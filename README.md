@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Local Directory
 
-## Getting Started
+A hyperlocal, WhatsApp-native directory of neighborhood businesses. Built with Next.js 15 (App Router), Tailwind, and Supabase.
 
-First, run the development server:
+## Stack
+
+- Next.js 15, React 19, TypeScript, Tailwind v4
+- Supabase (Postgres, Auth, RLS)
+- Deploy target: Vercel
+
+## Setup
+
+### 1. Supabase
+
+1. Create a project at https://supabase.com/dashboard.
+2. Open the SQL Editor, paste and run `supabase/schema.sql`.
+3. Create your admin account:
+   - Auth → Users → **Add user** (email + password).
+   - Back in SQL Editor:
+     ```sql
+     insert into admin_users (user_id)
+     select id from auth.users where email = 'you@example.com';
+     ```
+
+### 2. Env
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in the three Supabase values from **Project Settings → API**:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only, never exposed to the browser)
+
+### 3. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Path | Purpose |
+| --- | --- |
+| `/` | Home — categories + neighborhoods for the active city |
+| `/[city]/[category]` | All approved listings in a category |
+| `/[city]/n/[neighborhood]` | All approved listings in a neighborhood |
+| `/[city]/[neighborhood]/[category]/[listing]` | Listing detail with WhatsApp CTA |
+| `/list-your-business` | Public submission form (goes to `pending`) |
+| `/admin/login` | Admin sign-in |
+| `/admin` | Approve/reject pending queue |
+| `/report?listing=…` | Report a listing |
+| `/sitemap.xml`, `/robots.txt` | SEO |
 
-## Learn More
+## Sanity check (end-to-end)
 
-To learn more about Next.js, take a look at the following resources:
+1. Submit a listing at `/list-your-business` — should say "submitted for review".
+2. Sign in at `/admin/login`, approve it in the queue.
+3. Visit `/[city]/[category]` and confirm it renders.
+4. Tap the WhatsApp button on a phone — should open WhatsApp with a pre-filled opener.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What's intentionally missing (MVP)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No user accounts, no reviews, no payments, no featured listings, no mobile app, no multi-city. See `~/.claude/plans/i-want-to-create-piped-honey.md` for the full plan and the triggers for adding those.

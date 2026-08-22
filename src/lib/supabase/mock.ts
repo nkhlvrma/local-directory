@@ -1,0 +1,100 @@
+// Minimal fake Supabase client covering the read surface the app uses.
+// Enabled when NEXT_PUBLIC_SUPABASE_URL is missing. Writes are no-ops that
+// return a friendly error so the UI stays functional.
+
+import { MOCK_TABLES } from "@/lib/mock-data";
+
+type Row = Record<string, unknown>;
+type Filter = { col: string; val: unknown };
+
+function getPath(row: Row, path: string): unknown {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === "object") {
+      return (acc as Row)[key];
+    }
+    return undefined;
+  }, row);
+}
+
+class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
+  private filters: Filter[] = [];
+  private single = false;
+
+  constructor(private rows: Row[]) {}
+
+  select(_cols?: string) {
+    void _cols;
+    return this;
+  }
+  eq(col: string, val: unknown) {
+    this.filters.push({ col, val });
+    return this;
+  }
+  order(_col: string, _opts?: unknown) {
+    void _col;
+    void _opts;
+    return this;
+  }
+  maybeSingle() {
+    this.single = true;
+    return this;
+  }
+
+  private resolve() {
+    let out = this.rows;
+    for (const { col, val } of this.filters) {
+      out = out.filter((r) => getPath(r, col) === val);
+    }
+    return this.single
+      ? { data: out[0] ?? null, error: null }
+      : { data: out, error: null };
+  }
+
+  then<TResult1 = { data: unknown; error: null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: unknown; error: null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return Promise.resolve(this.resolve()).then(onfulfilled, onrejected);
+  }
+}
+
+const readOnlyError = {
+  error: {
+    message: "Demo mode: connect Supabase to enable writes.",
+  },
+};
+
+export function createMockSupabaseClient() {
+  return {
+    from(table: string) {
+      const rows = MOCK_TABLES[table] ?? [];
+      const q = new MockQuery(rows);
+      return Object.assign(q, {
+        insert: async () => readOnlyError,
+        update: () => ({
+          eq: async () => readOnlyError,
+        }),
+        delete: () => ({
+          eq: async () => readOnlyError,
+        }),
+      });
+    },
+    auth: {
+      async getUser() {
+        return { data: { user: null }, error: null };
+      },
+      async signInWithPassword() {
+        return {
+          data: { user: null, session: null },
+          error: { message: "Demo mode: connect Supabase to enable admin." },
+        };
+      },
+    },
+  };
+}
+
+export function isMockMode(): boolean {
+  return !process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
