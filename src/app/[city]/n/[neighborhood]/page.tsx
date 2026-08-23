@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
+import { isValidPin } from "@/lib/pin";
 
 type Params = { city: string; neighborhood: string };
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 async function loadContext(params: Params) {
   const supabase = await createSupabaseServerClient();
@@ -18,7 +21,7 @@ async function loadContext(params: Params) {
   const { data: neighborhood } = await supabase
     .from("neighborhoods")
     .select("id, name, slug, city_id")
-    .eq("city_id", city.id)
+    .eq("city_id", (city as { id: string }).id)
     .eq("slug", params.neighborhood)
     .maybeSingle();
   return { supabase, city, neighborhood };
@@ -31,8 +34,8 @@ export async function generateMetadata(
   const { city, neighborhood } = await loadContext(p);
   if (!city || !neighborhood) return {};
   return {
-    title: `${neighborhood.name}, ${city.name}`,
-    description: `Verified local businesses in ${neighborhood.name}, ${city.name}.`,
+    title: `${(neighborhood as { name: string }).name}, ${(city as { name: string }).name}`,
+    description: `Verified local businesses in ${(neighborhood as { name: string }).name}, ${(city as { name: string }).name}.`,
   };
 }
 
@@ -43,44 +46,64 @@ export default async function NeighborhoodPage(
   const { supabase, city, neighborhood } = await loadContext(p);
   if (!city || !neighborhood) notFound();
 
-  const { data: listings } = await supabase
+  const pin = (await cookies()).get("pin")?.value ?? "";
+  const pinFilter = isValidPin(pin) ? pin : null;
+
+  let q = supabase
     .from("listings")
     .select(
-      `id, name, slug, description, verified,
+      `id, name, slug, description, verified, pin_code,
        categories!inner ( name, slug )`,
     )
     .eq("status", "approved")
-    .eq("neighborhood_id", neighborhood.id)
-    .order("name");
+    .eq("neighborhood_id", (neighborhood as { id: string }).id);
+  if (pinFilter) q = q.eq("pin_code", pinFilter);
+  const { data: listings } = await q.order("name");
+
+  type Row = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    verified: boolean;
+    pin_code: string | null;
+    categories: { name: string; slug: string };
+  };
+  const rows = (listings ?? []) as unknown as Row[];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-      <header>
-        <p className="text-sm text-black/50 dark:text-white/50">{city.name}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{neighborhood.name}</h1>
-      </header>
+    <Container size="3" px="4" py="6">
+      <Flex direction="column" gap="4">
+        <header>
+          <Text size="1" color="gray">{(city as { name: string }).name}</Text>
+          <Flex align="center" gap="2" mt="1">
+            <Heading size="6">{(neighborhood as { name: string }).name}</Heading>
+            {pinFilter ? <Badge color="grass">PIN {pinFilter}</Badge> : null}
+          </Flex>
+        </header>
 
-      {(listings ?? []).length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">
-          No listings yet in this neighborhood.
-        </p>
-      ) : (
-        <div className="grid gap-3">
-          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; verified: boolean; categories: { name: string; slug: string } }>).map((l) => {
-            const c = l.categories;
-            return (
+        {rows.length === 0 ? (
+          <Text size="2" color="gray">
+            {pinFilter
+              ? `No listings at PIN ${pinFilter} in this neighborhood yet.`
+              : "No listings yet in this neighborhood."}
+          </Text>
+        ) : (
+          <Grid columns="1" gap="3">
+            {rows.map((l) => (
               <ListingCard
                 key={l.id}
-                href={`/${city.slug}/${neighborhood.slug}/${c.slug}/${l.slug}`}
+                href={`/${(city as { slug: string }).slug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
                 name={l.name}
-                category={c.name}
+                category={l.categories.name}
                 description={l.description}
                 verified={l.verified}
+                pin={l.pin_code}
               />
-            );
-          })}
-        </div>
-      )}
-    </div>
+            ))}
+          </Grid>
+        )}
+      </Flex>
+    </Container>
   );
 }

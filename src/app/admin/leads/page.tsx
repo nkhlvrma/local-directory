@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Container, Heading, Text, Flex, Card, Grid } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -14,13 +15,13 @@ export default async function LeadsPage() {
   const { data: isAdminRow } = await supabase
     .from("admin_users")
     .select("user_id")
-    .eq("user_id", user.id)
+    .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
   if (!isAdminRow) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-10">
-        <h1 className="text-xl font-semibold">Not authorized</h1>
-      </div>
+      <Container size="1" px="4" py="6">
+        <Heading size="5">Not authorized</Heading>
+      </Container>
     );
   }
 
@@ -48,67 +49,62 @@ export default async function LeadsPage() {
   const totalClicks = rows.reduce((s, r) => s + (r.whatsapp_clicks ?? 0), 0);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-      <header>
-        <h1 className="text-xl font-semibold">Leads delivered</h1>
-        <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-          WhatsApp taps per listing, all-time. Use this when a business asks
-          &ldquo;is anyone actually contacting me?&rdquo;
-        </p>
-      </header>
-
-      <div className="rounded-2xl border border-black/10 dark:border-white/10 p-4 text-sm flex items-baseline gap-4">
+    <Container size="3" px="4" py="6">
+      <Flex direction="column" gap="4">
         <div>
-          <div className="text-2xl font-semibold">{totalClicks}</div>
-          <div className="text-xs text-black/60 dark:text-white/60">
-            total WhatsApp taps
-          </div>
+          <Heading size="5">Leads delivered</Heading>
+          <Text as="p" size="2" color="gray" mt="1">
+            WhatsApp taps per listing, all-time. Use this when a business asks
+            &ldquo;is anyone actually contacting me?&rdquo;
+          </Text>
         </div>
-        <div>
-          <div className="text-2xl font-semibold">{rows.length}</div>
-          <div className="text-xs text-black/60 dark:text-white/60">
-            approved listings
-          </div>
-        </div>
-      </div>
 
-      {rows.length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">
-          No approved listings yet.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {rows.map((r) => (
-            <li
-              key={r.id}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-black/10 dark:border-white/10 p-3"
-            >
-              <div className="min-w-0">
-                <div className="font-medium truncate">{r.name}</div>
-                <div className="text-xs text-black/60 dark:text-white/60">
-                  {r.categories.name} · {r.neighborhoods.name}
-                </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="text-right">
-                  <div className="font-semibold tabular-nums">
-                    {r.whatsapp_clicks}
+        <Grid columns={{ initial: "2", sm: "3" }} gap="3">
+          <Card size="2">
+            <Text size="6" weight="bold">{totalClicks}</Text>
+            <Text as="div" size="1" color="gray">total WhatsApp taps</Text>
+          </Card>
+          <Card size="2">
+            <Text size="6" weight="bold">{rows.length}</Text>
+            <Text as="div" size="1" color="gray">approved listings</Text>
+          </Card>
+        </Grid>
+
+        {rows.length === 0 ? (
+          <Text size="2" color="gray">No approved listings yet.</Text>
+        ) : (
+          <Flex direction="column" gap="2">
+            {rows.map((r) => (
+              <Card key={r.id} size="2">
+                <Flex align="center" justify="between" gap="3">
+                  <div style={{ minWidth: 0 }}>
+                    <Text weight="medium" as="div">{r.name}</Text>
+                    <Text size="1" color="gray" as="div">
+                      {r.categories.name} · {r.neighborhoods.name}
+                    </Text>
                   </div>
-                  <div className="text-[10px] uppercase tracking-wider text-black/50 dark:text-white/50">
-                    taps
-                  </div>
-                </div>
-                <Link
-                  href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
-                  className="text-xs underline text-black/60 dark:text-white/60"
-                >
-                  view
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                  <Flex align="center" gap="3">
+                    <div style={{ textAlign: "right" }}>
+                      <Text size="4" weight="bold" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {r.whatsapp_clicks}
+                      </Text>
+                      <Text as="div" size="1" color="gray" style={{ textTransform: "uppercase" }}>
+                        taps
+                      </Text>
+                    </div>
+                    <Link
+                      href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
+                      style={{ fontSize: 12 }}
+                    >
+                      view
+                    </Link>
+                  </Flex>
+                </Flex>
+              </Card>
+            ))}
+          </Flex>
+        )}
+      </Flex>
+    </Container>
   );
 }

@@ -1,23 +1,39 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import {
+  Select,
+  TextArea,
+  Button,
+  Flex,
+  Text,
+  Callout,
+} from "@radix-ui/themes";
+import { CheckCircledIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { submitReport } from "./actions";
 
 export function ReportForm({ listingId }: { listingId: string }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
 
-  if (done) return <p className="text-sm">Thanks — we&apos;ll take a look.</p>;
+  if (done)
+    return (
+      <Callout.Root color="grass">
+        <Callout.Icon><CheckCircledIcon /></Callout.Icon>
+        <Callout.Text>Thanks — we&apos;ll take a look.</Callout.Text>
+      </Callout.Root>
+    );
 
   return (
     <form
-      className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
         const fd = new FormData(e.currentTarget);
         fd.set("listing_id", listingId);
+        fd.set("reason", reason);
         startTransition(async () => {
           const res = await submitReport(fd);
           if (res?.error) setError(res.error);
@@ -25,32 +41,35 @@ export function ReportForm({ listingId }: { listingId: string }) {
         });
       }}
     >
-      <select
-        name="reason"
-        required
-        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
-      >
-        <option value="">Reason</option>
-        <option value="closed">Closed / no longer operating</option>
-        <option value="wrong_info">Wrong info</option>
-        <option value="spam">Spam</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea
-        name="note"
-        rows={3}
-        maxLength={400}
-        placeholder="Optional note"
-        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
-      />
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending || !listingId}
-        className="rounded-full bg-foreground text-background px-4 py-2 text-sm disabled:opacity-50"
-      >
-        {pending ? "Sending…" : "Send report"}
-      </button>
+      <Flex direction="column" gap="3">
+        <label>
+          <Text as="div" size="1" color="gray" weight="medium" mb="1">Reason</Text>
+          <Select.Root value={reason} onValueChange={setReason} required>
+            <Select.Trigger placeholder="Choose reason" />
+            <Select.Content>
+              <Select.Item value="closed">Closed / no longer operating</Select.Item>
+              <Select.Item value="wrong_info">Wrong info</Select.Item>
+              <Select.Item value="spam">Spam</Select.Item>
+              <Select.Item value="other">Other</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </label>
+        <label>
+          <Text as="div" size="1" color="gray" weight="medium" mb="1">Note (optional)</Text>
+          <TextArea name="note" rows={3} maxLength={400} />
+        </label>
+        {error ? (
+          <Callout.Root color="red">
+            <Callout.Icon><ExclamationTriangleIcon /></Callout.Icon>
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        ) : null}
+        <div>
+          <Button type="submit" disabled={pending || !listingId || !reason}>
+            {pending ? "Sending…" : "Send report"}
+          </Button>
+        </div>
+      </Flex>
     </form>
   );
 }

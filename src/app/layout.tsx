@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { Theme, Container, Flex, Text, Callout, Button } from "@radix-ui/themes";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
+import { LocationBar } from "@/components/LocationBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,8 +17,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-import { SITE_URL } from "@/lib/site";
 
 const SITE_NAME = "Local Directory";
 
@@ -35,45 +38,80 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const pin = cookieStore.get("pin")?.value ?? "";
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        {!process.env.NEXT_PUBLIC_SUPABASE_URL ? (
-          <div className="bg-amber-500/15 text-amber-900 dark:text-amber-200 text-xs px-4 py-1.5 text-center">
-            Demo mode — using in-memory data. Try{" "}
-            <a href="/admin" className="underline font-medium">
-              admin
-            </a>{" "}
-            (no login).
-          </div>
-        ) : null}
-        <header className="border-b border-black/5 dark:border-white/10">
-          <div className="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-tight">
-              {SITE_NAME}
-            </Link>
-            <Link
-              href="/list-your-business"
-              className="text-sm rounded-full bg-foreground text-background px-3 py-1.5"
+      <body className="min-h-full">
+        <Theme accentColor="grass" grayColor="sand" radius="large" scaling="100%">
+          <Flex direction="column" style={{ minHeight: "100vh" }}>
+            {!process.env.NEXT_PUBLIC_SUPABASE_URL ? (
+              <Container size="3" px="4" pt="3">
+                <Callout.Root color="amber" size="1">
+                  <Callout.Icon>
+                    <InfoCircledIcon />
+                  </Callout.Icon>
+                  <Callout.Text>
+                    Demo mode — using in-memory data.{" "}
+                    <Link href="/admin" style={{ textDecoration: "underline" }}>
+                      Try admin
+                    </Link>{" "}
+                    (no login needed).
+                  </Callout.Text>
+                </Callout.Root>
+              </Container>
+            ) : null}
+
+            <header
+              style={{
+                borderBottom: "1px solid var(--gray-a4)",
+              }}
             >
-              List your business
-            </Link>
-          </div>
-        </header>
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-black/5 dark:border-white/10 mt-8">
-          <div className="mx-auto max-w-3xl px-4 py-6 text-xs text-black/60 dark:text-white/60">
-            {SITE_NAME} · community-verified · no spam calls
-          </div>
-        </footer>
+              <Container size="3" px="4" py="3">
+                <Flex align="center" justify="between" gap="3" wrap="wrap">
+                  <Flex align="center" gap="3">
+                    <Link href="/" style={{ textDecoration: "none" }}>
+                      <Text size="4" weight="bold">
+                        {SITE_NAME}
+                      </Text>
+                    </Link>
+                    <LocationBar initialPin={pin} />
+                  </Flex>
+                  <Link href="/list-your-business" style={{ textDecoration: "none" }}>
+                    <Button size="2" variant="solid">
+                      List your business
+                    </Button>
+                  </Link>
+                </Flex>
+              </Container>
+            </header>
+
+            <main style={{ flex: 1 }}>{children}</main>
+
+            <footer
+              style={{
+                borderTop: "1px solid var(--gray-a4)",
+                marginTop: "var(--space-6)",
+              }}
+            >
+              <Container size="3" px="4" py="5">
+                <Text size="1" color="gray">
+                  {SITE_NAME} · community-verified · no spam calls
+                </Text>
+              </Container>
+            </footer>
+          </Flex>
+        </Theme>
       </body>
     </html>
   );

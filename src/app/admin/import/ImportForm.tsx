@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { TextArea, Button, Flex, Text, Card } from "@radix-ui/themes";
 import { importListings, type ImportResult } from "./actions";
 
 export function ImportForm() {
@@ -9,18 +10,18 @@ export function ImportForm() {
   const [result, setResult] = useState<ImportResult | null>(null);
 
   return (
-    <div className="space-y-4">
-      <textarea
+    <Flex direction="column" gap="3">
+      <TextArea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={12}
         placeholder={
-          "Anita's Home Kitchen\ttiffin-services\tgomti-nagar\t+919812345678\tHome-cooked North Indian tiffin.\ttrue"
+          "Anita's Home Kitchen\ttiffin-services\tgomti-nagar\t+919812345678\t226010\tHome-cooked North Indian tiffin.\ttrue"
         }
-        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm font-mono"
+        style={{ fontFamily: "var(--code-font-family)" }}
       />
-      <div className="flex items-center gap-3">
-        <button
+      <Flex align="center" gap="3">
+        <Button
           disabled={pending || !text.trim()}
           onClick={() => {
             setResult(null);
@@ -29,32 +30,31 @@ export function ImportForm() {
               setResult(res);
             });
           }}
-          className="rounded-full bg-foreground text-background px-4 py-2 text-sm disabled:opacity-50"
         >
           {pending ? "Importing…" : "Import"}
-        </button>
-        <span className="text-xs text-black/60 dark:text-white/60">
-          Rows land as <code>pending</code> — review at <code>/admin</code>.
-        </span>
-      </div>
+        </Button>
+        <Text size="1" color="gray">
+          Rows land as pending — review at /admin.
+        </Text>
+      </Flex>
 
       {result ? (
-        <div className="rounded-2xl border border-black/10 dark:border-white/10 p-4 text-sm space-y-2">
-          <p>
+        <Card size="2">
+          <Text size="2">
             <strong>{result.inserted}</strong> inserted ·{" "}
             <strong>{result.failed.length}</strong> failed
-          </p>
+          </Text>
           {result.failed.length > 0 ? (
-            <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
+            <Flex direction="column" gap="1" mt="2">
               {result.failed.map((f, i) => (
-                <li key={i}>
+                <Text size="1" color="red" key={i}>
                   Row {f.row}: {f.error}
-                </li>
+                </Text>
               ))}
-            </ul>
+            </Flex>
           ) : null}
-        </div>
+        </Card>
       ) : null}
-    </div>
+    </Flex>
   );
 }

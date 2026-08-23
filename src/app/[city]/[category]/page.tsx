@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
+import { isValidPin } from "@/lib/pin";
 
 type Params = { city: string; category: string };
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 async function loadContext(params: Params) {
   const supabase = await createSupabaseServerClient();
@@ -23,8 +26,8 @@ export async function generateMetadata(
   const { city, category } = await loadContext(p);
   if (!city || !category) return {};
   return {
-    title: `${category.name} in ${city.name}`,
-    description: `Verified ${category.name.toLowerCase()} in ${city.name}. Chat on WhatsApp directly.`,
+    title: `${(category as { name: string }).name} in ${(city as { name: string }).name}`,
+    description: `Verified ${(category as { name: string }).name.toLowerCase()} in ${(city as { name: string }).name}. Chat on WhatsApp directly.`,
   };
 }
 
@@ -35,46 +38,66 @@ export default async function CategoryPage(
   const { supabase, city, category } = await loadContext(p);
   if (!city || !category) notFound();
 
-  const { data: listings } = await supabase
+  const pin = (await cookies()).get("pin")?.value ?? "";
+  const pinFilter = isValidPin(pin) ? pin : null;
+
+  let q = supabase
     .from("listings")
     .select(
-      `id, name, slug, description, verified,
+      `id, name, slug, description, verified, pin_code,
        neighborhoods!inner ( name, slug, city_id ),
        categories!inner ( name, slug )`,
     )
     .eq("status", "approved")
-    .eq("category_id", category.id)
-    .eq("neighborhoods.city_id", city.id)
-    .order("name");
+    .eq("category_id", (category as { id: string }).id)
+    .eq("neighborhoods.city_id", (city as { id: string }).id);
+  if (pinFilter) q = q.eq("pin_code", pinFilter);
+  const { data: listings } = await q.order("name");
+
+  type Row = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    verified: boolean;
+    pin_code: string | null;
+    neighborhoods: { name: string; slug: string };
+  };
+  const rows = (listings ?? []) as unknown as Row[];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-      <header>
-        <p className="text-sm text-black/50 dark:text-white/50">{city.name}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{category.name}</h1>
-      </header>
+    <Container size="3" px="4" py="6">
+      <Flex direction="column" gap="4">
+        <header>
+          <Text size="1" color="gray">{(city as { name: string }).name}</Text>
+          <Flex align="center" gap="2" mt="1">
+            <Heading size="6">{(category as { name: string }).name}</Heading>
+            {pinFilter ? <Badge color="grass">PIN {pinFilter}</Badge> : null}
+          </Flex>
+        </header>
 
-      {(listings ?? []).length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">
-          No listings yet in this category.
-        </p>
-      ) : (
-        <div className="grid gap-3">
-          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; verified: boolean; neighborhoods: { name: string; slug: string } }>).map((l) => {
-            const n = l.neighborhoods;
-            return (
+        {rows.length === 0 ? (
+          <Text size="2" color="gray">
+            {pinFilter
+              ? `No ${(category as { name: string }).name.toLowerCase()} listed at PIN ${pinFilter} yet.`
+              : "No listings yet in this category."}
+          </Text>
+        ) : (
+          <Grid columns="1" gap="3">
+            {rows.map((l) => (
               <ListingCard
                 key={l.id}
-                href={`/${city.slug}/${n.slug}/${category.slug}/${l.slug}`}
+                href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
                 name={l.name}
-                neighborhood={n.name}
+                neighborhood={l.neighborhoods.name}
                 description={l.description}
                 verified={l.verified}
+                pin={l.pin_code}
               />
-            );
-          })}
-        </div>
-      )}
-    </div>
+            ))}
+          </Grid>
+        )}
+      </Flex>
+    </Container>
   );
 }

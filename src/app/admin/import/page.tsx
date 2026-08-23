@@ -1,4 +1,13 @@
 import { redirect } from "next/navigation";
+import {
+  Container,
+  Heading,
+  Text,
+  Flex,
+  Card,
+  Code,
+  Grid,
+} from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ImportForm } from "./ImportForm";
@@ -10,20 +19,18 @@ export default async function ImportPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/admin/login");
 
   const { data: isAdminRow } = await supabase
     .from("admin_users")
     .select("user_id")
-    .eq("user_id", user.id)
+    .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
-
   if (!isAdminRow) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-10">
-        <h1 className="text-xl font-semibold">Not authorized</h1>
-      </div>
+      <Container size="1" px="4" py="6">
+        <Heading size="5">Not authorized</Heading>
+      </Container>
     );
   }
 
@@ -48,52 +55,54 @@ export default async function ImportPage() {
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
-      <header>
-        <h1 className="text-xl font-semibold">Bulk import listings</h1>
-        <p className="mt-1 text-sm text-black/70 dark:text-white/70">
-          Paste tab-separated rows (copy-paste directly from Google Sheets).
-          They land in the pending queue for review.
-        </p>
-      </header>
+    <Container size="3" px="4" py="6">
+      <Flex direction="column" gap="4">
+        <div>
+          <Heading size="5">Bulk import listings</Heading>
+          <Text as="p" size="2" color="gray" mt="1">
+            Paste tab-separated rows (copy-paste directly from Google Sheets).
+            They land in the pending queue for review.
+          </Text>
+        </div>
 
-      <div className="rounded-2xl border border-black/10 dark:border-white/10 p-4 text-sm">
-        <p className="font-medium">Column order (one row per listing):</p>
-        <pre className="mt-2 text-xs overflow-x-auto rounded bg-black/[.04] dark:bg-white/[.05] p-2">
-{"name\tcategory_slug\tneighborhood_slug\twhatsapp\tdescription\tverified"}
-        </pre>
-        <details className="mt-3">
-          <summary className="cursor-pointer text-black/70 dark:text-white/70">
-            Category slugs
-          </summary>
-          <ul className="mt-2 grid grid-cols-2 gap-1 text-xs">
-            {cats.map((c) => (
-              <li key={c.slug}>
-                <code>{c.slug}</code> — {c.name}
-              </li>
-            ))}
-          </ul>
-        </details>
-        <details className="mt-2">
-          <summary className="cursor-pointer text-black/70 dark:text-white/70">
-            Neighborhood slugs
-          </summary>
-          <ul className="mt-2 grid grid-cols-2 gap-1 text-xs">
-            {hoods.map((h) => (
-              <li key={h.slug}>
-                <code>{h.slug}</code> — {h.name}
-              </li>
-            ))}
-          </ul>
-        </details>
-        <p className="mt-3 text-xs text-black/60 dark:text-white/60">
-          <code>verified</code>: <code>true</code> if you&apos;ve already
-          messaged this WhatsApp and got a response, otherwise <code>false</code>{" "}
-          or blank.
-        </p>
-      </div>
+        <Card size="2">
+          <Flex direction="column" gap="2">
+            <Text size="2" weight="medium">Column order:</Text>
+            <Code size="2">
+              name{"\t"}category_slug{"\t"}neighborhood_slug{"\t"}whatsapp{"\t"}pin{"\t"}description{"\t"}verified
+            </Code>
+            <Grid columns={{ initial: "1", sm: "2" }} gap="4" mt="2">
+              <div>
+                <Text size="1" color="gray" weight="medium">Categories</Text>
+                <Flex direction="column" gap="1" mt="1">
+                  {cats.map((c) => (
+                    <Text size="1" key={c.slug}>
+                      <Code>{c.slug}</Code> — {c.name}
+                    </Text>
+                  ))}
+                </Flex>
+              </div>
+              <div>
+                <Text size="1" color="gray" weight="medium">Neighborhoods</Text>
+                <Flex direction="column" gap="1" mt="1">
+                  {hoods.map((h) => (
+                    <Text size="1" key={h.slug}>
+                      <Code>{h.slug}</Code> — {h.name}
+                    </Text>
+                  ))}
+                </Flex>
+              </div>
+            </Grid>
+            <Text size="1" color="gray" mt="2">
+              <Code>pin</Code>: 6-digit Indian PIN (optional).{" "}
+              <Code>verified</Code>: <Code>true</Code> if you&apos;ve already
+              messaged them and got a response.
+            </Text>
+          </Flex>
+        </Card>
 
-      <ImportForm />
-    </div>
+        <ImportForm />
+      </Flex>
+    </Container>
   );
 }

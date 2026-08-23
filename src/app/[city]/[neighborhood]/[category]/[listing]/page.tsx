@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Container, Heading, Text, Flex, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -26,7 +28,7 @@ async function loadListing(params: Params) {
   const { data: neighborhood } = await supabase
     .from("neighborhoods")
     .select("id, name, slug")
-    .eq("city_id", city.id)
+    .eq("city_id", (city as { id: string }).id)
     .eq("slug", params.neighborhood)
     .maybeSingle();
   if (!neighborhood) return null;
@@ -40,15 +42,30 @@ async function loadListing(params: Params) {
 
   const { data: listing } = await supabase
     .from("listings")
-    .select("id, name, slug, description, whatsapp_number, photo_url, hours_json, verified")
+    .select("id, name, slug, description, whatsapp_number, photo_url, hours_json, verified, pin_code")
     .eq("status", "approved")
-    .eq("neighborhood_id", neighborhood.id)
-    .eq("category_id", category.id)
+    .eq("neighborhood_id", (neighborhood as { id: string }).id)
+    .eq("category_id", (category as { id: string }).id)
     .eq("slug", params.listing)
     .maybeSingle();
   if (!listing) return null;
 
-  return { city, neighborhood, category, listing };
+  return {
+    city: city as { name: string; slug: string },
+    neighborhood: neighborhood as { name: string; slug: string },
+    category: category as { name: string; slug: string },
+    listing: listing as {
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      whatsapp_number: string;
+      photo_url: string | null;
+      hours_json: Record<string, string> | null;
+      verified: boolean;
+      pin_code: string | null;
+    },
+  };
 }
 
 export async function generateMetadata(
@@ -86,43 +103,44 @@ export default async function ListingPage(
       "@type": "PostalAddress",
       addressLocality: neighborhood.name,
       addressRegion: city.name,
+      postalCode: listing.pin_code ?? undefined,
       addressCountry: "IN",
     },
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+    <Container size="3" px="4" py="6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <nav className="text-xs text-black/60 dark:text-white/60">
-        {city.name} · {neighborhood.name} · {category.name}
-      </nav>
-      <header>
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-semibold tracking-tight">{listing.name}</h1>
-          {listing.verified ? <VerifiedBadge /> : null}
+      <Flex direction="column" gap="4">
+        <Text size="1" color="gray">
+          {city.name} · {neighborhood.name} · {category.name}
+        </Text>
+        <header>
+          <Flex align="center" gap="2" wrap="wrap">
+            <Heading size="7">{listing.name}</Heading>
+            {listing.verified ? <VerifiedBadge /> : null}
+            {listing.pin_code ? (
+              <Badge color="gray" variant="soft">PIN {listing.pin_code}</Badge>
+            ) : null}
+          </Flex>
+          {listing.description ? (
+            <Text as="p" size="3" mt="2">{listing.description}</Text>
+          ) : null}
+        </header>
+
+        <div>
+          <WhatsAppButton listingId={listing.id} />
         </div>
-        {listing.description ? (
-          <p className="mt-2 text-black/80 dark:text-white/80">
-            {listing.description}
-          </p>
-        ) : null}
-      </header>
 
-      <div>
-        <WhatsAppButton listingId={listing.id} />
-      </div>
-
-      <div className="pt-4 border-t border-black/5 dark:border-white/10">
-        <a
-          href={`/report?listing=${listing.id}`}
-          className="text-xs text-black/50 dark:text-white/50 underline"
-        >
-          Report this listing
-        </a>
-      </div>
-    </div>
+        <div style={{ borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" }}>
+          <Link href={`/report?listing=${listing.id}`} style={{ fontSize: 12, color: "var(--gray-11)" }}>
+            Report this listing
+          </Link>
+        </div>
+      </Flex>
+    </Container>
   );
 }

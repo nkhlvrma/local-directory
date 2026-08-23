@@ -1,3 +1,4 @@
+import { Container, Heading, Text, Flex } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { SubmitForm } from "./SubmitForm";
@@ -19,23 +20,25 @@ export default async function ListYourBusinessPage() {
       ? supabase
           .from("neighborhoods")
           .select("id, name")
-          .eq("city_id", city.id)
+          .eq("city_id", (city as { id: string }).id)
           .order("name")
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
   ]);
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8 space-y-4">
-      <header>
-        <h1 className="text-2xl font-semibold">List your business</h1>
-        <p className="mt-1 text-sm text-black/70 dark:text-white/70">
-          Free. We review every submission by hand — usually within a day.
-        </p>
-      </header>
-      <SubmitForm
-        categories={categories ?? []}
-        neighborhoods={neighborhoods ?? []}
-      />
-    </div>
+    <Container size="2" px="4" py="6">
+      <Flex direction="column" gap="4">
+        <header>
+          <Heading size="6">List your business</Heading>
+          <Text as="p" size="2" color="gray" mt="1">
+            Free. We review every submission by hand — usually within a day.
+          </Text>
+        </header>
+        <SubmitForm
+          categories={(categories ?? []) as { id: string; name: string }[]}
+          neighborhoods={(neighborhoods ?? []) as { id: string; name: string }[]}
+        />
+      </Flex>
+    </Container>
   );
 }

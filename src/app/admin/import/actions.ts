@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
+import { isValidPin } from "@/lib/pin";
 
 export type ImportResult = {
   inserted: number;
@@ -10,9 +11,8 @@ export type ImportResult = {
 };
 
 // Tab-separated rows: name, category_slug, neighborhood_slug, whatsapp,
-// description, verified. Lines can be pasted straight from Google Sheets.
+// pin, description, verified. Lines can be pasted straight from Google Sheets.
 export async function importListings(text: string): Promise<ImportResult> {
-  // Admin gate — server action must re-verify.
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -21,7 +21,7 @@ export async function importListings(text: string): Promise<ImportResult> {
   const { data: adminRow } = await supabase
     .from("admin_users")
     .select("user_id")
-    .eq("user_id", user.id)
+    .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
   if (!adminRow)
     return { inserted: 0, failed: [{ row: 0, error: "not an admin" }] };
@@ -47,7 +47,7 @@ export async function importListings(text: string): Promise<ImportResult> {
 
   for (let i = 0; i < rows.length; i++) {
     const cols = rows[i].split("\t").map((c) => c.trim());
-    const [name, categorySlug, neighborhoodSlug, whatsapp, description, verifiedRaw] = cols;
+    const [name, categorySlug, neighborhoodSlug, whatsapp, pinRaw, description, verifiedRaw] = cols;
 
     if (!name || !categorySlug || !neighborhoodSlug || !whatsapp) {
       result.failed.push({ row: i + 1, error: "missing required column" });
@@ -55,6 +55,10 @@ export async function importListings(text: string): Promise<ImportResult> {
     }
     if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp)) {
       result.failed.push({ row: i + 1, error: `bad whatsapp: ${whatsapp}` });
+      continue;
+    }
+    if (pinRaw && !isValidPin(pinRaw)) {
+      result.failed.push({ row: i + 1, error: `bad pin: ${pinRaw}` });
       continue;
     }
     const category_id = catMap.get(categorySlug);
@@ -80,6 +84,7 @@ export async function importListings(text: string): Promise<ImportResult> {
         neighborhood_id,
         description: description || null,
         whatsapp_number: whatsapp,
+        pin_code: pinRaw || null,
         verified,
         status: "pending",
         source: "import",
@@ -91,7 +96,7 @@ export async function importListings(text: string): Promise<ImportResult> {
       }
       if (!error.message.includes("duplicate")) {
         result.failed.push({ row: i + 1, error: error.message });
-        inserted = true; // don't retry
+        inserted = true;
         break;
       }
     }

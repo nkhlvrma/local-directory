@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TextField, Button, Flex, Callout } from "@radix-ui/themes";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function LoginForm() {
@@ -13,7 +15,6 @@ export function LoginForm() {
 
   return (
     <form
-      className="space-y-3"
       onSubmit={async (e) => {
         e.preventDefault();
         setError(null);
@@ -28,30 +29,35 @@ export function LoginForm() {
         else router.replace("/admin");
       }}
     >
-      <input
-        type="email"
-        required
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
-      />
-      <input
-        type="password"
-        required
-        placeholder="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
-      />
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-full bg-foreground text-background px-4 py-2 text-sm disabled:opacity-50"
-      >
-        {pending ? "Signing in…" : "Sign in"}
-      </button>
+      <Flex direction="column" gap="3">
+        <TextField.Root
+          type="email"
+          required
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField.Root
+          type="password"
+          required
+          placeholder="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error ? (
+          <Callout.Root color="red">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        ) : null}
+        <div>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Signing in…" : "Sign in"}
+          </Button>
+        </div>
+      </Flex>
     </form>
   );
 }

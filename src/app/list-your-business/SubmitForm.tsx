@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import {
+  TextField,
+  TextArea,
+  Select,
+  Button,
+  Flex,
+  Text,
+  Callout,
+} from "@radix-ui/themes";
+import { CheckCircledIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { submitListing } from "./actions";
 import { Turnstile } from "@/components/Turnstile";
 
@@ -16,22 +26,30 @@ export function SubmitForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [categoryId, setCategoryId] = useState("");
+  const [neighborhoodId, setNeighborhoodId] = useState("");
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-4 text-sm">
-        Thanks — your listing has been submitted for review.
-      </div>
+      <Callout.Root color="grass">
+        <Callout.Icon>
+          <CheckCircledIcon />
+        </Callout.Icon>
+        <Callout.Text>
+          Thanks — your listing has been submitted for review.
+        </Callout.Text>
+      </Callout.Root>
     );
   }
 
   return (
     <form
-      className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
         const fd = new FormData(e.currentTarget);
+        fd.set("category_id", categoryId);
+        fd.set("neighborhood_id", neighborhoodId);
         startTransition(async () => {
           const res = await submitListing(fd);
           if (res?.error) setError(res.error);
@@ -39,64 +57,80 @@ export function SubmitForm({
         });
       }}
     >
-      <Field label="Business name">
-        <input name="name" required maxLength={80} className={inputClass} />
-      </Field>
-      <Field label="WhatsApp number (with country code, e.g. +9198…)">
-        <input
-          name="whatsapp_number"
-          required
-          placeholder="+919812345678"
-          pattern="^\+[1-9][0-9]{7,14}$"
-          className={inputClass}
-        />
-      </Field>
-      <Field label="Category">
-        <select name="category_id" required className={inputClass}>
-          <option value="">Choose one</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Neighborhood">
-        <select name="neighborhood_id" required className={inputClass}>
-          <option value="">Choose one</option>
-          {neighborhoods.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Short description (optional)">
-        <textarea
-          name="description"
-          rows={3}
-          maxLength={300}
-          className={inputClass}
-        />
-      </Field>
+      <Flex direction="column" gap="3">
+        <Field label="Business name">
+          <TextField.Root name="name" required maxLength={80} />
+        </Field>
 
-      <Turnstile />
+        <Field label="WhatsApp number (with country code, e.g. +9198…)">
+          <TextField.Root
+            name="whatsapp_number"
+            required
+            placeholder="+919812345678"
+            pattern="^\+[1-9][0-9]{7,14}$"
+          />
+        </Field>
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+        <Field label="Category">
+          <Select.Root value={categoryId} onValueChange={setCategoryId} required>
+            <Select.Trigger placeholder="Choose one" />
+            <Select.Content>
+              {categories.map((c) => (
+                <Select.Item key={c.id} value={c.id}>
+                  {c.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Field>
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-full bg-foreground text-background px-4 py-2 text-sm disabled:opacity-50"
-      >
-        {pending ? "Submitting…" : "Submit for review"}
-      </button>
+        <Field label="Neighborhood">
+          <Select.Root value={neighborhoodId} onValueChange={setNeighborhoodId} required>
+            <Select.Trigger placeholder="Choose one" />
+            <Select.Content>
+              {neighborhoods.map((n) => (
+                <Select.Item key={n.id} value={n.id}>
+                  {n.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Field>
+
+        <Field label="PIN code (optional, 6 digits)">
+          <TextField.Root
+            name="pin_code"
+            placeholder="226010"
+            inputMode="numeric"
+            maxLength={6}
+            pattern="[1-9][0-9]{5}"
+          />
+        </Field>
+
+        <Field label="Short description (optional)">
+          <TextArea name="description" rows={3} maxLength={300} />
+        </Field>
+
+        <Turnstile />
+
+        {error ? (
+          <Callout.Root color="red">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        ) : null}
+
+        <div>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Submitting…" : "Submit for review"}
+          </Button>
+        </div>
+      </Flex>
     </form>
   );
 }
-
-const inputClass =
-  "mt-1 w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/40 dark:focus:border-white/40";
 
 function Field({
   label,
@@ -106,8 +140,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block text-sm">
-      <span className="text-black/70 dark:text-white/70">{label}</span>
+    <label>
+      <Text as="div" size="1" color="gray" weight="medium" mb="1">
+        {label}
+      </Text>
       {children}
     </label>
   );

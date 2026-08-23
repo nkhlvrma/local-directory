@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Card, Flex, Text, Badge } from "@radix-ui/themes";
 import { VerifiedBadge } from "./VerifiedBadge";
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
   neighborhood?: string | null;
   description?: string | null;
   verified?: boolean;
+  pin?: string | null;
 };
 
 export function ListingCard({
@@ -17,24 +19,36 @@ export function ListingCard({
   neighborhood,
   description,
   verified,
+  pin,
 }: Props) {
   return (
-    <Link
-      href={href}
-      className="block rounded-2xl border border-black/10 dark:border-white/10 p-4 hover:bg-black/[.03] dark:hover:bg-white/[.05]"
-    >
-      <div className="flex items-center gap-2">
-        <div className="font-medium">{name}</div>
-        {verified ? <VerifiedBadge compact /> : null}
-      </div>
-      <div className="mt-0.5 text-xs text-black/60 dark:text-white/60">
-        {[category, neighborhood].filter(Boolean).join(" · ")}
-      </div>
-      {description ? (
-        <p className="mt-2 text-sm text-black/75 dark:text-white/75 line-clamp-2">
-          {description}
-        </p>
-      ) : null}
+    <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>
+      <Card size="2">
+        <Flex direction="column" gap="1">
+          <Flex align="center" gap="2" wrap="wrap">
+            <Text weight="medium">{name}</Text>
+            {verified ? <VerifiedBadge /> : null}
+            {pin ? (
+              <Badge color="gray" variant="soft">
+                PIN {pin}
+              </Badge>
+            ) : null}
+          </Flex>
+          <Text size="1" color="gray">
+            {[category, neighborhood].filter(Boolean).join(" · ")}
+          </Text>
+          {description ? (
+            <Text size="2" mt="1" style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}>
+              {description}
+            </Text>
+          ) : null}
+        </Flex>
+      </Card>
     </Link>
   );
 }

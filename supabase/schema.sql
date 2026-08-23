@@ -49,6 +49,7 @@ create table if not exists listings (
   hours_json jsonb,
   photo_url text,
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
+  pin_code text,                           -- Indian PIN, 6 digits (optional)
   whatsapp_clicks integer not null default 0,
   status listing_status not null default 'pending',
   source listing_source not null default 'self_serve',
@@ -56,13 +57,15 @@ create table if not exists listings (
   approved_at timestamptz,
   approved_by uuid references auth.users(id) on delete set null,
   unique (neighborhood_id, slug),
-  constraint whatsapp_e164 check (whatsapp_number ~ '^\+[1-9][0-9]{7,14}$')
+  constraint whatsapp_e164 check (whatsapp_number ~ '^\+[1-9][0-9]{7,14}$'),
+  constraint pin_code_format check (pin_code is null or pin_code ~ '^[1-9][0-9]{5}$')
 );
 
 create index if not exists listings_status_idx on listings(status);
 create index if not exists listings_category_idx on listings(category_id);
 create index if not exists listings_neighborhood_idx on listings(neighborhood_id);
 create index if not exists listings_verified_idx on listings(verified);
+create index if not exists listings_pin_idx on listings(pin_code);
 
 create table if not exists listing_reports (
   id uuid primary key default uuid_generate_v4(),

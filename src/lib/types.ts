@@ -34,6 +34,7 @@ export type Listing = {
   hours_json: Record<string, string> | null;
   photo_url: string | null;
   verified: boolean;
+  pin_code: string | null;
   whatsapp_clicks: number;
   status: ListingStatus;
   source: ListingSource;

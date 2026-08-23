@@ -3,6 +3,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { isValidPin } from "@/lib/pin";
 
 export async function submitListing(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
@@ -10,6 +11,7 @@ export async function submitListing(fd: FormData) {
   const categoryId = String(fd.get("category_id") ?? "");
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
+  const pinRaw = String(fd.get("pin_code") ?? "").trim();
   const turnstileToken = fd.get("cf-turnstile-response");
 
   const passed = await verifyTurnstile(
@@ -23,11 +25,13 @@ export async function submitListing(fd: FormData) {
     return { error: "WhatsApp number must be in international format like +9198…" };
   if (!categoryId || !neighborhoodId)
     return { error: "Category and neighborhood are required." };
+  if (pinRaw && !isValidPin(pinRaw))
+    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+  const pin_code = pinRaw || null;
 
   const base = slugify(name);
   const admin = createSupabaseAdminClient();
 
-  // Try base slug; on collision (unique on neighborhood_id + slug), suffix -2, -3…
   for (let i = 0; i < 20; i++) {
     const slug = i === 0 ? base : `${base}-${i + 1}`;
     const { error } = await admin.from("listings").insert({
@@ -37,6 +41,7 @@ export async function submitListing(fd: FormData) {
       neighborhood_id: neighborhoodId,
       description,
       whatsapp_number: whatsapp,
+      pin_code,
       status: "pending",
       source: "self_serve",
     });

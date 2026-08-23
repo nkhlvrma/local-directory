@@ -14,8 +14,6 @@ const neighborhoods: Row[] = [
   { id: "n5", city_id: "c1", name: "Alambagh", slug: "alambagh" },
 ];
 
-// First cell: Tiffin Services. Other categories exist in the schema so the
-// browse-by-category taxonomy is complete, but this seed focuses one.
 const categories: Row[] = [
   { id: "k1", name: "Tiffin Services", slug: "tiffin-services", icon: "🍱" },
   { id: "k2", name: "Home Cleaning", slug: "home-cleaning", icon: "🧹" },
@@ -27,8 +25,6 @@ const categories: Row[] = [
   { id: "k8", name: "Salons", slug: "salons", icon: "💇" },
 ];
 
-// Placeholder demo listings so the UI has something to render before you
-// import real ones. Replace via /admin/import.
 const listings: Row[] = [
   {
     id: "l1",
@@ -36,13 +32,13 @@ const listings: Row[] = [
     slug: "anitas-home-kitchen",
     category_id: "k1",
     neighborhood_id: "n1",
-    description:
-      "Home-cooked North Indian tiffin. Monthly plans, breakfast + dinner. Jain options.",
+    description: "Home-cooked North Indian tiffin. Monthly plans, breakfast + dinner. Jain options.",
     whatsapp_number: "+919812345678",
     hours_json: null,
     photo_url: null,
     verified: true,
-    whatsapp_clicks: 0,
+    pin_code: "226010",
+    whatsapp_clicks: 12,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Gomti Nagar", slug: "gomti-nagar", city_id: "c1" },
@@ -58,7 +54,8 @@ const listings: Row[] = [
     hours_json: null,
     photo_url: null,
     verified: true,
-    whatsapp_clicks: 0,
+    pin_code: "226001",
+    whatsapp_clicks: 8,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Hazratganj", slug: "hazratganj", city_id: "c1" },
@@ -74,7 +71,8 @@ const listings: Row[] = [
     hours_json: null,
     photo_url: null,
     verified: false,
-    whatsapp_clicks: 0,
+    pin_code: "226024",
+    whatsapp_clicks: 3,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Aliganj", slug: "aliganj", city_id: "c1" },
@@ -85,13 +83,13 @@ const listings: Row[] = [
     slug: "shivanis-kitchen",
     category_id: "k1",
     neighborhood_id: "n4",
-    description:
-      "Bengali + North Indian. Weekly menu on WhatsApp. Trial meal available.",
+    description: "Bengali + North Indian. Weekly menu on WhatsApp. Trial meal available.",
     whatsapp_number: "+919833333333",
     hours_json: null,
     photo_url: null,
     verified: true,
-    whatsapp_clicks: 0,
+    pin_code: "226016",
+    whatsapp_clicks: 21,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Indira Nagar", slug: "indira-nagar", city_id: "c1" },
@@ -107,7 +105,8 @@ const listings: Row[] = [
     hours_json: null,
     photo_url: null,
     verified: false,
-    whatsapp_clicks: 0,
+    pin_code: "226005",
+    whatsapp_clicks: 5,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Alambagh", slug: "alambagh", city_id: "c1" },

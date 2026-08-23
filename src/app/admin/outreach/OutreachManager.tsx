@@ -1,6 +1,16 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import {
+  Card,
+  Flex,
+  Text,
+  Button,
+  Badge,
+  TextArea,
+  Select,
+  Code,
+} from "@radix-ui/themes";
 import type { Lead } from "./page";
 import {
   addLeads,
@@ -21,12 +31,12 @@ const STATUS_LABELS: Record<Lead["status"], string> = {
   no_response: "No response",
 };
 
-const STATUS_STYLES: Record<Lead["status"], string> = {
-  lead: "bg-black/10 dark:bg-white/10",
-  contacted: "bg-amber-500/20 text-amber-900 dark:text-amber-200",
-  yes: "bg-green-500/20 text-green-800 dark:text-green-300",
-  no: "bg-red-500/20 text-red-800 dark:text-red-300",
-  no_response: "bg-black/10 dark:bg-white/10 text-black/60 dark:text-white/60",
+const STATUS_COLORS: Record<Lead["status"], "gray" | "amber" | "grass" | "red"> = {
+  lead: "gray",
+  contacted: "amber",
+  yes: "grass",
+  no: "red",
+  no_response: "gray",
 };
 
 export function OutreachManager({
@@ -56,64 +66,59 @@ export function OutreachManager({
   }
 
   return (
-    <div className="space-y-6">
+    <Flex direction="column" gap="4">
       {/* --- Add leads --- */}
-      <section className="rounded-2xl border border-black/10 dark:border-white/10">
-        <button
-          onClick={() => setShowAdd((s) => !s)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium"
-        >
-          <span>Add candidate businesses</span>
-          <span className="text-black/50 dark:text-white/50">
+      <Card size="2">
+        <Flex justify="between" align="center" mb="2">
+          <Text weight="medium" size="2">Add candidate businesses</Text>
+          <Button
+            variant="ghost"
+            size="1"
+            onClick={() => setShowAdd((s) => !s)}
+          >
             {showAdd ? "hide" : "show"}
-          </span>
-        </button>
+          </Button>
+        </Flex>
         {showAdd ? (
-          <div className="px-4 pb-4 space-y-3">
-            <p className="text-xs text-black/60 dark:text-white/60">
-              Paste tab-separated rows (from Google Sheets). Columns:{" "}
-              <code>business_name</code> · <code>whatsapp</code> ·{" "}
-              <code>category_slug</code> · <code>neighborhood_slug</code> ·{" "}
-              <code>note</code>
-            </p>
-            <details className="text-xs">
-              <summary className="cursor-pointer text-black/60 dark:text-white/60">
+          <Flex direction="column" gap="2">
+            <Text size="1" color="gray">
+              Paste tab-separated rows. Columns:{" "}
+              <Code>business_name</Code> · <Code>whatsapp</Code> ·{" "}
+              <Code>category_slug</Code> · <Code>neighborhood_slug</Code> ·{" "}
+              <Code>note</Code>
+            </Text>
+            <details>
+              <summary style={{ fontSize: 12, cursor: "pointer", color: "var(--gray-11)" }}>
                 Available slugs
               </summary>
-              <div className="mt-2 grid grid-cols-2 gap-4">
+              <Flex gap="4" mt="2">
                 <div>
-                  <div className="font-medium">Categories</div>
-                  <ul className="mt-1 space-y-0.5">
+                  <Text size="1" weight="medium">Categories</Text>
+                  <Flex direction="column" gap="1" mt="1">
                     {categories.map((c) => (
-                      <li key={c.slug}>
-                        <code>{c.slug}</code>
-                      </li>
+                      <Text size="1" key={c.slug}><Code>{c.slug}</Code></Text>
                     ))}
-                  </ul>
+                  </Flex>
                 </div>
                 <div>
-                  <div className="font-medium">Neighborhoods</div>
-                  <ul className="mt-1 space-y-0.5">
+                  <Text size="1" weight="medium">Neighborhoods</Text>
+                  <Flex direction="column" gap="1" mt="1">
                     {neighborhoods.map((n) => (
-                      <li key={n.slug}>
-                        <code>{n.slug}</code>
-                      </li>
+                      <Text size="1" key={n.slug}><Code>{n.slug}</Code></Text>
                     ))}
-                  </ul>
+                  </Flex>
                 </div>
-              </div>
+              </Flex>
             </details>
-            <textarea
+            <TextArea
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={6}
-              placeholder={
-                "Anita's Home Kitchen\t+919812345678\ttiffin-services\tgomti-nagar\tfrom Google Maps"
-              }
-              className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm font-mono"
+              placeholder="Anita's Home Kitchen&#9;+919812345678&#9;tiffin-services&#9;gomti-nagar&#9;from Google Maps"
+              style={{ fontFamily: "var(--code-font-family)" }}
             />
-            <div className="flex items-center gap-3">
-              <button
+            <Flex align="center" gap="3">
+              <Button
                 disabled={pending || !text.trim()}
                 onClick={() => {
                   setAddResult(null);
@@ -126,109 +131,113 @@ export function OutreachManager({
                     }
                   });
                 }}
-                className="rounded-full bg-foreground text-background px-4 py-2 text-sm disabled:opacity-50"
               >
                 {pending ? "Adding…" : "Add to queue"}
-              </button>
+              </Button>
               {addResult ? (
-                <span className="text-xs text-black/60 dark:text-white/60">
+                <Text size="1" color="gray">
                   {addResult.inserted.length} added ·{" "}
                   {addResult.failed.length} failed
-                </span>
+                </Text>
               ) : null}
-            </div>
+            </Flex>
             {addResult && addResult.failed.length > 0 ? (
-              <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
+              <Flex direction="column" gap="1">
                 {addResult.failed.map((f, i) => (
-                  <li key={i}>
+                  <Text size="1" color="red" key={i}>
                     Row {f.row}: {f.error}
-                  </li>
+                  </Text>
                 ))}
-              </ul>
+              </Flex>
             ) : null}
-          </div>
+          </Flex>
         ) : null}
-      </section>
+      </Card>
 
       {/* --- Controls --- */}
-      <div className="flex flex-wrap items-center gap-2">
-        {(["all", "lead", "contacted", "yes", "no", "no_response"] as const).map(
-          (f) => {
-            const count =
-              f === "all" ? leads.length : leads.filter((l) => l.status === f).length;
-            const active = filter === f;
-            return (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`rounded-full px-3 py-1 text-xs border ${
-                  active
-                    ? "bg-foreground text-background border-transparent"
-                    : "border-black/15 dark:border-white/20"
-                }`}
-              >
-                {f === "all" ? "All" : STATUS_LABELS[f]} ({count})
-              </button>
-            );
-          },
-        )}
-        <div className="ml-auto flex items-center gap-2 text-xs">
-          <span className="text-black/60 dark:text-white/60">Message language:</span>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as MessageLang)}
-            className="rounded-md border border-black/15 dark:border-white/20 bg-transparent px-2 py-1 text-xs"
-          >
-            <option value="hinglish">Hinglish</option>
-            <option value="hi">हिंदी</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-      </div>
+      <Flex align="center" gap="2" wrap="wrap">
+        {(["all", "lead", "contacted", "yes", "no", "no_response"] as const).map((f) => {
+          const count =
+            f === "all" ? leads.length : leads.filter((l) => l.status === f).length;
+          const active = filter === f;
+          return (
+            <Button
+              key={f}
+              variant={active ? "solid" : "soft"}
+              color={active ? undefined : "gray"}
+              size="1"
+              onClick={() => setFilter(f)}
+            >
+              {f === "all" ? "All" : STATUS_LABELS[f]} ({count})
+            </Button>
+          );
+        })}
+        <Flex align="center" gap="2" ml="auto">
+          <Text size="1" color="gray">Message language:</Text>
+          <Select.Root value={lang} onValueChange={(v) => setLang(v as MessageLang)}>
+            <Select.Trigger />
+            <Select.Content>
+              <Select.Item value="hinglish">Hinglish</Select.Item>
+              <Select.Item value="hi">हिंदी</Select.Item>
+              <Select.Item value="en">English</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Flex>
+      </Flex>
 
       {/* --- Message preview --- */}
-      <MessagePreview lang={lang} sampleCategory={categories[0]?.name ?? "tiffin services"} />
+      <Card size="2">
+        <details>
+          <summary style={{ fontSize: 13, cursor: "pointer", color: "var(--gray-11)" }}>
+            Preview outreach message
+          </summary>
+          <Text
+            as="div"
+            mt="2"
+            size="1"
+            style={{
+              whiteSpace: "pre-wrap",
+              background: "var(--gray-a2)",
+              padding: "var(--space-3)",
+              borderRadius: "var(--radius-3)",
+            }}
+          >
+            {outreachMessage(lang, categories[0]?.name ?? "tiffin services")}
+          </Text>
+        </details>
+      </Card>
 
       {/* --- Leads list --- */}
       {visible.length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">
+        <Text size="2" color="gray">
           {leads.length === 0
             ? "No leads yet. Paste candidates above to get started."
             : "No leads match this filter."}
-        </p>
+        </Text>
       ) : (
-        <ul className="space-y-2">
+        <Flex direction="column" gap="2">
           {visible.map((l) => (
-            <li
-              key={l.id}
-              className="rounded-2xl border border-black/10 dark:border-white/10 p-4"
-            >
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">{l.business_name}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_STYLES[l.status]}`}
-                    >
+            <Card key={l.id} size="2">
+              <Flex justify="between" align="start" gap="3" wrap="wrap">
+                <div style={{ minWidth: 0 }}>
+                  <Flex align="center" gap="2" wrap="wrap">
+                    <Text weight="medium">{l.business_name}</Text>
+                    <Badge color={STATUS_COLORS[l.status]} variant="soft">
                       {STATUS_LABELS[l.status]}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 text-xs text-black/60 dark:text-white/60">
-                    {[
-                      l.categories?.name,
-                      l.neighborhoods?.name,
-                      l.whatsapp_number,
-                    ]
+                    </Badge>
+                  </Flex>
+                  <Text size="1" color="gray" as="div" mt="1">
+                    {[l.categories?.name, l.neighborhoods?.name, l.whatsapp_number]
                       .filter(Boolean)
                       .join(" · ")}
-                  </div>
+                  </Text>
                   {l.source_note ? (
-                    <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+                    <Text size="1" color="gray" as="div" mt="1">
                       {l.source_note}
-                    </p>
+                    </Text>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <Flex gap="2" wrap="wrap">
                   <a
                     href={outreachWaLink(
                       l.whatsapp_number,
@@ -243,11 +252,14 @@ export function OutreachManager({
                         if (next) replaceLead(next);
                       })
                     }
-                    className="rounded-full bg-[#25D366] text-black px-3 py-1.5 text-xs font-medium"
+                    style={{ textDecoration: "none" }}
                   >
-                    Message on WhatsApp
+                    <Button color="grass" size="1">Message on WhatsApp</Button>
                   </a>
-                  <button
+                  <Button
+                    color="grass"
+                    variant="soft"
+                    size="1"
                     disabled={pending || !l.categories || !l.neighborhoods || l.status === "yes"}
                     onClick={() =>
                       startTransition(async () => {
@@ -255,12 +267,13 @@ export function OutreachManager({
                         if (next) replaceLead(next);
                       })
                     }
-                    className="rounded-full bg-green-600 text-white px-3 py-1.5 text-xs disabled:opacity-40"
-                    title="Create a listing (pending) linked to this lead"
                   >
-                    Yes → create listing
-                  </button>
-                  <button
+                    Yes → listing
+                  </Button>
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    size="1"
                     disabled={pending}
                     onClick={() =>
                       startTransition(async () => {
@@ -268,11 +281,13 @@ export function OutreachManager({
                         if (next) replaceLead(next);
                       })
                     }
-                    className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-xs disabled:opacity-40"
                   >
                     No
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    size="1"
                     disabled={pending}
                     onClick={() =>
                       startTransition(async () => {
@@ -280,35 +295,15 @@ export function OutreachManager({
                         if (next) replaceLead(next);
                       })
                     }
-                    className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-xs disabled:opacity-40"
                   >
                     No response
-                  </button>
-                </div>
-              </div>
-            </li>
+                  </Button>
+                </Flex>
+              </Flex>
+            </Card>
           ))}
-        </ul>
+        </Flex>
       )}
-    </div>
-  );
-}
-
-function MessagePreview({
-  lang,
-  sampleCategory,
-}: {
-  lang: MessageLang;
-  sampleCategory: string;
-}) {
-  return (
-    <details className="rounded-2xl border border-black/10 dark:border-white/10 p-3 text-sm">
-      <summary className="cursor-pointer text-black/70 dark:text-white/70">
-        Preview outreach message
-      </summary>
-      <pre className="mt-2 whitespace-pre-wrap text-xs bg-black/[.04] dark:bg-white/[.05] p-3 rounded">
-        {outreachMessage(lang, sampleCategory)}
-      </pre>
-    </details>
+    </Flex>
   );
 }
