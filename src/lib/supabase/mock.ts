@@ -88,13 +88,30 @@ export function createMockSupabaseClient() {
     },
     auth: {
       async getUser() {
-        return { data: { user: null }, error: null };
+        // In demo mode everyone is the demo admin — matches admin_users row.
+        return {
+          data: {
+            user: {
+              id: "demo-admin",
+              email: "demo@localhost",
+              aud: "authenticated",
+            },
+          },
+          error: null,
+        };
       },
       async signInWithPassword() {
+        // Login form is bypassed in mock mode; this is a safety return.
         return {
-          data: { user: null, session: null },
-          error: { message: "Demo mode: connect Supabase to enable admin." },
+          data: {
+            user: { id: "demo-admin", email: "demo@localhost" },
+            session: null,
+          },
+          error: null,
         };
+      },
+      async signOut() {
+        return { error: null };
       },
     },
   };

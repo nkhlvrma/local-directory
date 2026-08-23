@@ -48,8 +48,11 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         {!process.env.NEXT_PUBLIC_SUPABASE_URL ? (
           <div className="bg-amber-500/15 text-amber-900 dark:text-amber-200 text-xs px-4 py-1.5 text-center">
-            Demo mode — using in-memory data. Connect Supabase in{" "}
-            <code>.env.local</code> to enable submissions and admin.
+            Demo mode — using in-memory data. Try{" "}
+            <a href="/admin" className="underline font-medium">
+              admin
+            </a>{" "}
+            (no login).
           </div>
         ) : null}
         <header className="border-b border-black/5 dark:border-white/10">
