@@ -76,6 +76,29 @@ create table if not exists admin_users (
   created_at timestamptz not null default now()
 );
 
+do $$ begin
+  create type outreach_status as enum ('lead', 'contacted', 'yes', 'no', 'no_response');
+exception when duplicate_object then null; end $$;
+
+-- Outreach queue: candidate businesses (scraped from Google Maps / Justdial /
+-- word of mouth) that we plan to message on WhatsApp for consent. Only "yes"
+-- replies get promoted to listings.
+create table if not exists outreach_leads (
+  id uuid primary key default uuid_generate_v4(),
+  business_name text not null,
+  whatsapp_number text not null,
+  category_id uuid references categories(id) on delete set null,
+  neighborhood_id uuid references neighborhoods(id) on delete set null,
+  source_note text,
+  status outreach_status not null default 'lead',
+  contacted_at timestamptz,
+  replied_at timestamptz,
+  listing_id uuid references listings(id) on delete set null,
+  created_at timestamptz not null default now(),
+  constraint outreach_whatsapp_e164 check (whatsapp_number ~ '^\+[1-9][0-9]{7,14}$')
+);
+create index if not exists outreach_status_idx on outreach_leads(status);
+
 -- Helper: is the current session an admin?
 create or replace function is_admin() returns boolean
 language sql stable security definer as $$
@@ -92,6 +115,7 @@ alter table categories      enable row level security;
 alter table listings        enable row level security;
 alter table listing_reports enable row level security;
 alter table admin_users     enable row level security;
+alter table outreach_leads  enable row level security;
 
 -- Reference tables: public read
 drop policy if exists "public read cities" on cities;
@@ -125,6 +149,10 @@ create policy "admin read reports" on listing_reports for select using (is_admin
 -- admin_users: admin-only read (service-role bootstraps the first admin row)
 drop policy if exists "admin read admin_users" on admin_users;
 create policy "admin read admin_users" on admin_users for select using (is_admin());
+
+-- Outreach: admin-only, all operations
+drop policy if exists "admin all outreach" on outreach_leads;
+create policy "admin all outreach" on outreach_leads for all using (is_admin()) with check (is_admin());
 
 -- ---------------------------------------------------------------------------
 -- Seed — Lucknow + 5 neighborhoods + the category taxonomy

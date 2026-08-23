@@ -49,12 +49,20 @@ export default async function AdminPage() {
             {pending?.length ?? 0} awaiting review
           </p>
         </div>
-        <a
-          href="/admin/import"
-          className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"
-        >
-          Bulk import
-        </a>
+        <div className="flex gap-2">
+          <a
+            href="/admin/outreach"
+            className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"
+          >
+            Outreach
+          </a>
+          <a
+            href="/admin/import"
+            className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"
+          >
+            Bulk import
+          </a>
+        </div>
       </header>
       <AdminQueue
         // Server → client boundary: pass plain data only.

@@ -116,4 +116,5 @@ export const MOCK_TABLES: Record<string, Row[]> = {
   listings,
   admin_users: [],
   listing_reports: [],
+  outreach_leads: [],
 };
