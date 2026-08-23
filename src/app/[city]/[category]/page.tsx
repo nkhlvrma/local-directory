@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { isValidPin } from "@/lib/pin";
 
 type Params = { city: string; category: string };
@@ -71,6 +72,9 @@ export default async function CategoryPage(
         <header>
           <Text size="1" color="gray">{(city as { name: string }).name}</Text>
           <Flex align="center" gap="2" mt="1">
+            <span style={{ color: "var(--grass-11)" }}>
+              <CategoryIcon slug={(category as { slug: string }).slug} size={22} />
+            </span>
             <Heading size="6">{(category as { name: string }).name}</Heading>
             {pinFilter ? <Badge color="grass">PIN {pinFilter}</Badge> : null}
           </Flex>

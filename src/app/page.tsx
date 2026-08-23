@@ -13,6 +13,7 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { isValidPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
@@ -133,8 +134,10 @@ export default async function Home() {
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 <Card size="2">
-                  <Flex direction="column" gap="1">
-                    <Text size="5">{c.icon ?? "•"}</Text>
+                  <Flex direction="column" gap="2">
+                    <span style={{ color: "var(--grass-11)" }}>
+                      <CategoryIcon slug={c.slug} size={22} />
+                    </span>
                     <Text size="2" weight="medium">{c.name}</Text>
                   </Flex>
                 </Card>
