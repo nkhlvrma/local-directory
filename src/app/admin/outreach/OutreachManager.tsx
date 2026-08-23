@@ -11,6 +11,13 @@ import {
   Select,
   Code,
 } from "@radix-ui/themes";
+import {
+  ChatBubbleIcon,
+  CheckIcon,
+  Cross1Icon,
+  ClockIcon,
+  PlusIcon,
+} from "@radix-ui/react-icons";
 import type { Lead } from "./page";
 import {
   addLeads,
@@ -132,6 +139,7 @@ export function OutreachManager({
                   });
                 }}
               >
+                <PlusIcon />
                 {pending ? "Adding…" : "Add to queue"}
               </Button>
               {addResult ? (
@@ -254,7 +262,10 @@ export function OutreachManager({
                     }
                     style={{ textDecoration: "none" }}
                   >
-                    <Button color="grass" size="1">Message on WhatsApp</Button>
+                    <Button color="grass" size="1">
+                      <ChatBubbleIcon />
+                      Message on WhatsApp
+                    </Button>
                   </a>
                   <Button
                     color="grass"
@@ -268,6 +279,7 @@ export function OutreachManager({
                       })
                     }
                   >
+                    <CheckIcon />
                     Yes → listing
                   </Button>
                   <Button
@@ -282,6 +294,7 @@ export function OutreachManager({
                       })
                     }
                   >
+                    <Cross1Icon />
                     No
                   </Button>
                   <Button
@@ -296,6 +309,7 @@ export function OutreachManager({
                       })
                     }
                   >
+                    <ClockIcon />
                     No response
                   </Button>
                 </Flex>

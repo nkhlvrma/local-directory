@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { Theme, Container, Flex, Text, Callout, Button } from "@radix-ui/themes";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { InfoCircledIcon, PlusIcon } from "@radix-ui/react-icons";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { LocationBar } from "@/components/LocationBar";
@@ -89,6 +89,7 @@ export default async function RootLayout({
                   </Flex>
                   <Link href="/list-your-business" style={{ textDecoration: "none" }}>
                     <Button size="2" variant="solid">
+                      <PlusIcon />
                       List your business
                     </Button>
                   </Link>

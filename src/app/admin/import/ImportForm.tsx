@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { TextArea, Button, Flex, Text, Card } from "@radix-ui/themes";
+import { UploadIcon } from "@radix-ui/react-icons";
 import { importListings, type ImportResult } from "./actions";
 
 export function ImportForm() {
@@ -31,6 +32,7 @@ export function ImportForm() {
             });
           }}
         >
+          <UploadIcon />
           {pending ? "Importing…" : "Import"}
         </Button>
         <Text size="1" color="gray">

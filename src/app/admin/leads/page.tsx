@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Container, Heading, Text, Flex, Card, Grid } from "@radix-ui/themes";
+import {
+  ChatBubbleIcon,
+  ArchiveIcon,
+  ExternalLinkIcon,
+} from "@radix-ui/react-icons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -61,11 +66,17 @@ export default async function LeadsPage() {
 
         <Grid columns={{ initial: "2", sm: "3" }} gap="3">
           <Card size="2">
-            <Text size="6" weight="bold">{totalClicks}</Text>
+            <Flex align="center" gap="2">
+              <ChatBubbleIcon color="var(--grass-11)" />
+              <Text size="6" weight="bold">{totalClicks}</Text>
+            </Flex>
             <Text as="div" size="1" color="gray">total WhatsApp taps</Text>
           </Card>
           <Card size="2">
-            <Text size="6" weight="bold">{rows.length}</Text>
+            <Flex align="center" gap="2">
+              <ArchiveIcon color="var(--gray-11)" />
+              <Text size="6" weight="bold">{rows.length}</Text>
+            </Flex>
             <Text as="div" size="1" color="gray">approved listings</Text>
           </Card>
         </Grid>
@@ -94,9 +105,14 @@ export default async function LeadsPage() {
                     </div>
                     <Link
                       href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
-                      style={{ fontSize: 12 }}
+                      style={{
+                        fontSize: 12,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
                     >
-                      view
+                      view <ExternalLinkIcon width={12} height={12} />
                     </Link>
                   </Flex>
                 </Flex>

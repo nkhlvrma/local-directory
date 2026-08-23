@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, Heading, Text, Flex, Badge } from "@radix-ui/themes";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -136,7 +137,17 @@ export default async function ListingPage(
         </div>
 
         <div style={{ borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" }}>
-          <Link href={`/report?listing=${listing.id}`} style={{ fontSize: 12, color: "var(--gray-11)" }}>
+          <Link
+            href={`/report?listing=${listing.id}`}
+            style={{
+              fontSize: 12,
+              color: "var(--gray-11)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <ExclamationTriangleIcon width={12} height={12} />
             Report this listing
           </Link>
         </div>

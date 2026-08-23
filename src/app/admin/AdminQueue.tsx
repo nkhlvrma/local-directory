@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Card, Flex, Text, Button, Badge } from "@radix-ui/themes";
+import { CheckIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { decideListing } from "./actions";
 
 type Item = {
@@ -54,6 +55,7 @@ export function AdminQueue({ items }: { items: Item[] }) {
                   })
                 }
               >
+                <CheckIcon />
                 Approve
               </Button>
               <Button
@@ -68,6 +70,7 @@ export function AdminQueue({ items }: { items: Item[] }) {
                   })
                 }
               >
+                <Cross1Icon />
                 Reject
               </Button>
             </Flex>

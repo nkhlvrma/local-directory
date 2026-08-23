@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Container, Heading, Text, Flex, Button } from "@radix-ui/themes";
+import {
+  BarChartIcon,
+  PaperPlaneIcon,
+  UploadIcon,
+} from "@radix-ui/react-icons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminQueue } from "./AdminQueue";
 
@@ -54,13 +59,22 @@ export default async function AdminPage() {
           </div>
           <Flex gap="2" wrap="wrap">
             <Link href="/admin/leads" style={{ textDecoration: "none" }}>
-              <Button variant="soft">Leads delivered</Button>
+              <Button variant="soft">
+                <BarChartIcon />
+                Leads delivered
+              </Button>
             </Link>
             <Link href="/admin/outreach" style={{ textDecoration: "none" }}>
-              <Button variant="soft">Outreach</Button>
+              <Button variant="soft">
+                <PaperPlaneIcon />
+                Outreach
+              </Button>
             </Link>
             <Link href="/admin/import" style={{ textDecoration: "none" }}>
-              <Button variant="soft">Bulk import</Button>
+              <Button variant="soft">
+                <UploadIcon />
+                Bulk import
+              </Button>
             </Link>
           </Flex>
         </Flex>

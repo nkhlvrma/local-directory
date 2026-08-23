@@ -10,7 +10,14 @@ import {
   Text,
   Callout,
 } from "@radix-ui/themes";
-import { CheckCircledIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import {
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+  PersonIcon,
+  ChatBubbleIcon,
+  HomeIcon,
+  PaperPlaneIcon,
+} from "@radix-ui/react-icons";
 import { submitListing } from "./actions";
 import { Turnstile } from "@/components/Turnstile";
 
@@ -59,7 +66,11 @@ export function SubmitForm({
     >
       <Flex direction="column" gap="3">
         <Field label="Business name">
-          <TextField.Root name="name" required maxLength={80} />
+          <TextField.Root name="name" required maxLength={80}>
+            <TextField.Slot>
+              <PersonIcon />
+            </TextField.Slot>
+          </TextField.Root>
         </Field>
 
         <Field label="WhatsApp number (with country code, e.g. +9198…)">
@@ -68,7 +79,11 @@ export function SubmitForm({
             required
             placeholder="+919812345678"
             pattern="^\+[1-9][0-9]{7,14}$"
-          />
+          >
+            <TextField.Slot>
+              <ChatBubbleIcon />
+            </TextField.Slot>
+          </TextField.Root>
         </Field>
 
         <Field label="Category">
@@ -104,7 +119,11 @@ export function SubmitForm({
             inputMode="numeric"
             maxLength={6}
             pattern="[1-9][0-9]{5}"
-          />
+          >
+            <TextField.Slot>
+              <HomeIcon />
+            </TextField.Slot>
+          </TextField.Root>
         </Field>
 
         <Field label="Short description (optional)">
@@ -124,6 +143,7 @@ export function SubmitForm({
 
         <div>
           <Button type="submit" disabled={pending}>
+            <PaperPlaneIcon />
             {pending ? "Submitting…" : "Submit for review"}
           </Button>
         </div>
