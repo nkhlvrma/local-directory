@@ -49,6 +49,7 @@ create table if not exists listings (
   hours_json jsonb,
   photo_url text,
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
+  whatsapp_clicks integer not null default 0,
   status listing_status not null default 'pending',
   source listing_source not null default 'self_serve',
   created_at timestamptz not null default now(),
@@ -103,6 +104,16 @@ create index if not exists outreach_status_idx on outreach_leads(status);
 create or replace function is_admin() returns boolean
 language sql stable security definer as $$
   select exists (select 1 from admin_users where user_id = auth.uid());
+$$;
+
+-- Atomic click counter. Called from the /api/wa/[id] redirect route via
+-- the service-role client, so it runs as security definer to update a
+-- single row regardless of RLS.
+create or replace function increment_whatsapp_click(p_listing_id uuid)
+returns void
+language sql security definer as $$
+  update listings set whatsapp_clicks = whatsapp_clicks + 1
+  where id = p_listing_id and status = 'approved';
 $$;
 
 -- ---------------------------------------------------------------------------

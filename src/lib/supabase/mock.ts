@@ -81,6 +81,11 @@ export function createMockSupabaseClient() {
         }),
       });
     },
+    async rpc(_fn: string, _args?: unknown) {
+      void _fn;
+      void _args;
+      return { data: null, error: null };
+    },
     auth: {
       async getUser() {
         return { data: { user: null }, error: null };

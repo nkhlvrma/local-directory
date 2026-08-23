@@ -1,18 +1,14 @@
-import { whatsappLink, defaultOpener } from "@/lib/whatsapp";
-import { SITE_NAME } from "@/lib/site";
-
 type Props = {
-  number: string;
-  listingName: string;
+  listingId: string;
 };
 
-// We never render the raw number as text — only the button. Small friction,
-// meaningful anti-scrape.
-export function WhatsAppButton({ number, listingName }: Props) {
-  const href = whatsappLink(number, defaultOpener(listingName, SITE_NAME));
+// Routes through /api/wa/[id] so we can count clicks. The API route
+// increments an atomic counter, then 302s to wa.me. Small friction to the
+// user (one extra hop), big value for us (we can prove leads to businesses).
+export function WhatsAppButton({ listingId }: Props) {
   return (
     <a
-      href={href}
+      href={`/api/wa/${listingId}`}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2 rounded-full bg-[#25D366] text-black font-medium px-5 py-3 shadow-sm hover:brightness-95"

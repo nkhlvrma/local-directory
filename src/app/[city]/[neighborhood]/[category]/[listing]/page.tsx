@@ -112,10 +112,7 @@ export default async function ListingPage(
       </header>
 
       <div>
-        <WhatsAppButton
-          number={listing.whatsapp_number}
-          listingName={listing.name}
-        />
+        <WhatsAppButton listingId={listing.id} />
       </div>
 
       <div className="pt-4 border-t border-black/5 dark:border-white/10">

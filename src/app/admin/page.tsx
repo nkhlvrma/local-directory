@@ -49,7 +49,13 @@ export default async function AdminPage() {
             {pending?.length ?? 0} awaiting review
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <a
+            href="/admin/leads"
+            className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"
+          >
+            Leads delivered
+          </a>
           <a
             href="/admin/outreach"
             className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { submitListing } from "./actions";
+import { Turnstile } from "@/components/Turnstile";
 
 type Option = { id: string; name: string };
 
@@ -78,6 +79,8 @@ export function SubmitForm({
           className={inputClass}
         />
       </Field>
+
+      <Turnstile />
 
       {error ? <p className="text-sm text-red-500">{error}</p> : null}
 

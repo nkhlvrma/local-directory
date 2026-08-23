@@ -2,6 +2,7 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export async function submitListing(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
@@ -9,6 +10,13 @@ export async function submitListing(fd: FormData) {
   const categoryId = String(fd.get("category_id") ?? "");
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
+  const turnstileToken = fd.get("cf-turnstile-response");
+
+  const passed = await verifyTurnstile(
+    typeof turnstileToken === "string" ? turnstileToken : null,
+  );
+  if (!passed)
+    return { error: "Bot check failed. Refresh the page and try again." };
 
   if (!name || name.length < 2) return { error: "Name is required." };
   if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
