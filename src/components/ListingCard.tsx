@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VerifiedBadge } from "./VerifiedBadge";
 
 type Props = {
   href: string;
@@ -6,6 +7,7 @@ type Props = {
   category?: string | null;
   neighborhood?: string | null;
   description?: string | null;
+  verified?: boolean;
 };
 
 export function ListingCard({
@@ -14,13 +16,17 @@ export function ListingCard({
   category,
   neighborhood,
   description,
+  verified,
 }: Props) {
   return (
     <Link
       href={href}
       className="block rounded-2xl border border-black/10 dark:border-white/10 p-4 hover:bg-black/[.03] dark:hover:bg-white/[.05]"
     >
-      <div className="font-medium">{name}</div>
+      <div className="flex items-center gap-2">
+        <div className="font-medium">{name}</div>
+        {verified ? <VerifiedBadge compact /> : null}
+      </div>
       <div className="mt-0.5 text-xs text-black/60 dark:text-white/60">
         {[category, neighborhood].filter(Boolean).join(" · ")}
       </div>

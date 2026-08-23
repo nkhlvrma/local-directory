@@ -1,4 +1,4 @@
--- Local WhatsApp Directory — schema, RLS, seed
+-- Local Directory — schema, RLS, seed
 -- Run this once in the Supabase SQL editor for a fresh project.
 
 create extension if not exists "uuid-ossp";
@@ -30,8 +30,13 @@ create table if not exists categories (
   parent_id uuid references categories(id) on delete set null
 );
 
-create type listing_status as enum ('pending', 'approved', 'rejected', 'removed');
-create type listing_source as enum ('self_serve', 'manual');
+do $$ begin
+  create type listing_status as enum ('pending', 'approved', 'rejected', 'removed');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type listing_source as enum ('self_serve', 'manual', 'import');
+exception when duplicate_object then null; end $$;
 
 create table if not exists listings (
   id uuid primary key default uuid_generate_v4(),
@@ -43,6 +48,7 @@ create table if not exists listings (
   whatsapp_number text not null,           -- E.164, e.g. +919812345678
   hours_json jsonb,
   photo_url text,
+  verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
   status listing_status not null default 'pending',
   source listing_source not null default 'self_serve',
   created_at timestamptz not null default now(),
@@ -55,6 +61,7 @@ create table if not exists listings (
 create index if not exists listings_status_idx on listings(status);
 create index if not exists listings_category_idx on listings(category_id);
 create index if not exists listings_neighborhood_idx on listings(neighborhood_id);
+create index if not exists listings_verified_idx on listings(verified);
 
 create table if not exists listing_reports (
   id uuid primary key default uuid_generate_v4(),
@@ -87,71 +94,65 @@ alter table listing_reports enable row level security;
 alter table admin_users     enable row level security;
 
 -- Reference tables: public read
-create policy "public read cities"        on cities        for select using (true);
+drop policy if exists "public read cities" on cities;
+create policy "public read cities" on cities for select using (true);
+drop policy if exists "public read neighborhoods" on neighborhoods;
 create policy "public read neighborhoods" on neighborhoods for select using (true);
-create policy "public read categories"    on categories    for select using (true);
+drop policy if exists "public read categories" on categories;
+create policy "public read categories" on categories for select using (true);
 
 -- Listings: public can read only approved rows; admins can read all
-create policy "public read approved listings"
-  on listings for select using (status = 'approved');
-create policy "admin read all listings"
-  on listings for select using (is_admin());
+drop policy if exists "public read approved listings" on listings;
+create policy "public read approved listings" on listings for select using (status = 'approved');
+drop policy if exists "admin read all listings" on listings;
+create policy "admin read all listings" on listings for select using (is_admin());
 
--- Listings: admin-only write (public submissions go through the service-role
--- key in a server action, which bypasses RLS).
+-- Listings: admin-only write. Public submissions go through the service-role
+-- key in a server action, which bypasses RLS.
+drop policy if exists "admin insert listings" on listings;
 create policy "admin insert listings" on listings for insert with check (is_admin());
+drop policy if exists "admin update listings" on listings;
 create policy "admin update listings" on listings for update using (is_admin()) with check (is_admin());
+drop policy if exists "admin delete listings" on listings;
 create policy "admin delete listings" on listings for delete using (is_admin());
 
 -- Reports: public can insert, admin can read
+drop policy if exists "public insert reports" on listing_reports;
 create policy "public insert reports" on listing_reports for insert with check (true);
-create policy "admin read reports"    on listing_reports for select using (is_admin());
+drop policy if exists "admin read reports" on listing_reports;
+create policy "admin read reports" on listing_reports for select using (is_admin());
 
 -- admin_users: admin-only read (service-role bootstraps the first admin row)
+drop policy if exists "admin read admin_users" on admin_users;
 create policy "admin read admin_users" on admin_users for select using (is_admin());
 
 -- ---------------------------------------------------------------------------
--- Seed — one city, a few neighborhoods, a starter category set, a demo listing
+-- Seed — Lucknow + 5 neighborhoods + the category taxonomy
 -- ---------------------------------------------------------------------------
 
-insert into cities (name, slug) values ('Bangalore', 'bangalore')
+insert into cities (name, slug) values ('Lucknow', 'lucknow')
   on conflict (slug) do nothing;
 
 insert into neighborhoods (city_id, name, slug)
 select c.id, n.name, n.slug
 from cities c,
      (values
-       ('Koramangala','koramangala'),
-       ('Indiranagar','indiranagar'),
-       ('HSR Layout','hsr-layout'),
-       ('Jayanagar','jayanagar')
+       ('Gomti Nagar','gomti-nagar'),
+       ('Hazratganj','hazratganj'),
+       ('Aliganj','aliganj'),
+       ('Indira Nagar','indira-nagar'),
+       ('Alambagh','alambagh')
      ) as n(name, slug)
-where c.slug = 'bangalore'
+where c.slug = 'lucknow'
 on conflict (city_id, slug) do nothing;
 
 insert into categories (name, slug, icon) values
+  ('Tiffin Services','tiffin-services','🍱'),
+  ('Home Cleaning','home-cleaning','🧹'),
+  ('Tailors','tailors','🧵'),
   ('Electricians','electricians','⚡'),
   ('Plumbers','plumbers','🔧'),
-  ('Tiffin Services','tiffin-services','🍱'),
-  ('Tailors','tailors','🧵'),
-  ('Home Cleaning','home-cleaning','🧹'),
   ('Tuition & Coaching','tuition-coaching','📚'),
   ('Car & Bike Repair','car-bike-repair','🔩'),
   ('Salons','salons','💇')
 on conflict (slug) do nothing;
-
--- One demo approved listing so pages render before you have real data.
-insert into listings (name, slug, category_id, neighborhood_id, description, whatsapp_number, status, source, approved_at)
-select
-  'Ravi Electricals',
-  'ravi-electricals',
-  cat.id,
-  nb.id,
-  'Neighborhood electrician. Wiring, fans, geysers, MCB, quick call-outs.',
-  '+919812345678',
-  'approved',
-  'manual',
-  now()
-from categories cat, neighborhoods nb
-where cat.slug = 'electricians' and nb.slug = 'koramangala'
-on conflict (neighborhood_id, slug) do nothing;

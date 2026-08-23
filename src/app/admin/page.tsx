@@ -42,11 +42,19 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 space-y-4">
-      <header>
-        <h1 className="text-xl font-semibold">Pending queue</h1>
-        <p className="text-sm text-black/60 dark:text-white/60">
-          {pending?.length ?? 0} awaiting review
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Pending queue</h1>
+          <p className="text-sm text-black/60 dark:text-white/60">
+            {pending?.length ?? 0} awaiting review
+          </p>
+        </div>
+        <a
+          href="/admin/import"
+          className="rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm"
+        >
+          Bulk import
+        </a>
       </header>
       <AdminQueue
         // Server → client boundary: pass plain data only.

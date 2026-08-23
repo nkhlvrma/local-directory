@@ -1,5 +1,5 @@
 export type ListingStatus = "pending" | "approved" | "rejected" | "removed";
-export type ListingSource = "self_serve" | "manual";
+export type ListingSource = "self_serve" | "manual" | "import";
 
 export type City = {
   id: string;
@@ -33,6 +33,7 @@ export type Listing = {
   whatsapp_number: string; // E.164, e.g. +919812345678
   hours_json: Record<string, string> | null;
   photo_url: string | null;
+  verified: boolean;
   status: ListingStatus;
   source: ListingSource;
   created_at: string;

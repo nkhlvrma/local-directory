@@ -46,7 +46,7 @@ export default async function NeighborhoodPage(
   const { data: listings } = await supabase
     .from("listings")
     .select(
-      `id, name, slug, description,
+      `id, name, slug, description, verified,
        categories!inner ( name, slug )`,
     )
     .eq("status", "approved")
@@ -66,7 +66,7 @@ export default async function NeighborhoodPage(
         </p>
       ) : (
         <div className="grid gap-3">
-          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; categories: { name: string; slug: string } }>).map((l) => {
+          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; verified: boolean; categories: { name: string; slug: string } }>).map((l) => {
             const c = l.categories;
             return (
               <ListingCard
@@ -75,6 +75,7 @@ export default async function NeighborhoodPage(
                 name={l.name}
                 category={c.name}
                 description={l.description}
+                verified={l.verified}
               />
             );
           })}

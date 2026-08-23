@@ -38,7 +38,7 @@ export default async function CategoryPage(
   const { data: listings } = await supabase
     .from("listings")
     .select(
-      `id, name, slug, description,
+      `id, name, slug, description, verified,
        neighborhoods!inner ( name, slug, city_id ),
        categories!inner ( name, slug )`,
     )
@@ -60,7 +60,7 @@ export default async function CategoryPage(
         </p>
       ) : (
         <div className="grid gap-3">
-          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; neighborhoods: { name: string; slug: string } }>).map((l) => {
+          {((listings ?? []) as Array<{ id: string; name: string; slug: string; description: string | null; verified: boolean; neighborhoods: { name: string; slug: string } }>).map((l) => {
             const n = l.neighborhoods;
             return (
               <ListingCard
@@ -69,6 +69,7 @@ export default async function CategoryPage(
                 name={l.name}
                 neighborhood={n.name}
                 description={l.description}
+                verified={l.verified}
               />
             );
           })}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SITE_URL } from "@/lib/site";
 
 type Params = {
@@ -39,7 +40,7 @@ async function loadListing(params: Params) {
 
   const { data: listing } = await supabase
     .from("listings")
-    .select("id, name, slug, description, whatsapp_number, photo_url, hours_json")
+    .select("id, name, slug, description, whatsapp_number, photo_url, hours_json, verified")
     .eq("status", "approved")
     .eq("neighborhood_id", neighborhood.id)
     .eq("category_id", category.id)
@@ -99,7 +100,10 @@ export default async function ListingPage(
         {city.name} · {neighborhood.name} · {category.name}
       </nav>
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{listing.name}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl font-semibold tracking-tight">{listing.name}</h1>
+          {listing.verified ? <VerifiedBadge /> : null}
+        </div>
         {listing.description ? (
           <p className="mt-2 text-black/80 dark:text-white/80">
             {listing.description}
