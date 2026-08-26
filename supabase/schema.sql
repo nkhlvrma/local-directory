@@ -27,7 +27,8 @@ create table if not exists categories (
   name text not null,
   slug text not null unique,
   icon text,
-  parent_id uuid references categories(id) on delete set null
+  parent_id uuid references categories(id) on delete set null,
+  fields_schema jsonb                      -- [{key, label, type, options?, help?}]
 );
 
 do $$ begin
@@ -51,6 +52,7 @@ create table if not exists listings (
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
   pin_code text,                           -- Indian PIN, 6 digits (optional)
   whatsapp_clicks integer not null default 0,
+  fields_values jsonb,                     -- values keyed by categories.fields_schema[].key
   status listing_status not null default 'pending',
   source listing_source not null default 'self_serve',
   created_at timestamptz not null default now(),
@@ -167,6 +169,34 @@ create policy "admin read admin_users" on admin_users for select using (is_admin
 -- Outreach: admin-only, all operations
 drop policy if exists "admin all outreach" on outreach_leads;
 create policy "admin all outreach" on outreach_leads for all using (is_admin()) with check (is_admin());
+
+-- ---------------------------------------------------------------------------
+-- Search events (analytics for zero-result queries)
+-- ---------------------------------------------------------------------------
+
+create table if not exists search_events (
+  id uuid primary key default uuid_generate_v4(),
+  query text not null,
+  matched_count integer not null default 0,
+  city_slug text,
+  pin_code text,
+  created_at timestamptz not null default now()
+);
+create index if not exists search_events_zero_idx
+  on search_events(matched_count, created_at desc)
+  where matched_count = 0;
+
+alter table search_events enable row level security;
+drop policy if exists "public insert search_events" on search_events;
+create policy "public insert search_events" on search_events for insert with check (true);
+drop policy if exists "admin read search_events" on search_events;
+create policy "admin read search_events" on search_events for select using (is_admin());
+
+-- ---------------------------------------------------------------------------
+-- Storage bucket for listing photos (create manually in Supabase UI too):
+--   Storage → New bucket → name "listing-photos", public: on.
+-- App uploads to path: {listing_id}/{timestamp}.{ext}
+-- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------
 -- Seed — Lucknow + 5 neighborhoods + the category taxonomy

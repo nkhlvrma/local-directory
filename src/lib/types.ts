@@ -23,6 +23,13 @@ export type Category = {
   parent_id: string | null;
 };
 
+// { open: "09:00", close: "18:00" } or null (closed that day).
+export type DayHours = { open: string; close: string } | null;
+export type WeekHours = Partial<Record<
+  "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
+  DayHours
+>>;
+
 export type Listing = {
   id: string;
   name: string;
@@ -31,14 +38,25 @@ export type Listing = {
   neighborhood_id: string;
   description: string | null;
   whatsapp_number: string; // E.164, e.g. +919812345678
-  hours_json: Record<string, string> | null;
+  hours_json: WeekHours | null;
   photo_url: string | null;
   verified: boolean;
   pin_code: string | null;
   whatsapp_clicks: number;
+  fields_values: Record<string, string | number | boolean | null> | null;
   status: ListingStatus;
   source: ListingSource;
   created_at: string;
   approved_at: string | null;
   approved_by: string | null;
+};
+
+// Category custom fields schema — admin defines per category, listings fill.
+export type FieldType = "text" | "number" | "boolean" | "select";
+export type FieldDef = {
+  key: string;   // stored in listings.fields_values under this key
+  label: string;
+  type: FieldType;
+  options?: string[]; // for select
+  help?: string;
 };

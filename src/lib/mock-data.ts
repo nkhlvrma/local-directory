@@ -14,16 +14,35 @@ const neighborhoods: Row[] = [
   { id: "n5", city_id: "c1", name: "Alambagh", slug: "alambagh" },
 ];
 
-const categories: Row[] = [
-  { id: "k1", name: "Tiffin Services", slug: "tiffin-services", icon: "🍱" },
-  { id: "k2", name: "Home Cleaning", slug: "home-cleaning", icon: "🧹" },
-  { id: "k3", name: "Tailors", slug: "tailors", icon: "🧵" },
-  { id: "k4", name: "Electricians", slug: "electricians", icon: "⚡" },
-  { id: "k5", name: "Plumbers", slug: "plumbers", icon: "🔧" },
-  { id: "k6", name: "Tuition & Coaching", slug: "tuition-coaching", icon: "📚" },
-  { id: "k7", name: "Car & Bike Repair", slug: "car-bike-repair", icon: "🔩" },
-  { id: "k8", name: "Salons", slug: "salons", icon: "💇" },
+// Tiffin has a starter fields_schema so /admin/categories has something to
+// show in demo mode.
+const tiffinFields = [
+  {
+    key: "diet",
+    label: "Diet",
+    type: "select",
+    options: ["Veg", "Non-veg", "Jain", "Both"],
+  },
+  { key: "price_per_meal", label: "₹ per meal", type: "number" },
+  { key: "delivery", label: "Home delivery", type: "boolean" },
 ];
+
+const categories: Row[] = [
+  { id: "k1", name: "Tiffin Services", slug: "tiffin-services", icon: "🍱", fields_schema: tiffinFields },
+  { id: "k2", name: "Home Cleaning", slug: "home-cleaning", icon: "🧹", fields_schema: null },
+  { id: "k3", name: "Tailors", slug: "tailors", icon: "🧵", fields_schema: null },
+  { id: "k4", name: "Electricians", slug: "electricians", icon: "⚡", fields_schema: null },
+  { id: "k5", name: "Plumbers", slug: "plumbers", icon: "🔧", fields_schema: null },
+  { id: "k6", name: "Tuition & Coaching", slug: "tuition-coaching", icon: "📚", fields_schema: null },
+  { id: "k7", name: "Car & Bike Repair", slug: "car-bike-repair", icon: "🔩", fields_schema: null },
+  { id: "k8", name: "Salons", slug: "salons", icon: "💇", fields_schema: null },
+];
+
+// Unsplash source images (free, cached).
+const IMG_TIFFIN_1 =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop";
+const IMG_TIFFIN_2 =
+  "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800&auto=format&fit=crop";
 
 const listings: Row[] = [
   {
@@ -34,11 +53,20 @@ const listings: Row[] = [
     neighborhood_id: "n1",
     description: "Home-cooked North Indian tiffin. Monthly plans, breakfast + dinner. Jain options.",
     whatsapp_number: "+919812345678",
-    hours_json: null,
-    photo_url: null,
+    hours_json: {
+      mon: { open: "07:00", close: "22:00" },
+      tue: { open: "07:00", close: "22:00" },
+      wed: { open: "07:00", close: "22:00" },
+      thu: { open: "07:00", close: "22:00" },
+      fri: { open: "07:00", close: "22:00" },
+      sat: { open: "07:00", close: "22:00" },
+      sun: null,
+    },
+    photo_url: IMG_TIFFIN_1,
     verified: true,
     pin_code: "226010",
     whatsapp_clicks: 12,
+    fields_values: { diet: "Both", price_per_meal: 110, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Gomti Nagar", slug: "gomti-nagar", city_id: "c1" },
@@ -51,11 +79,20 @@ const listings: Row[] = [
     neighborhood_id: "n2",
     description: "Ghar ka khaana. Roti-sabzi-dal-chawal, ₹90/meal. Delivers Hazratganj + nearby.",
     whatsapp_number: "+919811111111",
-    hours_json: null,
-    photo_url: null,
+    hours_json: {
+      mon: { open: "11:00", close: "22:00" },
+      tue: { open: "11:00", close: "22:00" },
+      wed: { open: "11:00", close: "22:00" },
+      thu: { open: "11:00", close: "22:00" },
+      fri: { open: "11:00", close: "22:00" },
+      sat: { open: "11:00", close: "22:00" },
+      sun: { open: "11:00", close: "22:00" },
+    },
+    photo_url: IMG_TIFFIN_2,
     verified: true,
     pin_code: "226001",
     whatsapp_clicks: 8,
+    fields_values: { diet: "Veg", price_per_meal: 90, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Hazratganj", slug: "hazratganj", city_id: "c1" },
@@ -73,6 +110,7 @@ const listings: Row[] = [
     verified: false,
     pin_code: "226024",
     whatsapp_clicks: 3,
+    fields_values: { diet: "Veg", price_per_meal: 75, delivery: false },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Aliganj", slug: "aliganj", city_id: "c1" },
@@ -90,6 +128,7 @@ const listings: Row[] = [
     verified: true,
     pin_code: "226016",
     whatsapp_clicks: 21,
+    fields_values: { diet: "Non-veg", price_per_meal: 130, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Indira Nagar", slug: "indira-nagar", city_id: "c1" },
@@ -107,6 +146,7 @@ const listings: Row[] = [
     verified: false,
     pin_code: "226005",
     whatsapp_clicks: 5,
+    fields_values: null,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
     neighborhoods: { name: "Alambagh", slug: "alambagh", city_id: "c1" },
@@ -120,6 +160,14 @@ export const MOCK_TABLES: Record<string, Row[]> = {
   listings,
   admin_users: [{ user_id: "demo-admin", created_at: "2026-08-01T00:00:00Z" }],
   listing_reports: [],
+  search_events: [
+    { id: "s1", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-24T12:00:00Z" },
+    { id: "s2", query: "gym trainer", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-24T14:00:00Z" },
+    { id: "s3", query: "carpenter", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-25T09:00:00Z" },
+    { id: "s4", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-25T18:00:00Z" },
+    { id: "s5", query: "chai", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-26T09:00:00Z" },
+    { id: "s6", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-26T11:00:00Z" },
+  ],
   outreach_leads: [
     {
       id: "o1",

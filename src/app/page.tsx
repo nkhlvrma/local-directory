@@ -14,6 +14,7 @@ import { CITY_SLUG } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
 import { CategoryCard } from "@/components/CategoryCard";
 import { SearchBar } from "@/components/SearchBar";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { isValidPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export default async function Home() {
         ? supabase
             .from("listings")
             .select(
-              `id, name, slug, description, verified, pin_code,
+              `id, name, slug, description, verified, pin_code, photo_url, hours_json,
                neighborhoods!inner ( name, slug ),
                categories!inner ( name, slug )`,
             )
@@ -71,6 +72,8 @@ export default async function Home() {
     description: string | null;
     verified: boolean;
     pin_code: string | null;
+    photo_url: string | null;
+    hours_json: import("@/lib/types").WeekHours | null;
     neighborhoods: { name: string; slug: string };
     categories: { name: string; slug: string };
   };
@@ -111,6 +114,8 @@ export default async function Home() {
                     description={l.description}
                     verified={l.verified}
                     pin={l.pin_code}
+                    photo_url={l.photo_url}
+                    hours={l.hours_json}
                   />
                 ))}
               </Grid>
@@ -123,6 +128,8 @@ export default async function Home() {
             </Callout.Root>
           )
         ) : null}
+
+        <RecentlyViewed />
 
         <section>
           <Heading size="3" color="gray" mb="3">Browse by category</Heading>

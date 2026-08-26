@@ -4,9 +4,13 @@ import type { Metadata } from "next";
 import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
+import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { isValidPin } from "@/lib/pin";
+import { isOpenNow } from "@/lib/hours";
+import type { WeekHours } from "@/lib/types";
 
 type Params = { city: string; neighborhood: string };
+type SP = { verified?: string; photo?: string; open?: string };
 
 export const dynamic = "force-dynamic";
 
@@ -40,24 +44,31 @@ export async function generateMetadata(
 }
 
 export default async function NeighborhoodPage(
-  { params }: { params: Promise<Params> },
+  {
+    params,
+    searchParams,
+  }: { params: Promise<Params>; searchParams: Promise<SP> },
 ) {
-  const p = await params;
+  const [p, sp] = await Promise.all([params, searchParams]);
   const { supabase, city, neighborhood } = await loadContext(p);
   if (!city || !neighborhood) notFound();
 
   const pin = (await cookies()).get("pin")?.value ?? "";
   const pinFilter = isValidPin(pin) ? pin : null;
+  const verifiedOnly = sp.verified === "1";
+  const photoOnly = sp.photo === "1";
+  const openOnly = sp.open === "1";
 
   let q = supabase
     .from("listings")
     .select(
-      `id, name, slug, description, verified, pin_code,
+      `id, name, slug, description, verified, pin_code, photo_url, hours_json,
        categories!inner ( name, slug )`,
     )
     .eq("status", "approved")
     .eq("neighborhood_id", (neighborhood as { id: string }).id);
   if (pinFilter) q = q.eq("pin_code", pinFilter);
+  if (verifiedOnly) q = q.eq("verified", true);
   const { data: listings } = await q.order("name");
 
   type Row = {
@@ -67,9 +78,13 @@ export default async function NeighborhoodPage(
     description: string | null;
     verified: boolean;
     pin_code: string | null;
+    photo_url: string | null;
+    hours_json: WeekHours | null;
     categories: { name: string; slug: string };
   };
-  const rows = (listings ?? []) as unknown as Row[];
+  let rows = (listings ?? []) as unknown as Row[];
+  if (photoOnly) rows = rows.filter((r) => !!r.photo_url);
+  if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
   return (
     <Container size="3" px="4" py="6">
@@ -82,12 +97,10 @@ export default async function NeighborhoodPage(
           </Flex>
         </header>
 
+        <CategoryFilterBar />
+
         {rows.length === 0 ? (
-          <Text size="2" color="gray">
-            {pinFilter
-              ? `No listings at PIN ${pinFilter} in this neighborhood yet.`
-              : "No listings yet in this neighborhood."}
-          </Text>
+          <Text size="2" color="gray">No listings match these filters.</Text>
         ) : (
           <Grid columns="1" gap="3">
             {rows.map((l) => (
@@ -99,6 +112,8 @@ export default async function NeighborhoodPage(
                 description={l.description}
                 verified={l.verified}
                 pin={l.pin_code}
+                photo_url={l.photo_url}
+                hours={l.hours_json}
               />
             ))}
           </Grid>

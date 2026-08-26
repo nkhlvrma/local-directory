@@ -5,9 +5,13 @@ import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
+import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { isValidPin } from "@/lib/pin";
+import { isOpenNow } from "@/lib/hours";
+import type { WeekHours } from "@/lib/types";
 
 type Params = { city: string; category: string };
+type SP = { verified?: string; photo?: string; open?: string };
 
 export const dynamic = "force-dynamic";
 
@@ -33,19 +37,25 @@ export async function generateMetadata(
 }
 
 export default async function CategoryPage(
-  { params }: { params: Promise<Params> },
+  {
+    params,
+    searchParams,
+  }: { params: Promise<Params>; searchParams: Promise<SP> },
 ) {
-  const p = await params;
+  const [p, sp] = await Promise.all([params, searchParams]);
   const { supabase, city, category } = await loadContext(p);
   if (!city || !category) notFound();
 
   const pin = (await cookies()).get("pin")?.value ?? "";
   const pinFilter = isValidPin(pin) ? pin : null;
+  const verifiedOnly = sp.verified === "1";
+  const photoOnly = sp.photo === "1";
+  const openOnly = sp.open === "1";
 
   let q = supabase
     .from("listings")
     .select(
-      `id, name, slug, description, verified, pin_code,
+      `id, name, slug, description, verified, pin_code, photo_url, hours_json,
        neighborhoods!inner ( name, slug, city_id ),
        categories!inner ( name, slug )`,
     )
@@ -53,6 +63,7 @@ export default async function CategoryPage(
     .eq("category_id", (category as { id: string }).id)
     .eq("neighborhoods.city_id", (city as { id: string }).id);
   if (pinFilter) q = q.eq("pin_code", pinFilter);
+  if (verifiedOnly) q = q.eq("verified", true);
   const { data: listings } = await q.order("name");
 
   type Row = {
@@ -62,9 +73,13 @@ export default async function CategoryPage(
     description: string | null;
     verified: boolean;
     pin_code: string | null;
+    photo_url: string | null;
+    hours_json: WeekHours | null;
     neighborhoods: { name: string; slug: string };
   };
-  const rows = (listings ?? []) as unknown as Row[];
+  let rows = (listings ?? []) as unknown as Row[];
+  if (photoOnly) rows = rows.filter((r) => !!r.photo_url);
+  if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
   return (
     <Container size="3" px="4" py="6">
@@ -80,10 +95,12 @@ export default async function CategoryPage(
           </Flex>
         </header>
 
+        <CategoryFilterBar />
+
         {rows.length === 0 ? (
           <Text size="2" color="gray">
-            {pinFilter
-              ? `No ${(category as { name: string }).name.toLowerCase()} listed at PIN ${pinFilter} yet.`
+            {pinFilter || verifiedOnly || photoOnly || openOnly
+              ? "No listings match these filters."
               : "No listings yet in this category."}
           </Text>
         ) : (
@@ -97,6 +114,8 @@ export default async function CategoryPage(
                 description={l.description}
                 verified={l.verified}
                 pin={l.pin_code}
+                photo_url={l.photo_url}
+                hours={l.hours_json}
               />
             ))}
           </Grid>

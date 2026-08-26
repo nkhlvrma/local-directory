@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/SearchBar";
 import { isValidPin } from "@/lib/pin";
+import { isMockMode } from "@/lib/supabase/mock";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,8 @@ export default async function SearchPage(
     description: string | null;
     verified: boolean;
     pin_code: string | null;
+    photo_url: string | null;
+    hours_json: import("@/lib/types").WeekHours | null;
     neighborhoods: { name: string; slug: string; city_id: string };
     categories: { name: string; slug: string };
   };
@@ -57,7 +61,7 @@ export default async function SearchPage(
     let q2 = supabase
       .from("listings")
       .select(
-        `id, name, slug, description, verified, pin_code,
+        `id, name, slug, description, verified, pin_code, photo_url, hours_json,
          neighborhoods!inner ( name, slug, city_id ),
          categories!inner ( name, slug )`,
       )
@@ -68,6 +72,19 @@ export default async function SearchPage(
     if (pinFilter) q2 = q2.eq("pin_code", pinFilter);
     const { data } = await q2;
     rows = (data ?? []) as unknown as Row[];
+
+    // Log the search event so /admin/search-insights can surface what
+    // users are looking for. Fire-and-forget; use the admin client so we
+    // don't need RLS to allow anon inserts. Skip in mock mode.
+    if (!isMockMode()) {
+      const adminC = createSupabaseAdminClient();
+      await adminC.from("search_events").insert({
+        query,
+        matched_count: rows.length,
+        city_slug: CITY_SLUG,
+        pin_code: pinFilter,
+      });
+    }
   }
 
   return (
@@ -112,6 +129,8 @@ export default async function SearchPage(
                 description={l.description}
                 verified={l.verified}
                 pin={l.pin_code}
+                photo_url={l.photo_url}
+                hours={l.hours_json}
               />
             ))}
           </Grid>

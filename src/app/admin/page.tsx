@@ -5,6 +5,9 @@ import {
   BarChartIcon,
   PaperPlaneIcon,
   UploadIcon,
+  MixerHorizontalIcon,
+  MagnifyingGlassIcon,
+  DownloadIcon,
 } from "@radix-ui/react-icons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminQueue } from "./AdminQueue";
@@ -59,23 +62,23 @@ export default async function AdminPage() {
           </div>
           <Flex gap="2" wrap="wrap">
             <Link href="/admin/leads" style={{ textDecoration: "none" }}>
-              <Button variant="soft">
-                <BarChartIcon />
-                Leads delivered
-              </Button>
+              <Button variant="soft" size="1"><BarChartIcon />Leads</Button>
             </Link>
             <Link href="/admin/outreach" style={{ textDecoration: "none" }}>
-              <Button variant="soft">
-                <PaperPlaneIcon />
-                Outreach
-              </Button>
+              <Button variant="soft" size="1"><PaperPlaneIcon />Outreach</Button>
+            </Link>
+            <Link href="/admin/search-insights" style={{ textDecoration: "none" }}>
+              <Button variant="soft" size="1"><MagnifyingGlassIcon />Insights</Button>
+            </Link>
+            <Link href="/admin/categories" style={{ textDecoration: "none" }}>
+              <Button variant="soft" size="1"><MixerHorizontalIcon />Categories</Button>
             </Link>
             <Link href="/admin/import" style={{ textDecoration: "none" }}>
-              <Button variant="soft">
-                <UploadIcon />
-                Bulk import
-              </Button>
+              <Button variant="soft" size="1"><UploadIcon />Import</Button>
             </Link>
+            <a href="/admin/export?type=listings" style={{ textDecoration: "none" }}>
+              <Button variant="soft" size="1"><DownloadIcon />Export</Button>
+            </a>
           </Flex>
         </Flex>
 

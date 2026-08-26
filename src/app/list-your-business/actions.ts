@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { isValidPin } from "@/lib/pin";
+import { findDuplicates } from "@/lib/dupes";
 
 export async function submitListing(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
@@ -31,6 +32,16 @@ export async function submitListing(fd: FormData) {
 
   const base = slugify(name);
   const admin = createSupabaseAdminClient();
+
+  // Dupe warning: if the WhatsApp number matches an existing listing
+  // exactly, refuse. Name-similarity we let through (admin can catch it).
+  const dupes = await findDuplicates(admin, { name, whatsapp });
+  const numberMatch = dupes.find((d) => d.whatsapp_number === whatsapp);
+  if (numberMatch) {
+    return {
+      error: `That WhatsApp is already listed as "${numberMatch.name}". If this is you, contact us to update it.`,
+    };
+  }
 
   for (let i = 0; i < 20; i++) {
     const slug = i === 0 ? base : `${base}-${i + 1}`;
