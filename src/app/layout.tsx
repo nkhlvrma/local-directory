@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Theme, Container, Flex, Text, Callout, Button } from "@radix-ui/themes";
-import { InfoCircledIcon, PlusIcon } from "@radix-ui/react-icons";
+import { Theme, Container, Flex, Text, Button } from "@radix-ui/themes";
+import { PlusIcon } from "@radix-ui/react-icons";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { LocationBar } from "@/components/LocationBar";
@@ -45,73 +45,80 @@ export default async function RootLayout({
 }) {
   const cookieStore = await cookies();
   const pin = cookieStore.get("pin")?.value ?? "";
+  const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full">
+      <body>
         <Theme accentColor="grass" grayColor="sand" radius="large" scaling="100%">
-          <Flex direction="column" style={{ minHeight: "100vh" }}>
-            {!process.env.NEXT_PUBLIC_SUPABASE_URL ? (
-              <Container size="3" px="4" pt="3">
-                <Callout.Root color="amber" size="1">
-                  <Callout.Icon>
-                    <InfoCircledIcon />
-                  </Callout.Icon>
-                  <Callout.Text>
-                    Demo mode — using in-memory data.{" "}
-                    <Link href="/admin" style={{ textDecoration: "underline" }}>
-                      Try admin
-                    </Link>{" "}
-                    (no login needed).
-                  </Callout.Text>
-                </Callout.Root>
-              </Container>
-            ) : null}
-
-            <header
+          {/* Full-width demo banner. Sits flush at the very top so the header
+              never gets pushed down by container padding. */}
+          {isDemo ? (
+            <div
               style={{
-                borderBottom: "1px solid var(--gray-a4)",
+                background: "var(--amber-3)",
+                borderBottom: "1px solid var(--amber-a5)",
+                padding: "6px 16px",
+                textAlign: "center",
+                fontSize: 12,
+                color: "var(--amber-12)",
               }}
             >
-              <Container size="3" px="4" py="3">
-                <Flex align="center" justify="between" gap="3" wrap="wrap">
-                  <Flex align="center" gap="3">
-                    <Link href="/" style={{ textDecoration: "none" }}>
-                      <Text size="4" weight="bold">
-                        {SITE_NAME}
-                      </Text>
-                    </Link>
-                    <LocationBar initialPin={pin} />
-                  </Flex>
-                  <Link href="/list-your-business" style={{ textDecoration: "none" }}>
-                    <Button size="2" variant="solid">
-                      <PlusIcon />
-                      List your business
-                    </Button>
+              Demo mode — using in-memory data.{" "}
+              <Link
+                href="/admin"
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                Try admin
+              </Link>{" "}
+              (no login needed).
+            </div>
+          ) : null}
+
+          <header
+            style={{
+              borderBottom: "1px solid var(--gray-a4)",
+              background: "var(--color-panel-solid)",
+            }}
+          >
+            <Container size="3" px="4" py="3">
+              <Flex align="center" justify="between" gap="3" wrap="wrap">
+                <Flex align="center" gap="3">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    <Text size="4" weight="bold">
+                      {SITE_NAME}
+                    </Text>
                   </Link>
+                  <LocationBar initialPin={pin} />
                 </Flex>
-              </Container>
-            </header>
+                <Link href="/list-your-business" style={{ textDecoration: "none" }}>
+                  <Button size="2" variant="solid">
+                    <PlusIcon />
+                    List your business
+                  </Button>
+                </Link>
+              </Flex>
+            </Container>
+          </header>
 
-            <main style={{ flex: 1 }}>{children}</main>
+          <main>{children}</main>
 
-            <footer
-              style={{
-                borderTop: "1px solid var(--gray-a4)",
-                marginTop: "var(--space-6)",
-              }}
-            >
-              <Container size="3" px="4" py="5">
-                <Text size="1" color="gray">
-                  {SITE_NAME} · community-verified · no spam calls
-                </Text>
-              </Container>
-            </footer>
-          </Flex>
+          <footer
+            style={{
+              borderTop: "1px solid var(--gray-a4)",
+              marginTop: "var(--space-6)",
+            }}
+          >
+            <Container size="3" px="4" py="5">
+              <Text size="1" color="gray">
+                {SITE_NAME} · community-verified · no spam calls
+              </Text>
+            </Container>
+          </footer>
         </Theme>
       </body>
     </html>
