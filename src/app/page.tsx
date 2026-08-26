@@ -6,14 +6,13 @@ import {
   Text,
   Grid,
   Flex,
-  Card,
   Callout,
   Badge,
 } from "@radix-ui/themes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
-import { CategoryIcon } from "@/components/CategoryIcon";
+import { CategoryCard } from "@/components/CategoryCard";
 import { SearchBar } from "@/components/SearchBar";
 import { isValidPin } from "@/lib/pin";
 
@@ -129,22 +128,12 @@ export default async function Home() {
           <Heading size="3" color="gray" mb="3">Browse by category</Heading>
           <Grid columns={{ initial: "2", sm: "3" }} gap="2">
             {cats.map((c) => (
-              <Link
+              <CategoryCard
                 key={c.slug}
+                slug={c.slug}
+                name={c.name}
                 href={`/${(city as { slug: string }).slug}/${c.slug}`}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <div data-category-card>
-                  <Card size="2">
-                    <Flex direction="column" gap="2">
-                      <span style={{ color: "var(--grass-11)" }}>
-                        <CategoryIcon slug={c.slug} size={22} />
-                      </span>
-                      <Text size="2" weight="medium">{c.name}</Text>
-                    </Flex>
-                  </Card>
-                </div>
-              </Link>
+              />
             ))}
           </Grid>
         </section>

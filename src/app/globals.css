@@ -8,21 +8,8 @@
   --code-font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* Category card hover — springy scale + slight rotate on the icon.
-   Cheap CSS-only version of what lucide-animated.com demos, so we don't
-   depend on a JS animation lib. */
-[data-category-icon] {
-  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-[data-category-card]:hover [data-category-icon] {
-  transform: scale(1.15) rotate(-6deg);
-}
-[data-category-card] {
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-[data-category-card]:hover {
-  transform: translateY(-2px);
-}
+/* Category card hover animations are now driven by Motion in
+   AnimatedCategoryIcon + CategoryCard. Keep the search field size boost. */
 
 /* Search bar in the hero — larger, softer focus ring. */
 [data-hero-search] .rt-TextFieldRoot {

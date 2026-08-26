@@ -1,3 +1,8 @@
+// Static Lucide icon — kept for headings on category pages where hover
+// animation doesn't fit (single icon next to a heading, no card container).
+// The animated version lives in AnimatedCategoryIcon.tsx and is used
+// on the home grid.
+
 import {
   UtensilsCrossed,
   Home,
@@ -11,17 +16,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// Slug → Lucide icon. Add new categories here.
-// Fallback is a neutral dot so unknown categories still render.
 const MAP: Record<string, LucideIcon> = {
-  "tiffin-services": UtensilsCrossed, // food
-  "home-cleaning": Home,              // home
+  "tiffin-services": UtensilsCrossed,
+  "home-cleaning": Home,
   tailors: Scissors,
   electricians: Zap,
   plumbers: Wrench,
   "tuition-coaching": GraduationCap,
   "car-bike-repair": Car,
-  salons: Building2,                  // building
+  salons: Building2,
 };
 
 export function CategoryIcon({
@@ -34,7 +37,5 @@ export function CategoryIcon({
   strokeWidth?: number;
 }) {
   const Icon = MAP[slug] ?? Dot;
-  // The `data-category-icon` hook is what makes the hover animation fire on
-  // cards. Card CSS lives in globals.css.
-  return <Icon size={size} strokeWidth={strokeWidth} data-category-icon />;
+  return <Icon size={size} strokeWidth={strokeWidth} />;
 }
