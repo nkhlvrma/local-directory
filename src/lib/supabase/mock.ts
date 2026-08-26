@@ -5,7 +5,9 @@
 import { MOCK_TABLES } from "@/lib/mock-data";
 
 type Row = Record<string, unknown>;
-type Filter = { col: string; val: unknown };
+type EqFilter = { kind: "eq"; col: string; val: unknown };
+type OrFilter = { kind: "or"; predicate: (r: Row) => boolean };
+type Filter = EqFilter | OrFilter;
 
 function getPath(row: Row, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {
@@ -16,9 +18,30 @@ function getPath(row: Row, path: string): unknown {
   }, row);
 }
 
+// Parse a Supabase-style .or() filter string like
+//   "name.ilike.%tiffin%,description.ilike.%tiffin%"
+// into a single row predicate. Only the ilike operator is supported; other
+// clauses become always-false so results shrink safely rather than lying.
+function parseOr(spec: string): (r: Row) => boolean {
+  const clauses = spec.split(",").map((c) => c.trim()).filter(Boolean);
+  const preds = clauses.map((c) => {
+    const m = /^([^.]+)\.ilike\.(.+)$/.exec(c);
+    if (!m) return () => false;
+    const col = m[1];
+    // Strip %...% wildcards for a contains check.
+    const needle = m[2].replace(/^%|%$/g, "").toLowerCase();
+    return (r: Row) => {
+      const v = getPath(r, col);
+      return typeof v === "string" && v.toLowerCase().includes(needle);
+    };
+  });
+  return (r) => preds.some((p) => p(r));
+}
+
 class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
   private filters: Filter[] = [];
   private single = false;
+  private limitN: number | null = null;
 
   constructor(private rows: Row[]) {}
 
@@ -27,12 +50,20 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     return this;
   }
   eq(col: string, val: unknown) {
-    this.filters.push({ col, val });
+    this.filters.push({ kind: "eq", col, val });
+    return this;
+  }
+  or(spec: string) {
+    this.filters.push({ kind: "or", predicate: parseOr(spec) });
     return this;
   }
   order(_col: string, _opts?: unknown) {
     void _col;
     void _opts;
+    return this;
+  }
+  limit(n: number) {
+    this.limitN = n;
     return this;
   }
   maybeSingle() {
@@ -42,9 +73,11 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
 
   private resolve() {
     let out = this.rows;
-    for (const { col, val } of this.filters) {
-      out = out.filter((r) => getPath(r, col) === val);
+    for (const f of this.filters) {
+      if (f.kind === "eq") out = out.filter((r) => getPath(r, f.col) === f.val);
+      else out = out.filter((r) => f.predicate(r));
     }
+    if (this.limitN != null) out = out.slice(0, this.limitN);
     return this.single
       ? { data: out[0] ?? null, error: null }
       : { data: out, error: null };
@@ -88,7 +121,6 @@ export function createMockSupabaseClient() {
     },
     auth: {
       async getUser() {
-        // In demo mode everyone is the demo admin — matches admin_users row.
         return {
           data: {
             user: {
@@ -101,7 +133,6 @@ export function createMockSupabaseClient() {
         };
       },
       async signInWithPassword() {
-        // Login form is bypassed in mock mode; this is a safety return.
         return {
           data: {
             user: { id: "demo-admin", email: "demo@localhost" },

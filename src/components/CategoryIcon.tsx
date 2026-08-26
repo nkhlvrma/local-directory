@@ -1,35 +1,40 @@
 import {
-  BackpackIcon,
-  EraserIcon,
-  ScissorsIcon,
-  LightningBoltIcon,
-  MixerVerticalIcon,
-  ReaderIcon,
-  GearIcon,
-  MagicWandIcon,
-  DotFilledIcon,
-} from "@radix-ui/react-icons";
+  UtensilsCrossed,
+  Home,
+  Scissors,
+  Zap,
+  Wrench,
+  GraduationCap,
+  Car,
+  Building2,
+  Dot,
+  type LucideIcon,
+} from "lucide-react";
 
-// Slug → Radix icon. When the taxonomy grows, add here. Falls back to a
-// neutral dot so unknown categories still render.
-const MAP: Record<string, React.ComponentType<{ width?: number; height?: number }>> = {
-  "tiffin-services": BackpackIcon,
-  "home-cleaning": EraserIcon,
-  tailors: ScissorsIcon,
-  electricians: LightningBoltIcon,
-  plumbers: MixerVerticalIcon,
-  "tuition-coaching": ReaderIcon,
-  "car-bike-repair": GearIcon,
-  salons: MagicWandIcon,
+// Slug → Lucide icon. Add new categories here.
+// Fallback is a neutral dot so unknown categories still render.
+const MAP: Record<string, LucideIcon> = {
+  "tiffin-services": UtensilsCrossed, // food
+  "home-cleaning": Home,              // home
+  tailors: Scissors,
+  electricians: Zap,
+  plumbers: Wrench,
+  "tuition-coaching": GraduationCap,
+  "car-bike-repair": Car,
+  salons: Building2,                  // building
 };
 
 export function CategoryIcon({
   slug,
-  size = 20,
+  size = 22,
+  strokeWidth = 1.75,
 }: {
   slug: string;
   size?: number;
+  strokeWidth?: number;
 }) {
-  const Icon = MAP[slug] ?? DotFilledIcon;
-  return <Icon width={size} height={size} />;
+  const Icon = MAP[slug] ?? Dot;
+  // The `data-category-icon` hook is what makes the hover animation fire on
+  // cards. Card CSS lives in globals.css.
+  return <Icon size={size} strokeWidth={strokeWidth} data-category-icon />;
 }

@@ -14,6 +14,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
+import { SearchBar } from "@/components/SearchBar";
 import { isValidPin } from "@/lib/pin";
 
 export const dynamic = "force-dynamic";
@@ -82,15 +83,15 @@ export default async function Home() {
   return (
     <Container size="3" px="4" py="6">
       <Flex direction="column" gap="6">
+        {/* Hero — heading + prominent search. No city tag; LocationBar in
+            the header handles city + PIN identity. */}
         <div>
-          <Text size="1" color="gray" style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            {(city as { name: string }).name}
-          </Text>
-          <Heading size="8" mt="1">Find someone nearby.</Heading>
-          <Text as="p" size="3" color="gray" mt="2">
+          <Heading size="8">Find someone nearby.</Heading>
+          <Text as="p" size="3" color="gray" mt="2" mb="4">
             Every listing is verified. Tap to chat on WhatsApp — no forms, no
             call-backs.
           </Text>
+          <SearchBar size="3" />
         </div>
 
         {pinFilter ? (
@@ -133,14 +134,16 @@ export default async function Home() {
                 href={`/${(city as { slug: string }).slug}/${c.slug}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <Card size="2">
-                  <Flex direction="column" gap="2">
-                    <span style={{ color: "var(--grass-11)" }}>
-                      <CategoryIcon slug={c.slug} size={22} />
-                    </span>
-                    <Text size="2" weight="medium">{c.name}</Text>
-                  </Flex>
-                </Card>
+                <div data-category-card>
+                  <Card size="2">
+                    <Flex direction="column" gap="2">
+                      <span style={{ color: "var(--grass-11)" }}>
+                        <CategoryIcon slug={c.slug} size={22} />
+                      </span>
+                      <Text size="2" weight="medium">{c.name}</Text>
+                    </Flex>
+                  </Card>
+                </div>
               </Link>
             ))}
           </Grid>
