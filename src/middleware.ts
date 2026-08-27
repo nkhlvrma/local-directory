@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 // Refresh the Supabase session cookie on every request so RSC calls can read
 // auth. Only runs for /admin* — everything else is public.
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return response;
