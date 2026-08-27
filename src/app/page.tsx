@@ -33,7 +33,7 @@ export default async function Home() {
   if (!city) {
     return (
       <Container className="py-16">
-        <h1 className="text-2xl font-semibold">Setup incomplete</h1>
+        <h1 className="text-2xl font-semibold font-heading">Setup incomplete</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           No active city found for slug <code>{CITY_SLUG}</code>. Run the
           Supabase schema and set <code>NEXT_PUBLIC_CITY_SLUG</code>.
@@ -93,7 +93,7 @@ export default async function Home() {
               {cityName} · community verified
             </span>
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] font-heading">
             Find trusted<br />locals.
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-md leading-relaxed">

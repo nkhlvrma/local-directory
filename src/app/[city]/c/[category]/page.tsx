@@ -91,7 +91,7 @@ export default async function CategoryPage(
           <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             <CategoryIcon slug={(category as { slug: string }).slug} size={20} />
           </span>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight font-heading">
             {(category as { name: string }).name}
           </h1>
           {pinFilter ? (

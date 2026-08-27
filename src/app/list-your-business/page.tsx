@@ -34,7 +34,7 @@ export default async function ListYourBusinessPage() {
             Free listing
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">List your business</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-heading">List your business</h1>
         <p className="text-muted-foreground leading-relaxed">
           We review every submission by hand — usually within a day. No fees, no commissions.
         </p>

@@ -93,7 +93,7 @@ export default async function NeighborhoodPage(
           {(city as { name: string }).name}
         </p>
         <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight font-heading">
             {(neighborhood as { name: string }).name}
           </h1>
           {pinFilter ? (

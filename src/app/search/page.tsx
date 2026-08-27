@@ -83,7 +83,7 @@ export default async function SearchPage(
   return (
     <Container className="py-7 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight mb-4">
+        <h1 className="text-2xl font-bold tracking-tight mb-4 font-heading">
           {query ? (
             <>
               Results for{" "}

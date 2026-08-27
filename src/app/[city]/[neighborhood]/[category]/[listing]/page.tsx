@@ -197,7 +197,7 @@ export default async function ListingPage(
         {/* Header */}
         <header className="space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-3xl font-bold tracking-tight">{listing.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-heading">{listing.name}</h1>
             {listing.verified ? <VerifiedBadge /> : null}
             <OpenNowBadge hours={listing.hours_json} />
             {listing.pin_code ? (
@@ -253,7 +253,7 @@ export default async function ListingPage(
         {similar.length > 0 ? (
           <div>
             <Separator className="mb-6" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 font-heading">
               More {category.name.toLowerCase()} in {neighborhood.name}
             </h2>
             <div className="grid gap-2">
