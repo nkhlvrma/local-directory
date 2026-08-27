@@ -6,6 +6,8 @@ import { Plus, Info } from "lucide-react";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { LocationBar } from "@/components/LocationBar";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Toaster } from "@/components/ui/sonner";
@@ -56,6 +58,12 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
         {isDemo ? (
           <div className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 text-xs text-center py-1.5 px-4 border-b border-amber-200 dark:border-amber-900 flex items-center justify-center gap-1.5">
             <Info className="size-3.5" />
@@ -77,12 +85,16 @@ export default async function RootLayout({
               </Link>
               <LocationBar initialPin={pin} />
             </div>
-            <Link href="/list-your-business">
-              <Button size="sm">
-                <Plus className="size-4" />
-                List your business
-              </Button>
-            </Link>
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <Link href="/list-your-business">
+                <Button size="sm">
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">List your business</span>
+                  <span className="sm:hidden">List</span>
+                </Button>
+              </Link>
+            </div>
           </Container>
         </header>
 
@@ -95,6 +107,7 @@ export default async function RootLayout({
         </footer>
 
         <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
