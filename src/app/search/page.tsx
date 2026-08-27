@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
-import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
+import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
@@ -8,6 +9,7 @@ import { ListingCard } from "@/components/ListingCard";
 import { SearchBar } from "@/components/SearchBar";
 import { isValidPin } from "@/lib/pin";
 import { isMockMode } from "@/lib/supabase/mock";
+import type { WeekHours } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +19,7 @@ export async function generateMetadata(
   { searchParams }: { searchParams: Promise<SP> },
 ): Promise<Metadata> {
   const { q } = await searchParams;
-  return {
-    title: q ? `Search: ${q}` : "Search",
-    robots: { index: false },
-  };
+  return { title: q ? `Search: ${q}` : "Search", robots: { index: false } };
 }
 
 export default async function SearchPage(
@@ -46,18 +45,15 @@ export default async function SearchPage(
     verified: boolean;
     pin_code: string | null;
     photo_url: string | null;
-    hours_json: import("@/lib/types").WeekHours | null;
+    hours_json: WeekHours | null;
     neighborhoods: { name: string; slug: string; city_id: string };
     categories: { name: string; slug: string };
   };
   let rows: Row[] = [];
 
   if (city && query) {
-    // Match against name and description. Escape % and _ so the query is
-    // treated as literal text, not a wildcard by the user.
     const safe = query.replace(/[\\%_]/g, "\\$&");
     const like = `%${safe}%`;
-
     let q2 = supabase
       .from("listings")
       .select(
@@ -73,9 +69,6 @@ export default async function SearchPage(
     const { data } = await q2;
     rows = (data ?? []) as unknown as Row[];
 
-    // Log the search event so /admin/search-insights can surface what
-    // users are looking for. Fire-and-forget; use the admin client so we
-    // don't need RLS to allow anon inserts. Skip in mock mode.
     if (!isMockMode()) {
       const adminC = createSupabaseAdminClient();
       await adminC.from("search_events").insert({
@@ -88,54 +81,54 @@ export default async function SearchPage(
   }
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <Heading size="6">
-          {query ? (
-            <>
-              Results for <span style={{ color: "var(--grass-11)" }}>{query}</span>
-            </>
-          ) : (
-            "Search"
-          )}
-        </Heading>
-
-        <SearchBar size="2" initialQuery={query} autoFocus={!query} />
-
-        {pinFilter ? (
-          <Text size="1" color="gray">
-            <Badge color="grass" size="1" mr="1">PIN {pinFilter}</Badge>
-            filtering to your area
-          </Text>
-        ) : null}
-
-        {!query ? (
-          <Text size="2" color="gray">
-            Try a business name, category, or keyword.
-          </Text>
-        ) : rows.length === 0 ? (
-          <Text size="2" color="gray">
-            No matches in {(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}.
-          </Text>
+    <Container className="py-6 space-y-4">
+      <h1 className="text-2xl font-bold tracking-tight">
+        {query ? (
+          <>
+            Results for <span className="text-green-700 dark:text-green-400">{query}</span>
+          </>
         ) : (
-          <Grid columns="1" gap="3">
-            {rows.map((l) => (
-              <ListingCard
-                key={l.id}
-                href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
-                name={l.name}
-                category={l.categories.name}
-                neighborhood={l.neighborhoods.name}
-                description={l.description}
-                verified={l.verified}
-                pin={l.pin_code}
-                photo_url={l.photo_url}
-                hours={l.hours_json}
-              />
-            ))}
-          </Grid>
+          "Search"
         )}
-      </Flex>
+      </h1>
+
+      <SearchBar size="md" initialQuery={query} autoFocus={!query} />
+
+      {pinFilter ? (
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
+            PIN {pinFilter}
+          </Badge>
+          filtering to your area
+        </div>
+      ) : null}
+
+      {!query ? (
+        <p className="text-sm text-muted-foreground">
+          Try a business name, category, or keyword.
+        </p>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No matches in {(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}.
+        </p>
+      ) : (
+        <div className="grid gap-3">
+          {rows.map((l) => (
+            <ListingCard
+              key={l.id}
+              href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
+              name={l.name}
+              category={l.categories.name}
+              neighborhood={l.neighborhoods.name}
+              description={l.description}
+              verified={l.verified}
+              pin={l.pin_code}
+              photo_url={l.photo_url}
+              hours={l.hours_json}
+            />
+          ))}
+        </div>
+      )}
     </Container>
   );
 }

@@ -2,18 +2,17 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { TextField, Button, Flex } from "@radix-ui/themes";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-// Prominent hero search. Submits to /search?q=… which does the query
-// server-side against the active city. Keyboard: Enter submits.
 export function SearchBar({
-  size = "3",
+  size = "lg",
   initialQuery = "",
   autoFocus = false,
   placeholder = "Search tiffin, tailors, electricians…",
 }: {
-  size?: "2" | "3";
+  size?: "md" | "lg";
   initialQuery?: string;
   autoFocus?: boolean;
   placeholder?: string;
@@ -28,27 +27,33 @@ export function SearchBar({
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
+  const inputCls =
+    size === "lg" ? "h-12 text-base pl-10" : "h-10 pl-9";
+  const iconCls = size === "lg" ? "size-4 left-3.5" : "size-4 left-3";
+
   return (
-    <form onSubmit={submit} data-hero-search>
-      <Flex gap="2">
-        <TextField.Root
-          size={size}
+    <form onSubmit={submit} className="flex gap-2">
+      <div className="relative flex-1">
+        <Search
+          className={`${iconCls} pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground`}
+        />
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          style={{ flex: 1 }}
           name="q"
           autoComplete="off"
-        >
-          <TextField.Slot>
-            <Search size={16} strokeWidth={2} />
-          </TextField.Slot>
-        </TextField.Root>
-        <Button type="submit" size={size} disabled={!q.trim()}>
-          Search
-        </Button>
-      </Flex>
+          className={inputCls}
+        />
+      </div>
+      <Button
+        type="submit"
+        size={size === "lg" ? "lg" : "default"}
+        disabled={!q.trim()}
+      >
+        Search
+      </Button>
     </form>
   );
 }

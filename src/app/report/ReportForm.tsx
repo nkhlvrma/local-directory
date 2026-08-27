@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
-  TextArea,
-  Button,
-  Flex,
-  Text,
-  Callout,
-} from "@radix-ui/themes";
-import { CheckCircledIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { submitReport } from "./actions";
 
 export function ReportForm({ listingId }: { listingId: string }) {
@@ -20,14 +23,15 @@ export function ReportForm({ listingId }: { listingId: string }) {
 
   if (done)
     return (
-      <Callout.Root color="grass">
-        <Callout.Icon><CheckCircledIcon /></Callout.Icon>
-        <Callout.Text>Thanks — we&apos;ll take a look.</Callout.Text>
-      </Callout.Root>
+      <Alert>
+        <CheckCircle2 className="size-4 text-green-600" />
+        <AlertDescription>Thanks — we&apos;ll take a look.</AlertDescription>
+      </Alert>
     );
 
   return (
     <form
+      className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -41,35 +45,33 @@ export function ReportForm({ listingId }: { listingId: string }) {
         });
       }}
     >
-      <Flex direction="column" gap="3">
-        <label>
-          <Text as="div" size="1" color="gray" weight="medium" mb="1">Reason</Text>
-          <Select.Root value={reason} onValueChange={setReason} required>
-            <Select.Trigger placeholder="Choose reason" />
-            <Select.Content>
-              <Select.Item value="closed">Closed / no longer operating</Select.Item>
-              <Select.Item value="wrong_info">Wrong info</Select.Item>
-              <Select.Item value="spam">Spam</Select.Item>
-              <Select.Item value="other">Other</Select.Item>
-            </Select.Content>
-          </Select.Root>
-        </label>
-        <label>
-          <Text as="div" size="1" color="gray" weight="medium" mb="1">Note (optional)</Text>
-          <TextArea name="note" rows={3} maxLength={400} />
-        </label>
-        {error ? (
-          <Callout.Root color="red">
-            <Callout.Icon><ExclamationTriangleIcon /></Callout.Icon>
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
-        ) : null}
-        <div>
-          <Button type="submit" disabled={pending || !listingId || !reason}>
-            {pending ? "Sending…" : "Send report"}
-          </Button>
-        </div>
-      </Flex>
+      <div className="space-y-1.5">
+        <Label>Reason</Label>
+        <Select value={reason} onValueChange={setReason} required>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose reason" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="closed">Closed / no longer operating</SelectItem>
+            <SelectItem value="wrong_info">Wrong info</SelectItem>
+            <SelectItem value="spam">Spam</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="note">Note (optional)</Label>
+        <Textarea id="note" name="note" rows={3} maxLength={400} />
+      </div>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Button type="submit" disabled={pending || !listingId || !reason}>
+        {pending ? "Sending…" : "Send report"}
+      </Button>
     </form>
   );
 }

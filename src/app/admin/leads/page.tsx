@@ -1,11 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Container, Heading, Text, Flex, Card, Grid } from "@radix-ui/themes";
-import {
-  ChatBubbleIcon,
-  ArchiveIcon,
-  ExternalLinkIcon,
-} from "@radix-ui/react-icons";
+import { MessageCircle, Archive, ExternalLink } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Card } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -17,15 +14,15 @@ export default async function LeadsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { data: isAdminRow } = await supabase
+  const { data: adminRow } = await supabase
     .from("admin_users")
     .select("user_id")
     .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
-  if (!isAdminRow) {
+  if (!adminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
       </Container>
     );
   }
@@ -54,73 +51,74 @@ export default async function LeadsPage() {
   const totalClicks = rows.reduce((s, r) => s + (r.whatsapp_clicks ?? 0), 0);
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="5">Leads delivered</Heading>
-          <Text as="p" size="2" color="gray" mt="1">
-            WhatsApp taps per listing, all-time. Use this when a business asks
-            &ldquo;is anyone actually contacting me?&rdquo;
-          </Text>
-        </div>
+    <Container className="py-8 space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold">Leads delivered</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Every tap on a WhatsApp button is a lead. Use this when a business asks
+          &ldquo;is anyone actually contacting me?&rdquo;
+        </p>
+      </header>
 
-        <Grid columns={{ initial: "2", sm: "3" }} gap="3">
-          <Card size="2">
-            <Flex align="center" gap="2">
-              <ChatBubbleIcon color="var(--grass-11)" />
-              <Text size="6" weight="bold">{totalClicks}</Text>
-            </Flex>
-            <Text as="div" size="1" color="gray">total WhatsApp taps</Text>
-          </Card>
-          <Card size="2">
-            <Flex align="center" gap="2">
-              <ArchiveIcon color="var(--gray-11)" />
-              <Text size="6" weight="bold">{rows.length}</Text>
-            </Flex>
-            <Text as="div" size="1" color="gray">approved listings</Text>
-          </Card>
-        </Grid>
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+            <MessageCircle className="size-4" />
+            <span className="text-3xl font-semibold tabular-nums">{totalClicks}</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Total WhatsApp taps
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-2">
+            <Archive className="size-4" />
+            <span className="text-3xl font-semibold tabular-nums">{rows.length}</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Live listings
+          </div>
+        </Card>
+      </div>
 
-        {rows.length === 0 ? (
-          <Text size="2" color="gray">No approved listings yet.</Text>
-        ) : (
-          <Flex direction="column" gap="2">
-            {rows.map((r) => (
-              <Card key={r.id} size="2">
-                <Flex align="center" justify="between" gap="3">
-                  <div style={{ minWidth: 0 }}>
-                    <Text weight="medium" as="div">{r.name}</Text>
-                    <Text size="1" color="gray" as="div">
-                      {r.categories.name} · {r.neighborhoods.name}
-                    </Text>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No approved listings yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((r) => (
+            <Card key={r.id} className="p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-medium truncate">{r.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {r.categories.name} · {r.neighborhoods.name}
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="text-right">
+                  <div className="font-semibold tabular-nums">
+                    {r.whatsapp_clicks}
                   </div>
-                  <Flex align="center" gap="3">
-                    <div style={{ textAlign: "right" }}>
-                      <Text size="4" weight="bold" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {r.whatsapp_clicks}
-                      </Text>
-                      <Text as="div" size="1" color="gray" style={{ textTransform: "uppercase" }}>
-                        taps
-                      </Text>
-                    </div>
-                    <Link
-                      href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
-                      style={{
-                        fontSize: 12,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      view <ExternalLinkIcon width={12} height={12} />
-                    </Link>
-                  </Flex>
-                </Flex>
-              </Card>
-            ))}
-          </Flex>
-        )}
-      </Flex>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    taps
+                  </div>
+                </div>
+                <Link
+                  href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
+                  className="text-xs inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  view <ExternalLink className="size-3" />
+                </Link>
+                <Link
+                  href={`/admin/listings/${r.id}/edit`}
+                  className="text-xs underline text-muted-foreground hover:text-foreground"
+                >
+                  edit
+                </Link>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </Container>
   );
 }

@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import {
-  Container,
-  Heading,
-  Text,
-  Grid,
-  Flex,
-  Callout,
-  Badge,
-} from "@radix-ui/themes";
+import { Badge } from "@/components/ui/badge";
+import { Container } from "@/components/ui/container";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ListingCard } from "@/components/ListingCard";
@@ -16,6 +10,7 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { isValidPin } from "@/lib/pin";
+import type { WeekHours } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +27,12 @@ export default async function Home() {
 
   if (!city) {
     return (
-      <Container size="3" px="4" py="8">
-        <Heading size="6">Setup incomplete</Heading>
-        <Text as="p" color="gray" size="2" mt="2">
+      <Container className="py-16">
+        <h1 className="text-2xl font-semibold">Setup incomplete</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           No active city found for slug <code>{CITY_SLUG}</code>. Run the
           Supabase schema and set <code>NEXT_PUBLIC_CITY_SLUG</code>.
-        </Text>
+        </p>
       </Container>
     );
   }
@@ -73,95 +68,99 @@ export default async function Home() {
     verified: boolean;
     pin_code: string | null;
     photo_url: string | null;
-    hours_json: import("@/lib/types").WeekHours | null;
+    hours_json: WeekHours | null;
     neighborhoods: { name: string; slug: string };
     categories: { name: string; slug: string };
   };
-  const nearby = ((nearbyRes.data ?? []) as unknown as Nearby[]);
-
+  const nearby = (nearbyRes.data ?? []) as unknown as Nearby[];
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="6">
-        {/* Hero — heading + prominent search. No city tag; LocationBar in
-            the header handles city + PIN identity. */}
-        <div>
-          <Heading size="8">Find someone nearby.</Heading>
-          <Text as="p" size="3" color="gray" mt="2" mb="4">
-            Every listing is verified. Tap to chat on WhatsApp — no forms, no
-            call-backs.
-          </Text>
-          <SearchBar size="3" />
+    <Container className="py-8 space-y-10">
+      <section>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Find someone nearby.
+        </h1>
+        <p className="mt-2 text-lg text-muted-foreground">
+          Every listing is verified. Tap to chat on WhatsApp — no forms, no
+          call-backs.
+        </p>
+        <div className="mt-6">
+          <SearchBar size="lg" />
         </div>
+      </section>
 
-        {pinFilter ? (
-          nearby.length > 0 ? (
-            <section>
-              <Flex align="baseline" gap="2" mb="3">
-                <Heading size="4">Near PIN</Heading>
-                <Badge color="grass">{pinFilter}</Badge>
-              </Flex>
-              <Grid columns={{ initial: "1", sm: "2" }} gap="3">
-                {nearby.map((l) => (
-                  <ListingCard
-                    key={l.id}
-                    href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
-                    name={l.name}
-                    category={l.categories.name}
-                    neighborhood={l.neighborhoods.name}
-                    description={l.description}
-                    verified={l.verified}
-                    pin={l.pin_code}
-                    photo_url={l.photo_url}
-                    hours={l.hours_json}
-                  />
-                ))}
-              </Grid>
-            </section>
-          ) : (
-            <Callout.Root color="gray">
-              <Callout.Text>
-                No listings yet at PIN {pinFilter}. Browse by category below.
-              </Callout.Text>
-            </Callout.Root>
-          )
-        ) : null}
+      {pinFilter ? (
+        nearby.length > 0 ? (
+          <section>
+            <div className="flex items-baseline gap-2 mb-3">
+              <h2 className="text-lg font-semibold">Near PIN</h2>
+              <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
+                {pinFilter}
+              </Badge>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {nearby.map((l) => (
+                <ListingCard
+                  key={l.id}
+                  href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
+                  name={l.name}
+                  category={l.categories.name}
+                  neighborhood={l.neighborhoods.name}
+                  description={l.description}
+                  verified={l.verified}
+                  pin={l.pin_code}
+                  photo_url={l.photo_url}
+                  hours={l.hours_json}
+                />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <Alert>
+            <AlertDescription>
+              No listings yet at PIN {pinFilter}. Browse by category below.
+            </AlertDescription>
+          </Alert>
+        )
+      ) : null}
 
-        <RecentlyViewed />
+      <RecentlyViewed />
 
-        <section>
-          <Heading size="3" color="gray" mb="3">Browse by category</Heading>
-          <Grid columns={{ initial: "2", sm: "3" }} gap="2">
-            {cats.map((c) => (
-              <CategoryCard
-                key={c.slug}
-                slug={c.slug}
-                name={c.name}
-                href={`/${(city as { slug: string }).slug}/${c.slug}`}
-              />
-            ))}
-          </Grid>
-        </section>
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3">
+          Browse by category
+        </h2>
+        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+          {cats.map((c) => (
+            <CategoryCard
+              key={c.slug}
+              slug={c.slug}
+              name={c.name}
+              href={`/${(city as { slug: string }).slug}/${c.slug}`}
+            />
+          ))}
+        </div>
+      </section>
 
-        <section>
-          <Heading size="3" color="gray" mb="3">Browse by neighborhood</Heading>
-          <Flex gap="2" wrap="wrap">
-            {hoods.map((n) => (
-              <Link
-                key={n.slug}
-                href={`/${(city as { slug: string }).slug}/n/${n.slug}`}
-                style={{ textDecoration: "none" }}
-              >
-                <Badge size="2" variant="soft" color="gray" style={{ cursor: "pointer" }}>
-                  {n.name}
-                </Badge>
-              </Link>
-            ))}
-          </Flex>
-        </section>
-      </Flex>
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3">
+          Browse by neighborhood
+        </h2>
+        <div className="flex gap-2 flex-wrap">
+          {hoods.map((n) => (
+            <Link
+              key={n.slug}
+              href={`/${(city as { slug: string }).slug}/n/${n.slug}`}
+            >
+              <Badge variant="secondary" className="cursor-pointer">
+                {n.name}
+              </Badge>
+            </Link>
+          ))}
+        </div>
+      </section>
     </Container>
   );
 }

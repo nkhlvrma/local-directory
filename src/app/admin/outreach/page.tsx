@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Container, Heading, Text, Flex } from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { OutreachManager } from "./OutreachManager";
@@ -13,15 +13,15 @@ export default async function OutreachPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { data: isAdminRow } = await supabase
+  const { data: adminRow } = await supabase
     .from("admin_users")
     .select("user_id")
     .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
-  if (!isAdminRow) {
+  if (!adminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
       </Container>
     );
   }
@@ -54,25 +54,23 @@ export default async function OutreachPage() {
     ]);
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="5">Outreach</Heading>
-          <Text as="p" size="2" color="gray" mt="1">
-            Candidate businesses awaiting a consent message. Only{" "}
-            <em>yes</em> replies get promoted to listings.
-          </Text>
-        </div>
-        <OutreachManager
-          categories={
-            (categories ?? []) as { id: string; slug: string; name: string }[]
-          }
-          neighborhoods={
-            (neighborhoods ?? []) as { id: string; slug: string; name: string }[]
-          }
-          initialLeads={(leads ?? []) as unknown as Lead[]}
-        />
-      </Flex>
+    <Container className="py-8 space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold">Reach out</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Candidate businesses waiting for a consent message. Only{" "}
+          <em>yes</em> replies become listings.
+        </p>
+      </header>
+      <OutreachManager
+        categories={
+          (categories ?? []) as { id: string; slug: string; name: string }[]
+        }
+        neighborhoods={
+          (neighborhoods ?? []) as { id: string; slug: string; name: string }[]
+        }
+        initialLeads={(leads ?? []) as unknown as Lead[]}
+      />
     </Container>
   );
 }

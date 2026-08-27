@@ -1,75 +1,72 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Heading, Grid, Card, Flex, Text, Badge } from "@radix-ui/themes";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { RecentEntry } from "./TrackView";
 
 const KEY = "recently-viewed-v1";
 
 export function RecentlyViewed() {
-  const [items, setItems] = useState<RecentEntry[] | null>(null);
+  const items = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("storage", onStoreChange);
+      window.addEventListener("recently-viewed-change", onStoreChange);
+      return () => {
+        window.removeEventListener("storage", onStoreChange);
+        window.removeEventListener("recently-viewed-change", onStoreChange);
+      };
+    },
+    () => {
+      try {
+        const raw = localStorage.getItem(KEY);
+        return raw ? (JSON.parse(raw) as RecentEntry[]) : [];
+      } catch {
+        return [];
+      }
+    },
+    () => [],
+  );
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      setItems(raw ? (JSON.parse(raw) as RecentEntry[]) : []);
-    } catch {
-      setItems([]);
-    }
-  }, []);
-
-  if (!items || items.length === 0) return null;
+  if (items.length === 0) return null;
   const shown = items.slice(0, 4);
 
   return (
     <section>
-      <Heading size="3" color="gray" mb="3">
+      <h2 className="text-sm font-medium text-muted-foreground mb-3">
         Recently viewed
-      </Heading>
-      <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
         {shown.map((r) => (
-          <Link
-            key={r.id}
-            href={r.href}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <Card size="2">
-              <Flex align="center" gap="3">
-                {r.photo_url ? (
-                  // Plain img so we don't need next.config remote patterns.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.photo_url}
-                    alt=""
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 8,
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : null}
-                <div style={{ minWidth: 0 }}>
-                  <Flex align="center" gap="1">
-                    <Text weight="medium" size="2">
-                      {r.name}
-                    </Text>
-                    {r.verified ? (
-                      <Badge color="grass" variant="soft" size="1">
-                        ✓
-                      </Badge>
-                    ) : null}
-                  </Flex>
-                  <Text size="1" color="gray" as="div">
-                    {r.category} · {r.neighborhood}
-                  </Text>
+          <Link key={r.id} href={r.href} className="block">
+            <Card className="p-3 flex items-center gap-3 transition-colors hover:bg-muted/50">
+              {r.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={r.photo_url}
+                  alt=""
+                  style={{ width: 48, height: 48 }}
+                  className="rounded-md object-cover shrink-0"
+                />
+              ) : null}
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium truncate">{r.name}</span>
+                  {r.verified ? (
+                    <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
+                      ✓
+                    </Badge>
+                  ) : null}
                 </div>
-              </Flex>
+                <div className="text-xs text-muted-foreground truncate">
+                  {r.category} · {r.neighborhood}
+                </div>
+              </div>
             </Card>
           </Link>
         ))}
-      </Grid>
+      </div>
     </section>
   );
 }

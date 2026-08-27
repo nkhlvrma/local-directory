@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Container, Heading, Text, Flex, Button } from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
+import { Button } from "@/components/ui/button";
 import {
-  BarChartIcon,
-  PaperPlaneIcon,
-  UploadIcon,
-  MixerHorizontalIcon,
-  MagnifyingGlassIcon,
-  DownloadIcon,
-} from "@radix-ui/react-icons";
+  BarChart3,
+  Download,
+  FileUp,
+  ListFilter,
+  MessageSquareText,
+  Search,
+} from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminQueue } from "./AdminQueue";
 
@@ -30,12 +31,12 @@ export default async function AdminPage() {
 
   if (!isAdminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
-        <Text as="p" size="2" color="gray" mt="2">
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Your account is not in <code>admin_users</code>. Ask an existing admin
           to add you.
-        </Text>
+        </p>
       </Container>
     );
   }
@@ -51,36 +52,48 @@ export default async function AdminPage() {
     .order("created_at", { ascending: true });
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <Flex align="start" justify="between" gap="3" wrap="wrap">
+    <Container size="lg" className="py-8">
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <Heading size="5">Pending queue</Heading>
-            <Text size="2" color="gray">
+            <h1 className="text-2xl font-semibold text-balance">Pending queue</h1>
+            <p className="text-sm text-muted-foreground">
               {(pending ?? []).length} awaiting review
-            </Text>
+            </p>
           </div>
-          <Flex gap="2" wrap="wrap">
-            <Link href="/admin/leads" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><BarChartIcon />Leads</Button>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/admin/leads">
+              <Button variant="outline" size="sm">
+                <BarChart3 />Leads
+              </Button>
             </Link>
-            <Link href="/admin/outreach" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><PaperPlaneIcon />Outreach</Button>
+            <Link href="/admin/outreach">
+              <Button variant="outline" size="sm">
+                <MessageSquareText />Outreach
+              </Button>
             </Link>
-            <Link href="/admin/search-insights" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><MagnifyingGlassIcon />Insights</Button>
+            <Link href="/admin/insights">
+              <Button variant="outline" size="sm">
+                <Search />Insights
+              </Button>
             </Link>
-            <Link href="/admin/categories" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><MixerHorizontalIcon />Categories</Button>
+            <Link href="/admin/categories">
+              <Button variant="outline" size="sm">
+                <ListFilter />Categories
+              </Button>
             </Link>
-            <Link href="/admin/import" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><UploadIcon />Import</Button>
+            <Link href="/admin/import">
+              <Button variant="outline" size="sm">
+                <FileUp />Import
+              </Button>
             </Link>
-            <a href="/admin/export?type=listings" style={{ textDecoration: "none" }}>
-              <Button variant="soft" size="1"><DownloadIcon />Export</Button>
-            </a>
-          </Flex>
-        </Flex>
+            <Link href="/admin/export?type=listings" download>
+              <Button variant="outline" size="sm">
+                <Download />Export
+              </Button>
+            </Link>
+          </div>
+        </div>
 
         <AdminQueue
           items={((pending ?? []) as unknown[]).map((p) => {
@@ -104,7 +117,7 @@ export default async function AdminPage() {
             };
           })}
         />
-      </Flex>
+      </div>
     </Container>
   );
 }

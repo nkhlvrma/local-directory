@@ -1,17 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Container,
-  Heading,
-  Text,
-  Flex,
-  Badge,
-  Card,
-  Grid,
-  Separator,
-} from "@radix-ui/themes";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { AlertTriangle } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -119,7 +113,6 @@ export default async function ListingPage(
   if (!data) notFound();
   const { supabase, city, neighborhood, category, listing } = data;
 
-  // Similar listings: same category + same neighborhood, exclude self.
   const { data: similarRaw } = await supabase
     .from("listings")
     .select("id, name, slug, description, verified, pin_code, photo_url, hours_json")
@@ -166,7 +159,7 @@ export default async function ListingPage(
   );
 
   return (
-    <Container size="3" px="4" py="6">
+    <Container className="py-6 space-y-5">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -181,107 +174,97 @@ export default async function ListingPage(
         verified={listing.verified}
       />
 
-      <Flex direction="column" gap="5">
-        <Text size="1" color="gray">
-          {city.name} · {neighborhood.name} · {category.name}
-        </Text>
+      <div className="text-xs text-muted-foreground">
+        {city.name} · {neighborhood.name} · {category.name}
+      </div>
 
-        {listing.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={listing.photo_url}
-            alt={listing.name}
-            style={{
-              width: "100%",
-              maxHeight: 360,
-              objectFit: "cover",
-              borderRadius: 16,
-            }}
-          />
-        ) : null}
+      {listing.photo_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={listing.photo_url}
+          alt={listing.name}
+          className="w-full rounded-2xl object-cover"
+          style={{ maxHeight: 360 }}
+        />
+      ) : null}
 
-        <header>
-          <Flex align="center" gap="2" wrap="wrap">
-            <Heading size="7">{listing.name}</Heading>
-            {listing.verified ? <VerifiedBadge /> : null}
-            <OpenNowBadge hours={listing.hours_json} />
-            {listing.pin_code ? (
-              <Badge color="gray" variant="soft">PIN {listing.pin_code}</Badge>
-            ) : null}
-          </Flex>
-          {listing.description ? (
-            <Text as="p" size="3" mt="2">{listing.description}</Text>
+      <header>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight">{listing.name}</h1>
+          {listing.verified ? <VerifiedBadge /> : null}
+          <OpenNowBadge hours={listing.hours_json} />
+          {listing.pin_code ? (
+            <Badge variant="secondary">PIN {listing.pin_code}</Badge>
           ) : null}
-        </header>
-
-        <Flex gap="2" wrap="wrap">
-          <WhatsAppButton listingId={listing.id} />
-          <ShareButton
-            title={listing.name}
-            url={canonical}
-            text={`Found ${listing.name} on Local Directory.`}
-          />
-        </Flex>
-
-        {shownFields.length > 0 ? (
-          <Card size="2">
-            <Grid columns={{ initial: "1", sm: "2" }} gap="3">
-              {shownFields.map((f) => (
-                <Flex direction="column" key={f.key}>
-                  <Text size="1" color="gray">{f.label}</Text>
-                  <Text size="2" weight="medium">
-                    {formatFieldValue(values[f.key], f)}
-                  </Text>
-                </Flex>
-              ))}
-            </Grid>
-          </Card>
-        ) : null}
-
-        {listing.hours_json ? (
-          <div>
-            <Heading size="3" mb="2">Hours</Heading>
-            <HoursTable hours={listing.hours_json} />
-          </div>
-        ) : null}
-
-        {similar.length > 0 ? (
-          <div>
-            <Separator size="4" my="4" />
-            <Heading size="3" mb="3">More {category.name.toLowerCase()} in {neighborhood.name}</Heading>
-            <Grid columns="1" gap="3">
-              {similar.map((s) => (
-                <ListingCard
-                  key={s.id}
-                  href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
-                  name={s.name}
-                  description={s.description}
-                  verified={s.verified}
-                  pin={s.pin_code}
-                  photo_url={s.photo_url}
-                  hours={s.hours_json}
-                />
-              ))}
-            </Grid>
-          </div>
-        ) : null}
-
-        <div style={{ borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" }}>
-          <Link
-            href={`/report?listing=${listing.id}`}
-            style={{
-              fontSize: 12,
-              color: "var(--gray-11)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <ExclamationTriangleIcon width={12} height={12} />
-            Report this listing
-          </Link>
         </div>
-      </Flex>
+        {listing.description ? (
+          <p className="mt-2 text-base">{listing.description}</p>
+        ) : null}
+      </header>
+
+      <div className="flex gap-2 flex-wrap">
+        <WhatsAppButton listingId={listing.id} />
+        <ShareButton
+          title={listing.name}
+          url={canonical}
+          text={`Found ${listing.name} on Local Directory.`}
+        />
+      </div>
+
+      {shownFields.length > 0 ? (
+        <Card className="p-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {shownFields.map((f) => (
+              <div key={f.key}>
+                <div className="text-xs text-muted-foreground">{f.label}</div>
+                <div className="text-sm font-medium">
+                  {formatFieldValue(values[f.key], f)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {listing.hours_json ? (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Hours</h2>
+          <HoursTable hours={listing.hours_json} />
+        </div>
+      ) : null}
+
+      {similar.length > 0 ? (
+        <div>
+          <Separator className="my-4" />
+          <h2 className="text-lg font-semibold mb-3">
+            More {category.name.toLowerCase()} in {neighborhood.name}
+          </h2>
+          <div className="grid gap-3">
+            {similar.map((s) => (
+              <ListingCard
+                key={s.id}
+                href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
+                name={s.name}
+                description={s.description}
+                verified={s.verified}
+                pin={s.pin_code}
+                photo_url={s.photo_url}
+                hours={s.hours_json}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="border-t pt-3">
+        <Link
+          href={`/report?listing=${listing.id}`}
+          className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-foreground"
+        >
+          <AlertTriangle className="size-3" />
+          Report this listing
+        </Link>
+      </div>
     </Container>
   );
 }

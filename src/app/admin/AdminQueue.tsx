@@ -2,8 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Card, Flex, Text, Button, Badge, Checkbox } from "@radix-ui/themes";
-import { CheckIcon, Cross1Icon, Pencil1Icon } from "@radix-ui/react-icons";
+import { Check, X, Pencil } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import { decideListing, bulkDecide } from "./actions";
 
 type Item = {
@@ -31,17 +35,20 @@ export function AdminQueue({ items }: { items: Item[] }) {
       return next;
     });
   }
-
   function toggleAll() {
     if (selected.size === visible.length) setSelected(new Set());
     else setSelected(new Set(visible.map((i) => i.id)));
   }
-
   function bulkAction(action: "approve" | "reject") {
     if (selected.size === 0) return;
     const ids = [...selected];
     startTransition(async () => {
-      await bulkDecide(ids, action);
+      const res = await bulkDecide(ids, action);
+      toast(
+        action === "approve"
+          ? `Approved ${res?.count ?? 0}`
+          : `Rejected ${res?.count ?? 0}`,
+      );
       setHidden((h) => {
         const next = new Set(h);
         ids.forEach((id) => next.add(id));
@@ -51,105 +58,108 @@ export function AdminQueue({ items }: { items: Item[] }) {
     });
   }
 
-  if (visible.length === 0) {
-    return (
-      <Text size="2" color="gray">
-        {items.length === 0 ? "Queue is empty." : "All caught up."}
-      </Text>
-    );
-  }
-
   return (
-    <Flex direction="column" gap="3">
-      <Flex align="center" gap="3" wrap="wrap">
-        <Checkbox
-          checked={selected.size === visible.length && visible.length > 0}
-          onCheckedChange={toggleAll}
-        />
-        <Text size="1" color="gray">
-          {selected.size} of {visible.length} selected
-        </Text>
+    <div className="space-y-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={selected.size === visible.length && visible.length > 0}
+            onCheckedChange={toggleAll}
+          />
+          <span className="text-xs text-muted-foreground">
+            {selected.size} of {visible.length} selected
+          </span>
+        </div>
         {selected.size > 0 ? (
-          <Flex gap="2" ml="auto">
+          <div className="flex gap-2 ml-auto">
             <Button
-              color="grass"
-              size="1"
+              size="sm"
               disabled={pending}
               onClick={() => bulkAction("approve")}
             >
-              <CheckIcon />
+              <Check className="size-4" />
               Approve selected
             </Button>
             <Button
-              variant="soft"
-              color="gray"
-              size="1"
+              variant="outline"
+              size="sm"
               disabled={pending}
               onClick={() => bulkAction("reject")}
             >
-              <Cross1Icon />
+              <X className="size-4" />
               Reject selected
             </Button>
-          </Flex>
+          </div>
         ) : null}
-      </Flex>
+      </div>
 
       {visible.map((i) => (
-        <Card key={i.id} size="2">
-          <Flex direction="column" gap="2">
-            <Flex align="center" gap="2" wrap="wrap">
-              <Checkbox checked={selected.has(i.id)} onCheckedChange={() => toggle(i.id)} />
-              <Text weight="medium">{i.name}</Text>
-              <Badge color="gray" variant="soft">{i.category}</Badge>
-              <Badge color="gray" variant="soft">{i.neighborhood}</Badge>
-              <Text size="1" color="gray">{i.whatsapp_number}</Text>
-            </Flex>
-            {i.description ? (
-              <Text size="2">{i.description}</Text>
-            ) : null}
-            <Flex gap="2">
-              <Button
-                color="grass"
-                size="1"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    await decideListing(i.id, "approve");
-                    setHidden((s) => new Set(s).add(i.id));
-                  })
-                }
-              >
-                <CheckIcon />
-                Approve
-              </Button>
-              <Button
-                variant="soft"
-                color="gray"
-                size="1"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    await decideListing(i.id, "reject");
-                    setHidden((s) => new Set(s).add(i.id));
-                  })
-                }
-              >
-                <Cross1Icon />
-                Reject
-              </Button>
-              <Link
-                href={`/admin/listings/${i.id}/edit`}
-                style={{ textDecoration: "none" }}
-              >
-                <Button variant="soft" size="1">
-                  <Pencil1Icon />
-                  Edit
+        <Card key={i.id} className="p-4">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              checked={selected.has(i.id)}
+              onCheckedChange={() => toggle(i.id)}
+              className="mt-1"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-medium">{i.name}</span>
+                <Badge variant="secondary">{i.category}</Badge>
+                <Badge variant="secondary">{i.neighborhood}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  {i.whatsapp_number}
+                </span>
+              </div>
+              {i.description ? (
+                <p className="text-sm mt-2">{i.description}</p>
+              ) : null}
+              <div className="flex gap-2 mt-3">
+                <Button
+                  size="sm"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const res = await decideListing(i.id, "approve");
+                      if (res?.error) toast.error(res.error);
+                      else {
+                        toast(`Approved ${i.name}`);
+                        setHidden((s) => new Set(s).add(i.id));
+                      }
+                    })
+                  }
+                >
+                  <Check className="size-4" />
+                  Approve
                 </Button>
-              </Link>
-            </Flex>
-          </Flex>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const res = await decideListing(i.id, "reject");
+                      if (res?.error) toast.error(res.error);
+                      else {
+                        toast(`Rejected ${i.name}`);
+                        setHidden((s) => new Set(s).add(i.id));
+                      }
+                    })
+                  }
+                >
+                  <X className="size-4" />
+                  Reject
+                </Button>
+                <Link href={`/admin/listings/${i.id}/edit`}>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="size-4" />
+                    Edit
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </Card>
       ))}
-    </Flex>
+    </div>
   );
 }

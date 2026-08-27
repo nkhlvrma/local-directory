@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Flex, Text } from "@radix-ui/themes";
+import { Card } from "@/components/ui/card";
 import { AnimatedCategoryIcon } from "./AnimatedCategoryIcon";
 
-// Client wrapper that translates card-hover into an animate boolean for
-// the icon inside. Server components render CategoryCard as data + link.
 export function CategoryCard({
   slug,
   name,
@@ -20,29 +18,21 @@ export function CategoryCard({
   return (
     <Link
       href={href}
-      style={{ textDecoration: "none", color: "inherit" }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={() => setHover(false)}
+      className="block"
     >
-      <div
-        style={{
-          transform: hover ? "translateY(-2px)" : "translateY(0)",
-          transition: "transform 180ms ease",
-        }}
+      <Card
+        className="p-4 transition-transform hover:bg-muted/50 flex flex-col gap-2"
+        style={{ transform: hover ? "translateY(-2px)" : "translateY(0)" }}
       >
-        <Card size="2">
-          <Flex direction="column" gap="2">
-            <span style={{ color: "var(--grass-11)" }}>
-              <AnimatedCategoryIcon slug={slug} animating={hover} size={22} />
-            </span>
-            <Text size="2" weight="medium">
-              {name}
-            </Text>
-          </Flex>
-        </Card>
-      </div>
+        <span className="text-green-700 dark:text-green-400">
+          <AnimatedCategoryIcon slug={slug} animating={hover} size={22} />
+        </span>
+        <span className="text-sm font-medium">{name}</span>
+      </Card>
     </Link>
   );
 }

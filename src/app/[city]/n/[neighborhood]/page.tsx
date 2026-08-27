@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
-import { Container, Heading, Text, Flex, Grid, Badge } from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
+import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/ListingCard";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
@@ -39,7 +40,6 @@ export async function generateMetadata(
   if (!city || !neighborhood) return {};
   return {
     title: `${(neighborhood as { name: string }).name}, ${(city as { name: string }).name}`,
-    description: `Verified local businesses in ${(neighborhood as { name: string }).name}, ${(city as { name: string }).name}.`,
   };
 }
 
@@ -87,38 +87,46 @@ export default async function NeighborhoodPage(
   if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <header>
-          <Text size="1" color="gray">{(city as { name: string }).name}</Text>
-          <Flex align="center" gap="2" mt="1">
-            <Heading size="6">{(neighborhood as { name: string }).name}</Heading>
-            {pinFilter ? <Badge color="grass">PIN {pinFilter}</Badge> : null}
-          </Flex>
-        </header>
+    <Container className="py-6 space-y-4">
+      <header>
+        <div className="text-xs text-muted-foreground">
+          {(city as { name: string }).name}
+        </div>
+        <div className="mt-1 flex items-center gap-2">
+          <h1 className="text-2xl font-semibold">
+            {(neighborhood as { name: string }).name}
+          </h1>
+          {pinFilter ? (
+            <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
+              PIN {pinFilter}
+            </Badge>
+          ) : null}
+        </div>
+      </header>
 
-        <CategoryFilterBar />
+      <CategoryFilterBar />
 
-        {rows.length === 0 ? (
-          <Text size="2" color="gray">No listings match these filters.</Text>
-        ) : (
-          <Grid columns="1" gap="3">
-            {rows.map((l) => (
-              <ListingCard
-                key={l.id}
-                href={`/${(city as { slug: string }).slug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
-                name={l.name}
-                category={l.categories.name}
-                description={l.description}
-                verified={l.verified}
-                pin={l.pin_code}
-                photo_url={l.photo_url}
-                hours={l.hours_json}
-              />
-            ))}
-          </Grid>
-        )}
-      </Flex>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No listings match these filters.
+        </p>
+      ) : (
+        <div className="grid gap-3">
+          {rows.map((l) => (
+            <ListingCard
+              key={l.id}
+              href={`/${(city as { slug: string }).slug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
+              name={l.name}
+              category={l.categories.name}
+              description={l.description}
+              verified={l.verified}
+              pin={l.pin_code}
+              photo_url={l.photo_url}
+              hours={l.hours_json}
+            />
+          ))}
+        </div>
+      )}
     </Container>
   );
 }

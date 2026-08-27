@@ -1,6 +1,6 @@
 # Local Directory
 
-A hyperlocal, WhatsApp-native directory of neighborhood businesses. Built with Next.js 15 (App Router), Tailwind, and Supabase.
+A hyperlocal, WhatsApp-native directory of neighborhood businesses. Built with Next.js 16 (App Router), Tailwind, and Supabase.
 
 ## Stack
 

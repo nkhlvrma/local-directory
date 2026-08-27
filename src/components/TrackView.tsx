@@ -25,6 +25,7 @@ export function TrackView(props: RecentEntry) {
       const filtered = arr.filter((e) => e.id !== props.id);
       const next = [props, ...filtered].slice(0, MAX);
       localStorage.setItem(KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("recently-viewed-change"));
     } catch {
       // storage blocked (private mode, quota) — silent no-op
     }

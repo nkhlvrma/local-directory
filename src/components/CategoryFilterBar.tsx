@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Flex, Button } from "@radix-ui/themes";
-import { CheckCircledIcon, ImageIcon, ClockIcon } from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Image as ImageIcon, Clock } from "lucide-react";
 
-// URL-driven filter chips. Server pages read the params directly.
 export function CategoryFilterBar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -17,26 +16,30 @@ export function CategoryFilterBar() {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
-  const chip = (key: string, label: string, Icon: React.ComponentType<{ width?: number; height?: number }>) => {
+  const chip = (
+    key: string,
+    label: string,
+    Icon: React.ComponentType<{ className?: string }>,
+  ) => {
     const active = params.get(key) === "1";
     return (
       <Button
-        size="1"
-        variant={active ? "solid" : "soft"}
-        color={active ? "grass" : "gray"}
+        size="sm"
+        variant={active ? "default" : "outline"}
         onClick={() => toggle(key)}
+        className="h-8"
       >
-        <Icon width={12} height={12} />
+        <Icon className="size-3.5" />
         {label}
       </Button>
     );
   };
 
   return (
-    <Flex gap="2" wrap="wrap">
-      {chip("verified", "Verified only", CheckCircledIcon)}
+    <div className="flex gap-2 flex-wrap">
+      {chip("verified", "Verified only", CheckCircle2)}
       {chip("photo", "Has photo", ImageIcon)}
-      {chip("open", "Open now", ClockIcon)}
-    </Flex>
+      {chip("open", "Open now", Clock)}
+    </div>
   );
 }

@@ -2,11 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Theme, Container, Flex, Text, Button } from "@radix-ui/themes";
-import { PlusIcon } from "@radix-ui/react-icons";
+import { Plus, Info } from "lucide-react";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { LocationBar } from "@/components/LocationBar";
+import { Button } from "@/components/ui/button";
+import { Container } from "@/components/ui/container";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,73 +55,46 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body>
-        <Theme accentColor="grass" grayColor="sand" radius="large" scaling="100%">
-          {/* Full-width demo banner. Sits flush at the very top so the header
-              never gets pushed down by container padding. */}
-          {isDemo ? (
-            <div
-              style={{
-                background: "var(--amber-3)",
-                borderBottom: "1px solid var(--amber-a5)",
-                padding: "6px 16px",
-                textAlign: "center",
-                fontSize: 12,
-                color: "var(--amber-12)",
-              }}
-            >
+      <body className="font-sans">
+        {isDemo ? (
+          <div className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 text-xs text-center py-1.5 px-4 border-b border-amber-200 dark:border-amber-900 flex items-center justify-center gap-1.5">
+            <Info className="size-3.5" />
+            <span>
               Demo mode — using in-memory data.{" "}
-              <Link
-                href="/admin"
-                style={{ color: "inherit", textDecoration: "underline" }}
-              >
+              <Link href="/admin" className="underline font-medium">
                 Try admin
               </Link>{" "}
               (no login needed).
+            </span>
+          </div>
+        ) : null}
+
+        <header className="border-b bg-background sticky top-0 z-40">
+          <Container className="py-3 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="font-bold text-lg tracking-tight">
+                {SITE_NAME}
+              </Link>
+              <LocationBar initialPin={pin} />
             </div>
-          ) : null}
+            <Link href="/list-your-business">
+              <Button size="sm">
+                <Plus className="size-4" />
+                List your business
+              </Button>
+            </Link>
+          </Container>
+        </header>
 
-          <header
-            style={{
-              borderBottom: "1px solid var(--gray-a4)",
-              background: "var(--color-panel-solid)",
-            }}
-          >
-            <Container size="3" px="4" py="3">
-              <Flex align="center" justify="between" gap="3" wrap="wrap">
-                <Flex align="center" gap="3">
-                  <Link href="/" style={{ textDecoration: "none" }}>
-                    <Text size="4" weight="bold">
-                      {SITE_NAME}
-                    </Text>
-                  </Link>
-                  <LocationBar initialPin={pin} />
-                </Flex>
-                <Link href="/list-your-business" style={{ textDecoration: "none" }}>
-                  <Button size="2" variant="solid">
-                    <PlusIcon />
-                    List your business
-                  </Button>
-                </Link>
-              </Flex>
-            </Container>
-          </header>
+        <main>{children}</main>
 
-          <main>{children}</main>
+        <footer className="border-t mt-12">
+          <Container className="py-6 text-xs text-muted-foreground">
+            {SITE_NAME} · community-verified · no spam calls
+          </Container>
+        </footer>
 
-          <footer
-            style={{
-              borderTop: "1px solid var(--gray-a4)",
-              marginTop: "var(--space-6)",
-            }}
-          >
-            <Container size="3" px="4" py="5">
-              <Text size="1" color="gray">
-                {SITE_NAME} · community-verified · no spam calls
-              </Text>
-            </Container>
-          </footer>
-        </Theme>
+        <Toaster />
       </body>
     </html>
   );

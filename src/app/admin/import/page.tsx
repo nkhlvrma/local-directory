@@ -1,13 +1,6 @@
 import { redirect } from "next/navigation";
-import {
-  Container,
-  Heading,
-  Text,
-  Flex,
-  Card,
-  Code,
-  Grid,
-} from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
+import { Card } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
 import { ImportForm } from "./ImportForm";
@@ -21,15 +14,15 @@ export default async function ImportPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { data: isAdminRow } = await supabase
+  const { data: adminRow } = await supabase
     .from("admin_users")
     .select("user_id")
     .eq("user_id", (user as { id: string }).id)
     .maybeSingle();
-  if (!isAdminRow) {
+  if (!adminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
       </Container>
     );
   }
@@ -55,54 +48,51 @@ export default async function ImportPage() {
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="5">Bulk import listings</Heading>
-          <Text as="p" size="2" color="gray" mt="1">
-            Paste tab-separated rows (copy-paste directly from Google Sheets).
-            They land in the pending queue for review.
-          </Text>
+    <Container className="py-8 space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold">Bulk import</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Paste tab-separated rows from Google Sheets. Everything lands in
+          <span className="mx-1 font-medium">New submissions</span>
+          for you to review.
+        </p>
+      </header>
+
+      <Card className="p-4">
+        <div className="font-medium text-sm mb-2">Column order</div>
+        <pre className="overflow-x-auto rounded bg-muted p-2 text-xs">
+{"name\tcategory_slug\tneighborhood_slug\twhatsapp\tpin\tdescription\tverified"}
+        </pre>
+        <div className="grid gap-4 mt-3 grid-cols-1 sm:grid-cols-2">
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Categories</div>
+            <ul className="text-xs mt-1 space-y-0.5">
+              {cats.map((c) => (
+                <li key={c.slug}>
+                  <code>{c.slug}</code> — {c.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Neighborhoods</div>
+            <ul className="text-xs mt-1 space-y-0.5">
+              {hoods.map((h) => (
+                <li key={h.slug}>
+                  <code>{h.slug}</code> — {h.name}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
+        <div className="text-xs text-muted-foreground mt-3">
+          <code>pin</code>: 6-digit Indian PIN (optional).{" "}
+          <code>verified</code>: <code>true</code> if you already messaged them
+          and got a response.
+        </div>
+      </Card>
 
-        <Card size="2">
-          <Flex direction="column" gap="2">
-            <Text size="2" weight="medium">Column order:</Text>
-            <Code size="2">
-              name{"\t"}category_slug{"\t"}neighborhood_slug{"\t"}whatsapp{"\t"}pin{"\t"}description{"\t"}verified
-            </Code>
-            <Grid columns={{ initial: "1", sm: "2" }} gap="4" mt="2">
-              <div>
-                <Text size="1" color="gray" weight="medium">Categories</Text>
-                <Flex direction="column" gap="1" mt="1">
-                  {cats.map((c) => (
-                    <Text size="1" key={c.slug}>
-                      <Code>{c.slug}</Code> — {c.name}
-                    </Text>
-                  ))}
-                </Flex>
-              </div>
-              <div>
-                <Text size="1" color="gray" weight="medium">Neighborhoods</Text>
-                <Flex direction="column" gap="1" mt="1">
-                  {hoods.map((h) => (
-                    <Text size="1" key={h.slug}>
-                      <Code>{h.slug}</Code> — {h.name}
-                    </Text>
-                  ))}
-                </Flex>
-              </div>
-            </Grid>
-            <Text size="1" color="gray" mt="2">
-              <Code>pin</Code>: 6-digit Indian PIN (optional).{" "}
-              <Code>verified</Code>: <Code>true</Code> if you&apos;ve already
-              messaged them and got a response.
-            </Text>
-          </Flex>
-        </Card>
-
-        <ImportForm />
-      </Flex>
+      <ImportForm />
     </Container>
   );
 }

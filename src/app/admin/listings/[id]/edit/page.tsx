@@ -1,5 +1,9 @@
 import { notFound, redirect } from "next/navigation";
-import { Container, Heading, Text, Flex } from "@radix-ui/themes";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { EditForm } from "./EditForm";
 import type { WeekHours, FieldDef } from "@/lib/types";
@@ -23,8 +27,8 @@ export default async function EditListingPage(
     .maybeSingle();
   if (!adminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
       </Container>
     );
   }
@@ -59,27 +63,31 @@ export default async function EditListingPage(
   };
 
   return (
-    <Container size="2" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="5">Edit listing</Heading>
-          <Text size="2" color="gray" as="p" mt="1">
-            {(listing as L).status.toUpperCase()} · id {(listing as L).id.slice(0, 8)}
-          </Text>
+    <Container size="sm" className="py-8 space-y-4">
+      <div>
+        <Link href="/admin/pending">
+          <Button variant="ghost" size="sm" className="-ml-2 mb-1">
+            <ArrowLeft className="size-4" />
+            Back
+          </Button>
+        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl font-semibold">Edit listing</h1>
+          <Badge variant="secondary">{(listing as L).status}</Badge>
         </div>
-        <EditForm
-          listing={listing as L}
-          categories={
-            (cats ?? []) as {
-              id: string;
-              name: string;
-              slug: string;
-              fields_schema: FieldDef[] | null;
-            }[]
-          }
-          neighborhoods={(hoods ?? []) as { id: string; name: string }[]}
-        />
-      </Flex>
+      </div>
+      <EditForm
+        listing={listing as L}
+        categories={
+          (cats ?? []) as {
+            id: string;
+            name: string;
+            slug: string;
+            fields_schema: FieldDef[] | null;
+          }[]
+        }
+        neighborhoods={(hoods ?? []) as { id: string; name: string }[]}
+      />
     </Container>
   );
 }

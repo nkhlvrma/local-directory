@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TextArea, Button, Flex, Text, Card } from "@radix-ui/themes";
-import { UploadIcon } from "@radix-ui/react-icons";
+import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 import { importListings, type ImportResult } from "./actions";
 
 export function ImportForm() {
@@ -11,17 +13,17 @@ export function ImportForm() {
   const [result, setResult] = useState<ImportResult | null>(null);
 
   return (
-    <Flex direction="column" gap="3">
-      <TextArea
+    <div className="space-y-3">
+      <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={12}
         placeholder={
           "Anita's Home Kitchen\ttiffin-services\tgomti-nagar\t+919812345678\t226010\tHome-cooked North Indian tiffin.\ttrue"
         }
-        style={{ fontFamily: "var(--code-font-family)" }}
+        className="font-mono text-sm"
       />
-      <Flex align="center" gap="3">
+      <div className="flex items-center gap-3">
         <Button
           disabled={pending || !text.trim()}
           onClick={() => {
@@ -32,31 +34,29 @@ export function ImportForm() {
             });
           }}
         >
-          <UploadIcon />
+          <Upload className="size-4" />
           {pending ? "Importing…" : "Import"}
         </Button>
-        <Text size="1" color="gray">
-          Rows land as pending — review at /admin.
-        </Text>
-      </Flex>
+        <span className="text-xs text-muted-foreground">
+          Rows land as pending — review at /admin/pending.
+        </span>
+      </div>
 
       {result ? (
-        <Card size="2">
-          <Text size="2">
+        <Card className="p-4">
+          <p className="text-sm">
             <strong>{result.inserted}</strong> inserted ·{" "}
             <strong>{result.failed.length}</strong> failed
-          </Text>
+          </p>
           {result.failed.length > 0 ? (
-            <Flex direction="column" gap="1" mt="2">
+            <ul className="text-xs text-destructive space-y-1 mt-2">
               {result.failed.map((f, i) => (
-                <Text size="1" color="red" key={i}>
-                  Row {f.row}: {f.error}
-                </Text>
+                <li key={i}>Row {f.row}: {f.error}</li>
               ))}
-            </Flex>
+            </ul>
           ) : null}
         </Card>
       ) : null}
-    </Flex>
+    </div>
   );
 }

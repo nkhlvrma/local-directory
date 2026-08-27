@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Container, Heading, Text, Flex } from "@radix-ui/themes";
+import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SchemaEditor } from "./SchemaEditor";
 import type { FieldDef } from "@/lib/types";
@@ -20,8 +20,8 @@ export default async function CategoriesPage() {
     .maybeSingle();
   if (!adminRow) {
     return (
-      <Container size="1" px="4" py="6">
-        <Heading size="5">Not authorized</Heading>
+      <Container size="sm" className="py-8">
+        <h1 className="text-xl font-semibold">Not authorized</h1>
       </Container>
     );
   }
@@ -32,33 +32,32 @@ export default async function CategoriesPage() {
     .order("name");
 
   return (
-    <Container size="3" px="4" py="6">
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="5">Categories — custom fields</Heading>
-          <Text as="p" size="2" color="gray" mt="1">
-            Define per-category fields that appear on the listing editor and the
-            public listing page. Store as JSON:{" "}
-            <code>[{'{ "key": "diet", "label": "Diet", "type": "select", "options": ["Veg","Non-veg"] }'}]</code>
-          </Text>
-        </div>
-        <Flex direction="column" gap="3">
-          {((cats ?? []) as {
-            id: string;
-            name: string;
-            slug: string;
-            fields_schema: FieldDef[] | null;
-          }[]).map((c) => (
-            <SchemaEditor
-              key={c.id}
-              id={c.id}
-              name={c.name}
-              slug={c.slug}
-              schema={c.fields_schema}
-            />
-          ))}
-        </Flex>
-      </Flex>
+    <Container className="py-8 space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold">Categories</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Add extra fields for a category (e.g. tiffin needs{" "}
+          <em>diet</em> and <em>₹/meal</em>; electricians could have{" "}
+          <em>24×7 emergency</em>). Fields you define show on the listing editor
+          and the public listing page.
+        </p>
+      </header>
+      <div className="space-y-4">
+        {((cats ?? []) as {
+          id: string;
+          name: string;
+          slug: string;
+          fields_schema: FieldDef[] | null;
+        }[]).map((c) => (
+          <SchemaEditor
+            key={c.id}
+            id={c.id}
+            name={c.name}
+            slug={c.slug}
+            schema={c.fields_schema}
+          />
+        ))}
+      </div>
     </Container>
   );
 }
