@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
   for (const c of categories ?? [])
-    entries.push({ url: `${SITE_URL}/${city.slug}/${c.slug}` });
+    entries.push({ url: `${SITE_URL}/${city.slug}/c/${c.slug}` });
   for (const n of neighborhoods ?? [])
     entries.push({ url: `${SITE_URL}/${city.slug}/n/${n.slug}` });
   for (const l of listings ?? []) {

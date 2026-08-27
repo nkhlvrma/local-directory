@@ -138,7 +138,7 @@ export default async function Home() {
               key={c.slug}
               slug={c.slug}
               name={c.name}
-              href={`/${(city as { slug: string }).slug}/${c.slug}`}
+              href={`/${(city as { slug: string }).slug}/c/${c.slug}`}
             />
           ))}
         </div>
