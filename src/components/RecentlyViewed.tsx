@@ -8,25 +8,43 @@ import type { RecentEntry } from "./TrackView";
 
 const KEY = "recently-viewed-v1";
 
+// useSyncExternalStore requires getSnapshot to return the SAME reference when
+// the underlying data hasn't changed — otherwise React re-renders in a loop
+// (React error #185). Cache the parsed value keyed on the raw string.
+const EMPTY: RecentEntry[] = [];
+let cachedRaw: string | null | undefined = undefined;
+let cachedItems: RecentEntry[] = EMPTY;
+
+function getClientSnapshot(): RecentEntry[] {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw === cachedRaw) return cachedItems;
+    cachedRaw = raw;
+    cachedItems = raw ? (JSON.parse(raw) as RecentEntry[]) : EMPTY;
+    return cachedItems;
+  } catch {
+    return cachedItems;
+  }
+}
+
+function getServerSnapshot(): RecentEntry[] {
+  return EMPTY;
+}
+
+function subscribe(onStoreChange: () => void): () => void {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener("recently-viewed-change", onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener("recently-viewed-change", onStoreChange);
+  };
+}
+
 export function RecentlyViewed() {
   const items = useSyncExternalStore(
-    (onStoreChange) => {
-      window.addEventListener("storage", onStoreChange);
-      window.addEventListener("recently-viewed-change", onStoreChange);
-      return () => {
-        window.removeEventListener("storage", onStoreChange);
-        window.removeEventListener("recently-viewed-change", onStoreChange);
-      };
-    },
-    () => {
-      try {
-        const raw = localStorage.getItem(KEY);
-        return raw ? (JSON.parse(raw) as RecentEntry[]) : [];
-      } catch {
-        return [];
-      }
-    },
-    () => [],
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
   );
 
   if (items.length === 0) return null;
