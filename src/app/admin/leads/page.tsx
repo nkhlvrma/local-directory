@@ -4,6 +4,7 @@ import { MessageCircle, Archive, ExternalLink } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Card } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { CITY_SLUG } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function LeadsPage() {
     .select(
       `id, name, slug, whatsapp_clicks, verified,
        categories!inner ( name, slug ),
-       neighborhoods!inner ( name, slug, cities!inner ( slug ) )`,
+       neighborhoods!inner ( name, slug )`,
     )
     .eq("status", "approved")
     .order("whatsapp_clicks", { ascending: false })
@@ -45,9 +46,16 @@ export default async function LeadsPage() {
     whatsapp_clicks: number;
     verified: boolean;
     categories: { name: string; slug: string };
-    neighborhoods: { name: string; slug: string; cities: { slug: string } };
+    neighborhoods: { name: string; slug: string };
   };
-  const rows = ((data ?? []) as unknown as Row[]).filter(Boolean);
+  const rowsRaw = ((data ?? []) as unknown as Row[]).filter(
+    (r) => r && r.categories && r.neighborhoods,
+  );
+  // Mock supabase doesn't honor .order — do the sort here so the top-clicked
+  // listing always shows first regardless of storage order.
+  const rows = [...rowsRaw].sort(
+    (a, b) => (b.whatsapp_clicks ?? 0) - (a.whatsapp_clicks ?? 0),
+  );
   const totalClicks = rows.reduce((s, r) => s + (r.whatsapp_clicks ?? 0), 0);
 
   return (
@@ -103,7 +111,7 @@ export default async function LeadsPage() {
                   </div>
                 </div>
                 <Link
-                  href={`/${r.neighborhoods.cities.slug}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
+                  href={`/${CITY_SLUG}/${r.neighborhoods.slug}/${r.categories.slug}/${r.slug}`}
                   className="text-xs inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
                   view <ExternalLink className="size-3" />
