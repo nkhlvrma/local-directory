@@ -26,13 +26,19 @@ export default async function ListYourBusinessPage() {
   ]);
 
   return (
-    <Container size="sm" className="py-8 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">List your business</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Free. We review every submission by hand — usually within a day.
+    <Container size="sm" className="py-10 space-y-6">
+      <header className="space-y-1">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Free listing
+          </span>
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">List your business</h1>
+        <p className="text-muted-foreground leading-relaxed">
+          We review every submission by hand — usually within a day. No fees, no commissions.
         </p>
-      </div>
+      </header>
       <SubmitForm
         categories={(categories ?? []) as { id: string; name: string }[]}
         neighborhoods={(neighborhoods ?? []) as { id: string; name: string }[]}

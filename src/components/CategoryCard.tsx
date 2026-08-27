@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { AnimatedCategoryIcon } from "./AnimatedCategoryIcon";
 
 export function CategoryCard({
@@ -24,15 +23,24 @@ export function CategoryCard({
       onBlur={() => setHover(false)}
       className="block"
     >
-      <Card
-        className="p-4 transition-transform hover:bg-muted/50 flex flex-col gap-2"
-        style={{ transform: hover ? "translateY(-2px)" : "translateY(0)" }}
+      <div
+        className={`rounded-xl border p-4 flex flex-col gap-3 transition-all duration-150 ${
+          hover
+            ? "border-primary/40 bg-muted/40"
+            : "border-border/70 bg-transparent"
+        }`}
       >
-        <span className="text-green-700 dark:text-green-400">
-          <AnimatedCategoryIcon slug={slug} animating={hover} size={22} />
+        <span
+          className={`size-10 rounded-lg flex items-center justify-center transition-colors duration-150 ${
+            hover
+              ? "bg-primary/15 text-primary"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          <AnimatedCategoryIcon slug={slug} animating={hover} size={20} />
         </span>
-        <span className="text-sm font-medium">{name}</span>
-      </Card>
+        <span className="text-sm font-semibold leading-tight">{name}</span>
+      </div>
     </Link>
   );
 }

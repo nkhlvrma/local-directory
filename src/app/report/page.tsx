@@ -10,11 +10,13 @@ export default async function ReportPage(
   const listingId = sp.listing ?? "";
 
   return (
-    <Container size="sm" className="py-6 space-y-3">
-      <h1 className="text-xl font-semibold">Report a listing</h1>
-      <p className="text-sm text-muted-foreground">
-        Tell us what&apos;s wrong. We&apos;ll review and take action if needed.
-      </p>
+    <Container size="sm" className="py-10 space-y-6">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Report a listing</h1>
+        <p className="text-muted-foreground">
+          Tell us what&apos;s wrong — we&apos;ll review and take action if needed.
+        </p>
+      </header>
       <ReportForm listingId={listingId} />
     </Container>
   );

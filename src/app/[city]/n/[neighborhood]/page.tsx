@@ -87,18 +87,18 @@ export default async function NeighborhoodPage(
   if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
   return (
-    <Container className="py-6 space-y-4">
-      <header>
-        <div className="text-xs text-muted-foreground">
+    <Container className="py-7 space-y-6">
+      <header className="space-y-1">
+        <p className="text-xs text-muted-foreground">
           {(city as { name: string }).name}
-        </div>
-        <div className="mt-1 flex items-center gap-2">
-          <h1 className="text-2xl font-semibold">
+        </p>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-2xl font-bold tracking-tight">
             {(neighborhood as { name: string }).name}
           </h1>
           {pinFilter ? (
-            <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
-              PIN {pinFilter}
+            <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
+              {pinFilter}
             </Badge>
           ) : null}
         </div>
@@ -107,11 +107,11 @@ export default async function NeighborhoodPage(
       <CategoryFilterBar />
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground py-8 text-center">
           No listings match these filters.
         </p>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           {rows.map((l) => (
             <ListingCard
               key={l.id}

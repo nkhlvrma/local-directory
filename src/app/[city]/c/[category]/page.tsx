@@ -82,21 +82,21 @@ export default async function CategoryPage(
   if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
   return (
-    <Container className="py-6 space-y-4">
-      <header>
-        <div className="text-xs text-muted-foreground">
+    <Container className="py-7 space-y-6">
+      <header className="space-y-1">
+        <p className="text-xs text-muted-foreground">
           {(city as { name: string }).name}
-        </div>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-green-700 dark:text-green-400">
-            <CategoryIcon slug={(category as { slug: string }).slug} size={22} />
+        </p>
+        <div className="flex items-center gap-2.5">
+          <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <CategoryIcon slug={(category as { slug: string }).slug} size={20} />
           </span>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-2xl font-bold tracking-tight">
             {(category as { name: string }).name}
           </h1>
           {pinFilter ? (
-            <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
-              PIN {pinFilter}
+            <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
+              {pinFilter}
             </Badge>
           ) : null}
         </div>
@@ -105,13 +105,13 @@ export default async function CategoryPage(
       <CategoryFilterBar />
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground py-8 text-center">
           {pinFilter || verifiedOnly || photoOnly || openOnly
             ? "No listings match these filters."
             : "No listings yet in this category."}
         </p>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           {rows.map((l) => (
             <ListingCard
               key={l.id}

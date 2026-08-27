@@ -2,8 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
 import type { RecentEntry } from "./TrackView";
 
 const KEY = "recently-viewed-v1";
@@ -52,36 +51,34 @@ export function RecentlyViewed() {
 
   return (
     <section>
-      <h2 className="text-sm font-medium text-muted-foreground mb-3">
+      <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
         Recently viewed
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {shown.map((r) => (
-          <Link key={r.id} href={r.href} className="block">
-            <Card className="p-3 flex items-center gap-3 transition-colors hover:bg-muted/50">
+          <Link key={r.id} href={r.href} className="block group">
+            <div className="flex gap-3 rounded-xl border border-border/70 px-4 py-3 transition-all hover:border-primary/30 hover:bg-muted/30">
               {r.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={r.photo_url}
                   alt=""
                   style={{ width: 48, height: 48 }}
-                  className="rounded-md object-cover shrink-0"
+                  className="rounded-lg object-cover shrink-0"
                 />
               ) : null}
               <div className="min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium truncate">{r.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold truncate">{r.name}</span>
                   {r.verified ? (
-                    <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
-                      ✓
-                    </Badge>
+                    <Check className="size-3.5 text-primary shrink-0" strokeWidth={2.5} />
                   ) : null}
                 </div>
-                <div className="text-xs text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {r.category} · {r.neighborhood}
-                </div>
+                </p>
               </div>
-            </Card>
+            </div>
           </Link>
         ))}
       </div>

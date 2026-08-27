@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -159,7 +158,7 @@ export default async function ListingPage(
   );
 
   return (
-    <Container className="py-6 space-y-5">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -174,98 +173,118 @@ export default async function ListingPage(
         verified={listing.verified}
       />
 
-      <div className="text-xs text-muted-foreground">
-        {city.name} · {neighborhood.name} · {category.name}
-      </div>
-
+      {/* Photo hero */}
       {listing.photo_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={listing.photo_url}
           alt={listing.name}
-          className="w-full rounded-2xl object-cover"
-          style={{ maxHeight: 360 }}
+          className="w-full object-cover"
+          style={{ maxHeight: 400 }}
         />
       ) : null}
 
-      <header>
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-3xl font-bold tracking-tight">{listing.name}</h1>
-          {listing.verified ? <VerifiedBadge /> : null}
-          <OpenNowBadge hours={listing.hours_json} />
-          {listing.pin_code ? (
-            <Badge variant="secondary">PIN {listing.pin_code}</Badge>
+      <Container className="py-7 space-y-6">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+          <Link href={`/${city.slug}/c/${category.slug}`} className="hover:text-foreground transition-colors">
+            {category.name}
+          </Link>
+          <ChevronRight className="size-3 shrink-0" />
+          <span>{neighborhood.name}</span>
+        </nav>
+
+        {/* Header */}
+        <header className="space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">{listing.name}</h1>
+            {listing.verified ? <VerifiedBadge /> : null}
+            <OpenNowBadge hours={listing.hours_json} />
+            {listing.pin_code ? (
+              <Badge variant="secondary" className="font-mono">
+                {listing.pin_code}
+              </Badge>
+            ) : null}
+          </div>
+          {listing.description ? (
+            <p className="text-base text-foreground/80 leading-relaxed max-w-prose">
+              {listing.description}
+            </p>
           ) : null}
+        </header>
+
+        {/* CTA */}
+        <div className="flex gap-2 flex-wrap items-center">
+          <WhatsAppButton listingId={listing.id} />
+          <ShareButton
+            title={listing.name}
+            url={canonical}
+            text={`Found ${listing.name} on Local Directory.`}
+          />
         </div>
-        {listing.description ? (
-          <p className="mt-2 text-base">{listing.description}</p>
-        ) : null}
-      </header>
 
-      <div className="flex gap-2 flex-wrap">
-        <WhatsAppButton listingId={listing.id} />
-        <ShareButton
-          title={listing.name}
-          url={canonical}
-          text={`Found ${listing.name} on Local Directory.`}
-        />
-      </div>
-
-      {shownFields.length > 0 ? (
-        <Card className="p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {shownFields.map((f) => (
-              <div key={f.key}>
-                <div className="text-xs text-muted-foreground">{f.label}</div>
-                <div className="text-sm font-medium">
-                  {formatFieldValue(values[f.key], f)}
+        {/* Custom fields */}
+        {shownFields.length > 0 ? (
+          <div className="rounded-xl border border-border/70 p-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {shownFields.map((f) => (
+                <div key={f.key}>
+                  <div className="text-xs text-muted-foreground">{f.label}</div>
+                  <div className="text-sm font-medium mt-0.5">
+                    {formatFieldValue(values[f.key], f)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </Card>
-      ) : null}
+        ) : null}
 
-      {listing.hours_json ? (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Hours</h2>
-          <HoursTable hours={listing.hours_json} />
-        </div>
-      ) : null}
-
-      {similar.length > 0 ? (
-        <div>
-          <Separator className="my-4" />
-          <h2 className="text-lg font-semibold mb-3">
-            More {category.name.toLowerCase()} in {neighborhood.name}
-          </h2>
-          <div className="grid gap-3">
-            {similar.map((s) => (
-              <ListingCard
-                key={s.id}
-                href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
-                name={s.name}
-                description={s.description}
-                verified={s.verified}
-                pin={s.pin_code}
-                photo_url={s.photo_url}
-                hours={s.hours_json}
-              />
-            ))}
+        {/* Hours */}
+        {listing.hours_json ? (
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+              Hours
+            </h2>
+            <HoursTable hours={listing.hours_json} />
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      <div className="border-t pt-3">
-        <Link
-          href={`/report?listing=${listing.id}`}
-          className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-foreground"
-        >
-          <AlertTriangle className="size-3" />
-          Report this listing
-        </Link>
-      </div>
-    </Container>
+        {/* Similar */}
+        {similar.length > 0 ? (
+          <div>
+            <Separator className="mb-6" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              More {category.name.toLowerCase()} in {neighborhood.name}
+            </h2>
+            <div className="grid gap-2">
+              {similar.map((s) => (
+                <ListingCard
+                  key={s.id}
+                  href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
+                  name={s.name}
+                  description={s.description}
+                  verified={s.verified}
+                  pin={s.pin_code}
+                  photo_url={s.photo_url}
+                  hours={s.hours_json}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Report */}
+        <div className="border-t pt-4">
+          <Link
+            href={`/report?listing=${listing.id}`}
+            className="text-xs text-muted-foreground inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+          >
+            <AlertTriangle className="size-3" />
+            Report this listing
+          </Link>
+        </div>
+      </Container>
+    </>
   );
 }
 

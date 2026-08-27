@@ -81,53 +81,60 @@ export default async function SearchPage(
   }
 
   return (
-    <Container className="py-6 space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">
-        {query ? (
-          <>
-            Results for <span className="text-green-700 dark:text-green-400">{query}</span>
-          </>
-        ) : (
-          "Search"
-        )}
-      </h1>
-
-      <SearchBar size="md" initialQuery={query} autoFocus={!query} />
+    <Container className="py-7 space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight mb-4">
+          {query ? (
+            <>
+              Results for{" "}
+              <span className="text-primary">&ldquo;{query}&rdquo;</span>
+            </>
+          ) : (
+            "Search"
+          )}
+        </h1>
+        <SearchBar size="md" initialQuery={query} autoFocus={!query} />
+      </header>
 
       {pinFilter ? (
-        <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
-            PIN {pinFilter}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
+            {pinFilter}
           </Badge>
-          filtering to your area
+          <span>filtering to your area</span>
         </div>
       ) : null}
 
       {!query ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground py-8 text-center">
           Try a business name, category, or keyword.
         </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground py-8 text-center">
           No matches in {(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}.
         </p>
       ) : (
-        <div className="grid gap-3">
-          {rows.map((l) => (
-            <ListingCard
-              key={l.id}
-              href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
-              name={l.name}
-              category={l.categories.name}
-              neighborhood={l.neighborhoods.name}
-              description={l.description}
-              verified={l.verified}
-              pin={l.pin_code}
-              photo_url={l.photo_url}
-              hours={l.hours_json}
-            />
-          ))}
-        </div>
+        <>
+          <p className="text-xs text-muted-foreground">
+            {rows.length} result{rows.length !== 1 ? "s" : ""}
+          </p>
+          <div className="grid gap-2">
+            {rows.map((l) => (
+              <ListingCard
+                key={l.id}
+                href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
+                name={l.name}
+                category={l.categories.name}
+                neighborhood={l.neighborhoods.name}
+                description={l.description}
+                verified={l.verified}
+                pin={l.pin_code}
+                photo_url={l.photo_url}
+                hours={l.hours_json}
+              />
+            ))}
+          </div>
+        </>
       )}
     </Container>
   );

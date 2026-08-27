@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 export function SearchBar({
@@ -27,31 +26,47 @@ export function SearchBar({
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
-  const inputCls =
-    size === "lg" ? "h-12 text-base pl-10" : "h-10 pl-9";
-  const iconCls = size === "lg" ? "size-4 left-3.5" : "size-4 left-3";
+  if (size === "lg") {
+    return (
+      <form onSubmit={submit}>
+        <div className="flex items-center gap-0 rounded-xl border border-border bg-background shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:border-primary/50 transition-all">
+          <Search className="size-4 ml-4 shrink-0 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={placeholder}
+            autoFocus={autoFocus}
+            name="q"
+            autoComplete="off"
+            className="flex-1 h-14 px-3 text-base bg-transparent outline-none placeholder:text-muted-foreground"
+          />
+          <Button
+            type="submit"
+            disabled={!q.trim()}
+            className="m-1.5 rounded-lg h-11 px-5 shrink-0"
+          >
+            Search
+          </Button>
+        </div>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={submit} className="flex gap-2">
       <div className="relative flex-1">
-        <Search
-          className={`${iconCls} pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground`}
-        />
-        <Input
+        <Search className="size-4 left-3 pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
           name="q"
           autoComplete="off"
-          className={inputCls}
+          className="w-full h-10 pl-9 pr-3 rounded-md border border-input bg-background text-sm outline-none focus:ring-2 focus:ring-ring focus:border-primary/50 placeholder:text-muted-foreground transition-all"
         />
       </div>
-      <Button
-        type="submit"
-        size={size === "lg" ? "lg" : "default"}
-        disabled={!q.trim()}
-      >
+      <Button type="submit" disabled={!q.trim()}>
         Search
       </Button>
     </form>

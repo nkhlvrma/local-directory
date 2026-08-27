@@ -14,6 +14,11 @@ import type { WeekHours } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+const CITY_LABEL: Record<string, string> = {
+  lucknow: "Lucknow",
+  bangalore: "Bangalore",
+};
+
 export default async function Home() {
   const supabase = await createSupabaseServerClient();
   const pin = (await cookies()).get("pin")?.value ?? "";
@@ -75,92 +80,113 @@ export default async function Home() {
   const nearby = (nearbyRes.data ?? []) as unknown as Nearby[];
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
+  const cityName = CITY_LABEL[(city as { slug: string }).slug] ?? (city as { name: string }).name;
 
   return (
-    <Container className="py-8 space-y-10">
-      <section>
-        <h1 className="text-4xl font-bold tracking-tight">
-          Find someone nearby.
-        </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          Every listing is verified. Tap to chat on WhatsApp — no forms, no
-          call-backs.
-        </p>
-        <div className="mt-6">
-          <SearchBar size="lg" />
-        </div>
-      </section>
+    <>
+      {/* Hero */}
+      <div className="border-b">
+        <Container className="pt-12 pb-10">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+            <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+              {cityName} · community verified
+            </span>
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
+            Find trusted<br />locals.
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground max-w-md leading-relaxed">
+            Electricians, tiffin, tailors, plumbers — every listing verified by hand. Chat directly on WhatsApp.
+          </p>
+          <div className="mt-8 max-w-xl">
+            <SearchBar size="lg" />
+          </div>
+        </Container>
+      </div>
 
-      {pinFilter ? (
-        nearby.length > 0 ? (
+      <Container className="py-10 space-y-12">
+        {/* Near PIN */}
+        {pinFilter ? (
+          nearby.length > 0 ? (
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Near PIN
+                </h2>
+                <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
+                  {pinFilter}
+                </Badge>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {nearby.map((l) => (
+                  <ListingCard
+                    key={l.id}
+                    href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
+                    name={l.name}
+                    category={l.categories.name}
+                    neighborhood={l.neighborhoods.name}
+                    description={l.description}
+                    verified={l.verified}
+                    pin={l.pin_code}
+                    photo_url={l.photo_url}
+                    hours={l.hours_json}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <Alert>
+              <AlertDescription>
+                No listings yet at PIN {pinFilter}. Browse by category below.
+              </AlertDescription>
+            </Alert>
+          )
+        ) : null}
+
+        <RecentlyViewed />
+
+        {/* Categories */}
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            Browse by category
+          </h2>
+          <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+            {cats.map((c) => (
+              <CategoryCard
+                key={c.slug}
+                slug={c.slug}
+                name={c.name}
+                href={`/${(city as { slug: string }).slug}/c/${c.slug}`}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Neighborhoods */}
+        {hoods.length > 0 && (
           <section>
-            <div className="flex items-baseline gap-2 mb-3">
-              <h2 className="text-lg font-semibold">Near PIN</h2>
-              <Badge className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200">
-                {pinFilter}
-              </Badge>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {nearby.map((l) => (
-                <ListingCard
-                  key={l.id}
-                  href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
-                  name={l.name}
-                  category={l.categories.name}
-                  neighborhood={l.neighborhoods.name}
-                  description={l.description}
-                  verified={l.verified}
-                  pin={l.pin_code}
-                  photo_url={l.photo_url}
-                  hours={l.hours_json}
-                />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              Browse by neighborhood
+            </h2>
+            <div className="flex gap-2 flex-wrap">
+              {hoods.map((n) => (
+                <Link
+                  key={n.slug}
+                  href={`/${(city as { slug: string }).slug}/n/${n.slug}`}
+                >
+                  <Badge
+                    variant="outline"
+                    className="cursor-pointer py-1.5 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary transition-colors"
+                  >
+                    {n.name}
+                  </Badge>
+                </Link>
               ))}
             </div>
           </section>
-        ) : (
-          <Alert>
-            <AlertDescription>
-              No listings yet at PIN {pinFilter}. Browse by category below.
-            </AlertDescription>
-          </Alert>
-        )
-      ) : null}
-
-      <RecentlyViewed />
-
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          Browse by category
-        </h2>
-        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
-          {cats.map((c) => (
-            <CategoryCard
-              key={c.slug}
-              slug={c.slug}
-              name={c.name}
-              href={`/${(city as { slug: string }).slug}/c/${c.slug}`}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          Browse by neighborhood
-        </h2>
-        <div className="flex gap-2 flex-wrap">
-          {hoods.map((n) => (
-            <Link
-              key={n.slug}
-              href={`/${(city as { slug: string }).slug}/n/${n.slug}`}
-            >
-              <Badge variant="secondary" className="cursor-pointer">
-                {n.name}
-              </Badge>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </Container>
+        )}
+      </Container>
+    </>
   );
 }

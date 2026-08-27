@@ -1,15 +1,13 @@
-import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 
 export function VerifiedBadge() {
   return (
-    <Badge
-      variant="secondary"
-      className="bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900 gap-1"
+    <span
+      className="inline-flex items-center gap-1 text-xs font-medium text-primary border border-primary/30 bg-primary/8 rounded-full px-2 py-0.5"
       title="We messaged this WhatsApp and got a response."
     >
-      <Check className="size-3" />
+      <Check className="size-3" strokeWidth={2.5} />
       Verified
-    </Badge>
+    </span>
   );
 }

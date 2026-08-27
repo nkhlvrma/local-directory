@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { VerifiedBadge } from "./VerifiedBadge";
 import { OpenNowBadge } from "./OpenNowBadge";
 import type { WeekHours } from "@/lib/types";
 
@@ -29,35 +28,45 @@ export function ListingCard({
   hours,
 }: Props) {
   return (
-    <Link href={href} className="block">
-      <Card className="p-4 transition-colors hover:bg-muted/50">
-        <div className="flex items-start gap-3">
-          {photo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photo_url}
-              alt=""
-              loading="lazy"
-              className="size-18 shrink-0 rounded-lg object-cover"
-              style={{ width: 72, height: 72 }}
-            />
-          ) : null}
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium">{name}</span>
-              {verified ? <VerifiedBadge /> : null}
-              <OpenNowBadge hours={hours ?? null} />
-              {pin ? <Badge variant="secondary">PIN {pin}</Badge> : null}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {[category, neighborhood].filter(Boolean).join(" · ")}
-            </div>
-            {description ? (
-              <p className="text-sm line-clamp-2">{description}</p>
+    <Link href={href} className="block group">
+      <div className="flex gap-3 rounded-xl border border-border/70 px-4 py-3.5 transition-all hover:border-primary/30 hover:bg-muted/30">
+        {photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo_url}
+            alt=""
+            loading="lazy"
+            className="size-16 shrink-0 rounded-lg object-cover"
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-sm leading-snug">{name}</span>
+            {verified ? (
+              <span
+                title="Verified — we messaged this WhatsApp and got a response"
+                className="inline-flex items-center"
+              >
+                <Check className="size-3.5 text-primary" strokeWidth={2.5} />
+              </span>
+            ) : null}
+            <OpenNowBadge hours={hours ?? null} />
+            {pin ? (
+              <Badge variant="secondary" className="text-xs font-mono">
+                {pin}
+              </Badge>
             ) : null}
           </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {[neighborhood, category].filter(Boolean).join(" · ")}
+          </p>
+          {description ? (
+            <p className="text-sm mt-1.5 line-clamp-2 text-foreground/75 leading-snug">
+              {description}
+            </p>
+          ) : null}
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }
