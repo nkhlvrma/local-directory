@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent/editor tooling state (not app code)
+.claude/
+.codex/
+.agents/
+skills-lock.json
