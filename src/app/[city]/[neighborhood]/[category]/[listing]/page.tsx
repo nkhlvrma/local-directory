@@ -18,7 +18,12 @@ import { ShareButton } from "@/components/ShareButton";
 import { TrackView } from "@/components/TrackView";
 import { ListingGridCard } from "@/components/ListingGridCard";
 import { SITE_URL } from "@/lib/site";
-import type { WeekHours, FieldDef } from "@/lib/types";
+import {
+  LISTING_CARD_COLUMNS,
+  type ListingCardRow,
+  type WeekHours,
+  type FieldDef,
+} from "@/lib/types";
 
 type Params = {
   city: string;
@@ -121,22 +126,13 @@ export default async function ListingPage(
 
   const { data: similarRaw } = await supabase
     .from("listings")
-    .select("id, name, slug, description, verified, pin_code, photo_url, hours_json")
+    .select(LISTING_CARD_COLUMNS)
     .eq("status", "approved")
     .eq("category_id", category.id)
     .eq("neighborhood_id", neighborhood.id)
     .order("whatsapp_clicks", { ascending: false })
     .limit(5);
-  type Sim = {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    verified: boolean;
-    pin_code: string | null;
-    photo_url: string | null;
-    hours_json: WeekHours | null;
-  };
+  type Sim = ListingCardRow;
   const similar = ((similarRaw ?? []) as unknown as Sim[])
     .filter((s) => s.id !== listing.id)
     .slice(0, 4);

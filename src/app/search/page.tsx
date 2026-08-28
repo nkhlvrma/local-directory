@@ -12,7 +12,7 @@ import { EmptyResults } from "@/components/EmptyResults";
 import { isValidPin } from "@/lib/pin";
 import { isMockMode } from "@/lib/supabase/mock";
 import { logEvent } from "@/lib/analytics";
-import type { WeekHours } from "@/lib/types";
+import { LISTING_CARD_COLUMNS, type ListingCardRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,15 +40,7 @@ export default async function SearchPage(
     .eq("slug", CITY_SLUG)
     .maybeSingle();
 
-  type Row = {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    verified: boolean;
-    pin_code: string | null;
-    photo_url: string | null;
-    hours_json: WeekHours | null;
+  type Row = ListingCardRow & {
     neighborhoods: { name: string; slug: string; city_id: string };
     categories: { name: string; slug: string; icon: string | null };
   };
@@ -60,7 +52,7 @@ export default async function SearchPage(
     let q2 = supabase
       .from("listings")
       .select(
-        `id, name, slug, description, verified, pin_code, photo_url, hours_json,
+        `${LISTING_CARD_COLUMNS},
          neighborhoods!inner ( name, slug, city_id ),
          categories!inner ( name, slug, icon )`,
       )

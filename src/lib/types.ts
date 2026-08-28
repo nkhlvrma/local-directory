@@ -60,3 +60,25 @@ export type FieldDef = {
   options?: string[]; // for select
   help?: string;
 };
+
+// The columns every listing *card* needs — grid cards, search results, and
+// the "similar listings" rail all render the same summary shape. Kept as a
+// single constant (with the row type it produces right beside it, so the
+// two can't drift) because four separate page queries previously spelled
+// this list out by hand; adding a field to the card meant editing all four.
+export const LISTING_CARD_COLUMNS =
+  "id, name, slug, description, verified, pin_code, photo_url, hours_json";
+
+// The row shape LISTING_CARD_COLUMNS selects. Pages intersect this with
+// whichever relations they additionally join, e.g.
+//   type Row = ListingCardRow & { categories: { name: string } };
+export type ListingCardRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  verified: boolean;
+  pin_code: string | null;
+  photo_url: string | null;
+  hours_json: WeekHours | null;
+};

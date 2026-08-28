@@ -11,7 +11,7 @@ import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { EmptyResults } from "@/components/EmptyResults";
 import { isValidPin } from "@/lib/pin";
 import { isOpenNow } from "@/lib/hours";
-import type { WeekHours } from "@/lib/types";
+import { LISTING_CARD_COLUMNS, type ListingCardRow } from "@/lib/types";
 
 type Params = { city: string; category: string };
 type SP = { verified?: string; photo?: string; open?: string };
@@ -57,7 +57,7 @@ export default async function CategoryPage(
   let q = supabase
     .from("listings")
     .select(
-      `id, name, slug, description, verified, pin_code, photo_url, hours_json,
+      `${LISTING_CARD_COLUMNS},
        neighborhoods!inner ( name, slug, city_id ),
        categories!inner ( name, slug )`,
     )
@@ -68,15 +68,7 @@ export default async function CategoryPage(
   if (verifiedOnly) q = q.eq("verified", true);
   const { data: listings } = await q.order("name");
 
-  type Row = {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    verified: boolean;
-    pin_code: string | null;
-    photo_url: string | null;
-    hours_json: WeekHours | null;
+  type Row = ListingCardRow & {
     neighborhoods: { name: string; slug: string };
   };
   let rows = (listings ?? []) as unknown as Row[];
