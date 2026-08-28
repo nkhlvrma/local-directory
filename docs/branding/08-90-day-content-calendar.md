@@ -15,7 +15,7 @@ Channels used: **WhatsApp groups** (community/society/local groups the founder i
 - **Instagram:** none. (Optional: reserve the handle/username now even if unused.)
 
 ### Week 2
-- **Goal:** first wave of business visits; get to 10 live verified listings.
+- **Goal:** first wave of business visits; get to 10 live contact-checked listings with consent.
 - **WhatsApp groups:** none yet publicly — any WhatsApp activity this week is 1:1 outreach to businesses, not group posting.
 - **WhatsApp Status:** none.
 - **Instagram:** none.
@@ -32,7 +32,7 @@ Channels used: **WhatsApp groups** (community/society/local groups the founder i
 - **WhatsApp Status:** none.
 - **Instagram:** create the account if not already done; no posts yet, just set up (bio, profile photo, link).
 
-*Why nothing public in Phase 1:* posting to a community before there's real, checkable substance behind it (a working directory with real verified listings) risks a first impression that Karib is vaporware or an idea, not a working product — worse for long-term trust than staying quiet for four weeks.
+*Why nothing public in Phase 1:* posting to a community before there's real, checkable substance behind it (a working directory with real contact-checked listings) risks a first impression that Karib is vaporware or an idea, not a working product — worse for long-term trust than staying quiet for four weeks.
 
 ---
 
@@ -47,14 +47,14 @@ Channels used: **WhatsApp groups** (community/society/local groups the founder i
 ### Week 6 — First community seeding
 - **Goal:** be genuinely useful in 2–3 local groups; light trust-building.
 - **WhatsApp groups:** post 2 of the practical-question-style posts from `07-acquisition-playbooks.md` (in different groups, spaced across the week, not the same day).
-- **WhatsApp Status:** 2 posts — one listing spotlight ("Found a great tiffin service in [neighborhood], verified their WhatsApp — search 'tiffin' on Karib"), one behind-the-scenes ("Spent today walking [neighborhood] adding shops to Karib").
+- **WhatsApp Status:** 2 posts — one listing spotlight ("Found a tiffin service in [neighborhood], checked their WhatsApp contact recently — search 'tiffin' on Karib"), one behind-the-scenes ("Spent today walking [neighborhood] adding shops to Karib").
 - **Instagram:** first post — an introduction post explaining what Karib is and why it exists (the positioning statement from `02-positioning-and-messaging.md`, adapted to a short caption).
 
 ### Week 7 — Share card push
-- **Goal:** get the "verified local businesses" share card genuinely forwarded, not just posted once.
+- **Goal:** get the "contact-checked local businesses" share card genuinely forwarded, not just posted once.
 - **WhatsApp groups:** post the share card (from `07-acquisition-playbooks.md`) in 2–3 relevant groups, framed as a resource, not an announcement. Follow 1 more practical-question post.
-- **WhatsApp Status:** 3 posts — 2 listing spotlights, 1 "here's how Karib checks a number is real" trust post (ties to the Verified badge explainer copy in `06-verification-community-copy.md`).
-- **Instagram:** 2 posts — one listing spotlight (a real business, real photo if available, real "Verified" and would-recommend framing), one "Verified means..." trust-explainer post.
+- **WhatsApp Status:** 3 posts — 2 listing spotlights, 1 "here's how Karib checks a number is real" trust post (ties to the Contact checked explainer copy in `06-verification-community-copy.md`).
+- **Instagram:** 2 posts — one listing spotlight (a real business, real photo if available, real "Contact checked" and would-recommend framing), one "Contact checked means..." trust-explainer post.
 
 ### Week 8 — Diagnose and fix the weakest funnel step
 - **Goal:** identify where residents drop off (search → view → WhatsApp click) using early data from `11-measurement-plan.md`, and address it directly.
@@ -76,7 +76,7 @@ Channels used: **WhatsApp groups** (community/society/local groups the founder i
 - **Goal:** turn ad hoc connector/visit recruitment into a repeatable weekly block.
 - **WhatsApp groups:** 1–2 posts, business as usual.
 - **WhatsApp Status:** 2–3 posts, including one aimed at business recruitment this time (e.g. "If you run a shop in [neighborhood] and want to be listed, message me") rather than only resident-facing content — Phase 3 should start blending supply and demand content instead of treating them as separate phases.
-- **Instagram:** 1 post, a "how it's going" milestone post (real numbers: "X verified listings across Y neighborhoods now") — milestone posts work well for social proof once there's a real number worth sharing.
+- **Instagram:** 1 post, a "how it's going" milestone post (real numbers: "X contact-checked listings across Y neighborhoods now") — milestone posts work well for social proof once there's a real number worth sharing.
 
 ### Week 11 — Deepen existing neighborhoods
 - **Goal:** add 1–2 new categories to existing neighborhoods; re-run the share card with better numbers behind it.

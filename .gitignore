@@ -46,3 +46,6 @@ next-env.d.ts
 .codex/
 .agents/
 skills-lock.json
+
+# private planning and branding notes
+/docs/

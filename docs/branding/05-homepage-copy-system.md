@@ -1,15 +1,15 @@
 # Homepage Copy System
 
-Multiple options per surface, at least 3 each, with a top recommendation marked. Written against the current homepage structure in `src/app/page.tsx` (hero with `LocationBar` + animated headline + `SearchBar`, then Recently Viewed, Browse by category, Neighborhood map) and the recommended name **Karib**. If a different name ships, only the name-specific lines (marked) need swapping.
+Multiple options per surface, at least 3 each, with a top recommendation marked. Written against the current homepage structure in `src/app/page.tsx` (hero with `LocationBar` + animated headline + `SearchBar`, then Recently Viewed, Browse by category, Neighborhood map) and the working name **Karib**. If a different name ships, only the name-specific lines need swapping.
 
 ---
 
 ## Hero headline
 
-The current implementation uses an animated typewriter: "Find trusted **[locals / businesses / services]**." These options work with or without that animation — noted where it matters.
+The current implementation uses an animated typewriter: "Find **[locals / businesses / services]**." These options work with or without that animation — noted where it matters.
 
-1. **"Find trusted locals, businesses, and services."** *(current copy — keep the typewriter cycling through these three words)*
-   Plain, functional, already live. Good default if no change is wanted.
+1. **"Find locals, businesses, and services."** *(current structure — keep the typewriter cycling through these three words)*
+   Plain and functional. Put the trust explanation below the headline rather than making an unearned quality claim in the headline.
 
 2. **"Your neighborhood, one chat away."**
    Leads with the WhatsApp mechanic implicitly and the neighborly tone explicitly — doesn't animate as naturally as a word-swap headline, works better as a static line. ⭐ **Recommended** — matches the tagline recommendation in `02-positioning-and-messaging.md`, and tests well against the "humble, not salesy" voice principle since it makes no claim about quality at all.
@@ -24,10 +24,10 @@ The current implementation uses an animated typewriter: "Find trusted **[locals 
 
 ## Hero subheadline
 
-Current copy: *"Find community-verified local services and chat with them directly on WhatsApp."*
+Current copy: *"A neighborhood guide for useful local people and services. Search first, then reach out directly."*
 
-1. **"Find community-verified local services and chat with them directly on WhatsApp."** *(current)*
-   Solid, clear, already live. Only issue: "community-verified" slightly conflates the two distinct trust mechanics (WhatsApp-reachability verification and community "would recommend" signals) — worth splitting for precision.
+1. **"A neighborhood guide for useful local people and services. Search first, then reach out directly."** *(current direction)*
+   Clear and modest. It explains the job without claiming the directory can guarantee service quality.
 
 2. **"We check that local businesses actually reply on WhatsApp — so you can skip the guesswork and just message them."**
    ⭐ **Recommended.** Precisely matches the resident-facing promise in `02-positioning-and-messaging.md`, names the mechanic (we messaged them, they replied) instead of a vaguer "verified" claim, and ends on the reader's action.
@@ -54,15 +54,15 @@ Context: resident searches a category/neighborhood combination with zero results
 
 ## Trust-panel microcopy
 
-Context: a small panel (likely on the listing detail page or an About/trust page) explaining what "Verified" and the directory as a whole actually stand behind.
+Context: a small panel on the listing detail page explaining what "Contact checked" and the directory as a whole actually stand behind.
 
-1. **"Verified means one thing here: we messaged this number on WhatsApp ourselves and got a reply. That's it — not a rating, not a background check, not an endorsement."**
-   ⭐ **Recommended.** Most explicit and most honest option — actively forecloses the reader's likely over-assumption (that "Verified" means more than it does), which is exactly the humility the plan calls for.
+1. **"Contact checked means one thing here: we messaged this number on WhatsApp ourselves and got a reply. That's it — not a rating, background check, or endorsement."**
+   ⭐ **Recommended.** Most explicit and honest option.
 
 2. **"We don't rank businesses or claim to know who's 'the best.' We only check that they're reachable — recommendations from real neighbors tell you the rest."**
    Good alternative framing that explains the *absence* of ratings/rankings as a deliberate choice rather than a missing feature — useful if user feedback suggests people are asking "why isn't this sorted by rating?"
 
-3. **"This directory runs on two simple checks: can we reach them on WhatsApp (Verified), and have neighbors said they'd recommend them (Would recommend). No paid placements, no star ratings."**
+3. **"This directory runs on two simple signals: did we reach the contact on WhatsApp (Contact checked), and have neighbors said they'd recommend them (Would recommend). No paid placements, no star ratings."**
    Most complete/systemic explanation — best suited to a dedicated "How Karib works" page rather than an inline panel, since it's longer and covers both trust mechanics at once.
 
 ---
@@ -71,8 +71,8 @@ Context: a small panel (likely on the listing detail page or an About/trust page
 
 Context: after a business (or resident, on behalf of a business) submits a new listing via `list-your-business`.
 
-1. **"Got it. We'll WhatsApp you in the next day or two to confirm your number, then you're live."**
-   ⭐ **Recommended.** Matches the example already set in `03-voice-guidelines.md` — reuse verbatim.
+1. **"Got it. We'll WhatsApp you in the next day or two to confirm your number, then send you the listing link after review."**
+   ⭐ **Recommended.** Gives a concrete next step without implying publication happens before consent and review.
 
 2. **"Thanks! One quick step left — we'll message your WhatsApp to confirm it's the right number, usually within a couple of days."**
    Slightly warmer/more explanatory version, better if user testing shows people are confused about *why* they'll get a WhatsApp message from an unfamiliar number after submitting.

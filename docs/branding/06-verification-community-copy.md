@@ -4,23 +4,23 @@ Exact microcopy strings, ready to drop into the codebase (as content, not as an 
 
 ---
 
-## Verified badge
+## Contact checked badge
 
-**Label (as currently implemented in `src/components/VerifiedBadge.tsx`):**
-> Verified
+**Label:**
+> Contact checked
 
-Keep this — one word is correct for badge-scale UI. Do not expand it to "Verified ✓" or "100% Verified" inline; the explanatory power belongs in the tooltip/explainer, not the label itself.
+Keep this short enough for badge-scale UI. Do not expand it to "Fully verified" or "100% verified"; the explanation belongs in the tooltip/detail panel.
 
-**Tooltip / explainer text (currently: "We messaged this WhatsApp and got a response."):**
+**Tooltip / explainer text:**
 
 Recommended replacement, slightly more precise and slightly warmer:
-> We messaged this number on WhatsApp ourselves and got a reply. That's what Verified means here.
+> We messaged this number on WhatsApp ourselves and got a reply. That's what Contact checked means here.
 
 Shorter variant, if tooltip space is constrained:
 > We WhatsApped this number and got a reply.
 
-**Trust-panel / detail-page expansion** (for a fuller explainer, e.g. an expandable "What does Verified mean?" link near the badge):
-> Verified means exactly one thing: we sent this business a WhatsApp message and a real person replied. It's not a rating, a background check, or an endorsement of their work — just confirmation that if you message them, someone will actually see it.
+**Trust-panel / detail-page expansion:**
+> Contact checked means exactly one thing: we sent this number a WhatsApp message and got a reply. It is not a rating, background check, or endorsement — and it does not guarantee that the business is available now.
 
 **What NOT to write**, and why each fails the humility principle:
 - "Fully verified" / "100% Verified" — implies a more thorough check than exists.

@@ -6,7 +6,7 @@ Turns the three phases (days 1–30 supply, 31–60 resident usage, 61–90 repe
 
 ## Phase 1 (Days 1–30): Supply — get real, reachable listings on the directory
 
-**Goal for the phase:** a critical mass of verified listings in 2–3 categories a resident would actually search for in week one, concentrated in 2–3 neighborhoods rather than spread thin citywide.
+**Goal for the phase:** a dense starting set of contact-checked listings in 2–3 categories a resident would actually search for in week one, concentrated in 2–3 neighborhoods rather than spread thin citywide.
 
 ### Week-by-week checklist
 
@@ -18,9 +18,9 @@ Turns the three phases (days 1–30 supply, 31–60 resident usage, 61–90 repe
 
 **Days 8–14 — First outreach wave**
 - [ ] Visit or call 15–20 businesses in person from the list (in-person or phone first, WhatsApp message second — a cold WhatsApp message from an unknown number to a shop owner who's never heard of Karib has a much lower reply rate than a message that follows a face-to-face or phone introduction). See `10-business-outreach-scripts.md` for the actual conversation script.
-- [ ] For each business that says yes: get their WhatsApp number confirmed live, in front of them if possible (send a test message and watch it deliver) — this collapses the "we'll message you in a day or two" verification step into the same visit, which is both faster and more reliable than doing it remotely later.
+- [ ] For each business that says yes: record explicit permission to publish the number, confirm it live in front of them if possible, and explain how they can edit or remove the listing. A delivered message alone is not consent.
 - [ ] Track a simple conversion funnel even informally: businesses approached → said yes → number confirmed live → listing published. This is the seed data for the measurement plan (`11-measurement-plan.md`).
-- [ ] Target for the week: **10 live, verified listings.** Adjust down if the actual in-person conversion rate is lower than expected — the point of week 2 is calibrating a realistic per-visit yield, not hitting an arbitrary number.
+- [ ] Target for the week: **10 live, contact-checked listings with consent.** Adjust down if the actual in-person conversion rate is lower than expected — the point is calibrating a realistic per-visit yield, not hitting an arbitrary number.
 
 **Days 15–21 — Recruit neighborhood connectors**
 A "neighborhood connector" is a real person embedded in a neighborhood — a local RWA (resident welfare association) member, a well-known shopkeeper, a building WhatsApp group admin — who can vouch for Karib to other businesses and residents, dramatically lowering the cold-outreach cost per listing.
@@ -32,8 +32,8 @@ A "neighborhood connector" is a real person embedded in a neighborhood — a loc
 **Days 22–30 — Consolidate and fill gaps**
 - [ ] Review category and neighborhood coverage: are there obvious gaps a resident would notice immediately (e.g. no tutors listed at all, or all listings clustered in one street)? Prioritize filling those over adding more of an already-covered category.
 - [ ] Re-contact any business that said "maybe later" in week 1–2 — a second, warmer touch (especially if a connector can now vouch) converts meaningfully better than a single cold attempt.
-- [ ] Target for phase end: **40–60 live, verified listings** across the chosen categories/neighborhoods. This is a planning anchor, not a guarantee — the real target should be set from what weeks 1–2 show is achievable per week, then extrapolated.
-- [ ] Draft the "verified local businesses" WhatsApp share card (see below) so it's ready to go the moment Phase 2 starts — don't build this under time pressure once residents are already the focus.
+- [ ] Target for phase end: **40–60 live, contact-checked listings with consent** across the chosen categories/neighborhoods. This is a planning anchor, not a guarantee.
+- [ ] Draft the "contact-checked local businesses" WhatsApp share card (see below) so it's ready to go the moment Phase 2 starts — don't build this under time pressure once residents are already the focus.
 
 ---
 
@@ -50,7 +50,7 @@ A "neighborhood connector" is a real person embedded in a neighborhood — a loc
 
 **Days 38–44 — Seed practical questions in local groups**
 - [ ] Post 3–4 genuinely useful, non-promotional questions/answers in local community WhatsApp groups and neighborhood Facebook groups (see draft examples below) — the goal is to be helpful first, mention Karib naturally second, not the reverse.
-- [ ] Post the "verified local businesses" share card (see below) once, in 2–3 relevant groups, framed as a genuinely useful resource, not an announcement about a company.
+- [ ] Post the "contact-checked local businesses" share card (see below) once, in 2–3 relevant groups, framed as a genuinely useful resource, not an announcement about a company.
 - [ ] Start a WhatsApp Status habit (personal number, or a Karib business number if one exists) — 2–3 times a week, short and specific ("Found a great tiffin service in [neighborhood], verified their WhatsApp, added them — search 'tiffin' on Karib"), not generic promotion.
 
 **Days 45–52 — Instagram presence, lightweight**
@@ -79,7 +79,7 @@ A "neighborhood connector" is a real person embedded in a neighborhood — a loc
 
 **Days 75–81 — Expand within existing neighborhoods before going wider**
 - [ ] Add 1–2 new categories to the existing launch neighborhoods (deepen, don't yet widen) — this tests whether the recruitment playbook generalizes to a new category before testing whether it generalizes to a new area.
-- [ ] Re-run the "verified local businesses" share card push in the same groups, now with a noticeably larger, more credible listing count — the second push in the same community should land better than the first because there's now visible proof it worked.
+- [ ] Re-run the "contact-checked local businesses" share card push in the same groups, now with a noticeably larger, more credible listing count — the second push in the same community should land better than the first because there's now visible proof it worked.
 
 **Days 82–90 — Decide readiness for a second neighborhood/city**
 - [ ] Pick one new neighborhood in Lucknow (not yet a second city) and run the full supply playbook there in compressed form (one week instead of four) as a rehearsal — this is the most honest test of repeatability available before committing to the bigger step of a second city.
@@ -98,7 +98,7 @@ How to approach them: in person or by phone first, never a cold broadcast messag
 
 ---
 
-## "Verified local businesses" WhatsApp share card — draft copy
+## "Contact-checked local businesses" WhatsApp share card — draft copy
 
 Format: a short forwardable text message (not an image, at this stage — a plain-text message is more likely to actually get forwarded person-to-person than an image card a founder would need design tooling to produce; revisit as an image once there's bandwidth).
 
@@ -118,10 +118,10 @@ Format: a short forwardable text message (not an image, at this stage — a plai
 
 ## Seeding practical questions in local groups — 4 example posts
 
-The rule: be genuinely useful first. Karib should be mentioned as an answer, not as the subject of the post.
+The rule: be genuinely useful first. Karib should be mentioned as an answer, not as the subject of the post. Never imply that contact checking is a quality or safety endorsement.
 
 1. **"Does anyone know a reliable AC repair guy in [neighborhood] who actually picks up the phone? Tried two numbers from an old flyer and both are dead."**
-   *(Wait for replies, then, if genuinely helpful:)* "Found one on Karib actually — messaged them on WhatsApp directly and they replied in a few minutes. [link]"
+   *(Wait for replies, then, if genuinely helpful:)* "Found one on Karib actually — the contact was checked recently and they replied on WhatsApp. [link]"
 
 2. **"PSA for anyone new to [neighborhood] — tiffin services here are mostly WhatsApp-only, no Swiggy/Zomato listing. Compiled a few I found reachable if useful: [link]"**
 

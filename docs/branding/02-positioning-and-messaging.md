@@ -8,7 +8,7 @@ Written against the recommended name **Karib** (see `01-naming.md`). If a differ
 
 **Refined from the source plan's draft:**
 
-> Karib is a trusted neighborhood guide for finding local people, businesses, and services in Lucknow you can actually reach — and messaging them directly on WhatsApp, without forms, hold music, or dead-end numbers.
+> Karib is a neighborhood guide for finding local people, businesses, and services in Lucknow you can actually reach — then messaging them directly on WhatsApp, without forms or dead-end numbers.
 
 Changes from the source draft and why:
 - Named the product and the city explicitly — a positioning statement that could describe any city isn't yet a positioning statement for *this* one.
@@ -17,10 +17,10 @@ Changes from the source draft and why:
 
 ## Resident-facing promise
 
-> **We check that local businesses answer. You skip the guesswork.**
+> **We check that local contacts are active. You skip the guesswork.**
 
 Supporting line (for use under the promise, not instead of it):
-> Every listing on Karib has been messaged on WhatsApp by us and got a real reply — so when you reach out, someone's actually there.
+> A Contact checked listing means we messaged the number on WhatsApp and got a reply at the time of checking. It is not a promise that the business is available now or that the service will be good.
 
 Why this phrasing: it describes an action Karib took ("we messaged them and got a reply"), not a quality judgment ("verified," "trusted," "top-rated"). That action is true and checkable. A quality judgment isn't, yet.
 
@@ -36,13 +36,13 @@ This is deliberately written for a shopkeeper who does not think of themselves a
 ## The four core messages
 
 ### 1. Resident message
-> Find a local business or service near you, see if a real neighbor has recommended them, and message them on WhatsApp in one tap — no sign-up, no spam calls.
+> Find a local business or service near you, see whether its contact has been checked, and message it on WhatsApp or call — no sign-up and no lead form.
 
 ### 2. Business message
 > List your shop or service for free. We'll message you once to confirm your WhatsApp number works, then neighbors can reach you directly — no fees, no forms, no app to manage.
 
 ### 3. Trust message
-> Every listing is checked one way: we message the business on WhatsApp ourselves and confirm someone replies. That's what "Verified" means here — not a star rating, not a paid placement. Just: this number works.
+> Every contact is checked one way: we message the number on WhatsApp ourselves and confirm a reply. That's what "Contact checked" means here — not a star rating, background check, or paid placement.
 
 ### 4. Community message
 > Karib runs on real recommendations from real neighbors — not star ratings from strangers. When someone in your area says "would recommend," that's a person, not an algorithm.

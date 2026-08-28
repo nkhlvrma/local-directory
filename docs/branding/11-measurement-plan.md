@@ -36,13 +36,13 @@ Group the raw events into a funnel that mirrors the actual resident journey, not
 
 ## North-star metric
 
-> **WhatsApp/call conversations started per approved listing view.**
+> **Contact starts per unique approved listing view.**
 
-Defined as: (WhatsApp clicked + Call clicked) ÷ (Listing viewed), measured over approved/live listings only.
+Defined as: (unique WhatsApp clicks + unique call clicks) ÷ (unique approved listing views), measured over a fixed time window. Report WhatsApp and call rates separately as well as combined; one resident may take both actions.
 
-**Why this is the right north star, not raw traffic or raw listing count:** it's the one number that directly reflects the core promise — "reachable, not just listed." A directory can have hundreds of listings and thousands of views and still fail its actual mission if views don't turn into real conversations. This metric also can't be gamed by adding more listings or driving more traffic alone — it only moves if the listings people actually look at are ones they're willing to act on, which is a decent proxy for whether the trust signals (Verified badge, would-recommend counts) are doing their job.
+**Why this is the right north star, not raw traffic or raw listing count:** it reflects the core promise — "reachable, not just listed." A directory can have hundreds of listings and thousands of views and still fail if views do not turn into contact attempts. It is only a proxy, though: a click is not a completed conversation, successful booking, or good service outcome.
 
-**Caveat to build into the dashboard, not just this document:** WhatsApp-click tracking (`whatsappLink` in `src/lib/whatsapp.ts`) fires when a resident taps the link, not when a conversation actually happens on WhatsApp itself — the product cannot see past the `wa.me` handoff. Label this metric internally as "conversations started (click-through)," not "conversations," so nobody mistakes it for confirmed engagement.
+**Caveat to build into the dashboard, not just this document:** WhatsApp-click tracking (`whatsappLink` in `src/lib/whatsapp.ts`) fires when a resident taps the link, not when a conversation actually happens on WhatsApp itself — the product cannot see past the `wa.me` handoff. Label this metric internally as "contact starts (click-through)," not "conversations," so nobody mistakes it for confirmed engagement.
 
 ---
 
@@ -56,18 +56,18 @@ Defined as: Listing viewed ÷ (Search submitted + Category selected + Neighborho
 
 ### 2. View-to-contact rate (Evaluation → Conversion)
 This is the per-listing version of the north-star metric, useful for identifying *which specific listings* underperform, not just the aggregate.
-**Target-setting guidance:** after 30 days, rank listings by view-to-contact rate. Listings in the bottom quartile are worth a manual look — often a missing/blurry detail, an unclear category fit, or the Verified badge not showing (a technical or data issue) rather than the business itself being undesirable.
+**Target-setting guidance:** after 30 days, rank listings by view-to-contact rate. Listings in the bottom quartile are worth a manual look — often a missing/blurry detail, an unclear category fit, or the Contact checked badge not showing (a technical or data issue) rather than the business itself being undesirable.
 
-### 3. Verified-listing share of total listings
-Defined as: Verified listings ÷ total live listings. Not from the resident-behavior event list, but a critical supporting metric since "reachable" is the entire brand promise — a dashboard that only tracks resident behavior and ignores whether the supply side is actually keeping up with verification would miss the thing most likely to break trust.
+### 3. Contact-checked listing share of total listings
+Defined as: contact-checked listings ÷ total live listings. Not from the resident-behavior event list, but a critical supporting metric since contactability is the core brand promise — a dashboard that ignores supply freshness would miss the thing most likely to break trust.
 **Target-setting guidance:** this should trend toward 100% by definition (an unverified listing arguably shouldn't be live at all) — track it as a data-quality/process-health metric, flagging immediately if it drops, rather than setting a target below 100%.
 
-### 4. Recommendation rate among contacted residents
-Defined as: Recommendation submitted ÷ WhatsApp clicked (a rough proxy for "of the people who reached out, how many came back to say it went well").
+### 4. Recommendation rate among eligible residents
+Defined as: Recommendation submitted ÷ eligible post-contact prompts, not simply WhatsApp clicks. If eligibility cannot yet be observed, report this as a directional ratio and label the limitation.
 **Target-setting guidance:** this will likely be a small fraction at first (most people don't return to leave a recommendation without a nudge) — after 30 days, use the observed rate as a baseline and treat any deliberate prompt/nudge added later (e.g. a follow-up WhatsApp Status reminder, an on-site prompt) as a testable intervention against that baseline, not against an assumed number.
 
 ### 5. Report rate
-Defined as: Listing reported ÷ Listing viewed. A quality/trust health-check metric — should stay very low; a rising report rate is an early warning signal, not just a data point to log and forget.
+Defined as: unique listings reported ÷ unique listing views, segmented by listing age and category. A quality/trust health-check metric — should stay low; a rising rate is an early warning signal, not just a data point to log and forget.
 **Target-setting guidance:** set the "concerning" threshold relative to the observed 30-day baseline rather than an absolute number — e.g. if the baseline settles around 0.1% of views, treat a sustained move to 0.5%+ as worth investigating, since the *change* matters more than the absolute figure this early.
 
 ### 6. Business submission completion rate (Supply growth)
@@ -86,4 +86,6 @@ A single-screen view organized by the funnel stages above, not a flat list of el
 4. **Trust health panel:** verified-listing share, report rate, recommendation rate — grouped together because they're all "is the directory staying trustworthy" signals, distinct from raw usage volume.
 5. **Supply panel:** submission started/completed counts and completion rate — kept visually separate from the resident-facing panels above, since it answers a different question (is supply keeping pace) for a different audience (the founder managing outreach, not evaluating resident experience).
 
-**Explicitly out of scope for this document:** the actual event-logging implementation, the specific analytics tool/backend, and dashboard engineering — those belong to the concurrent engineering effort. This document is the spec that effort (or whoever builds the dashboard on top of the logged events) should build against.
+**Measurement hygiene:** define a deduplication window, use consented first-party analytics only, and avoid collecting message contents or contact-book data. Keep the distinction between observed clicks and claimed conversations visible in every dashboard label.
+
+**Explicitly out of scope for this document:** the actual event-logging implementation, the specific analytics tool/backend, and dashboard engineering — those belong to the engineering effort. This document is the measurement spec that effort should build against.

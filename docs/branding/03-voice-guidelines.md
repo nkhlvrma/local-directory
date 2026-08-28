@@ -53,7 +53,7 @@ Reference real, specific things about Lucknow and its neighborhoods where it's t
 
 ---
 
-### 3. Explaining verification
+### 3. Explaining contact checks
 
 **Don't:**
 > This business has been fully verified and approved by our quality team.
@@ -61,7 +61,7 @@ Reference real, specific things about Lucknow and its neighborhoods where it's t
 *Why it fails:* "fully verified" overclaims — implies background checks, licensing, quality review, none of which happened. "Our quality team" implies a team that (per the plan) doesn't exist yet for a solo founder.
 
 **Do:**
-> Verified means we messaged this number on WhatsApp ourselves and got a reply. That's the one thing we check.
+> Contact checked means we messaged this number on WhatsApp ourselves and got a reply. That's the one thing we check.
 
 *Grounds: Humble (states exactly and only what was checked), Clear (no ambiguity about what "Verified" means), Useful (sets correct expectations before the resident messages them).*
 
@@ -117,7 +117,7 @@ Reference real, specific things about Lucknow and its neighborhoods where it's t
 *Why it fails:* "pending review by our team" and "in due course" are vague and bureaucratic — no sense of timeframe or what happens next, and imply a team where there may be one founder.
 
 **Do:**
-> Got it. We'll WhatsApp you in the next day or two to confirm your number, then you're live.
+> Got it. We'll WhatsApp you in the next day or two to confirm your number, then send you the listing link after review.
 
 *Grounds: Useful (concrete next step and rough timing), Neighborly (first-person, direct), Clear (no hedging language).*
 
@@ -141,8 +141,8 @@ Reference real, specific things about Lucknow and its neighborhoods where it's t
 
 | Avoid | Why | Use instead |
 |---|---|---|
-| Best, top-rated, #1 | No evidence exists for a quality ranking — only reachability is checked | "Verified," a recommendation count, or nothing |
-| Fully verified, 100% verified | Overclaims what the check actually covers | "Verified — we messaged them and got a reply" |
+| Best, top-rated, #1 | No evidence exists for a quality ranking — only contactability is checked | A recommendation count, or nothing |
+| Fully verified, 100% verified | Overclaims what the check actually covers | "Contact checked — we messaged the number and got a reply" |
 | Curated, ecosystem, seamless, leverage | Corporate jargon, doesn't help the reader act | Say the plain thing directly |
 | Our team / pending review | Implies staff/process that may not exist for a solo founder; sounds bureaucratic | First person ("I'll," "we'll") with a concrete next step |
 | Opportunity, grow your business, increased visibility | Confirmed spam tells in this exact outreach context (see git history of `src/lib/outreach.ts`) | State the specific, concrete thing that happens ("free listing," "neighbors message you directly") |

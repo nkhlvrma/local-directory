@@ -7,7 +7,7 @@ Draft templates in English, Hindi, and Hinglish. Tone reference: this project's 
 - Always ask a **low-friction yes/no question**. Never ask the recipient to fill out a form.
 - Never say "opportunity" or "grow your business" — confirmed spam tells.
 
-All templates below follow these rules. `[SITE_NAME]` stands in for whichever name is finalized (Karib, per the recommendation in `01-naming.md`); `[SITE_URL]`, `[CITY]`, and `[CATEGORY]` are template variables.
+All templates below follow these rules. `[SITE_NAME]` stands in for whichever name is finalized (Karib is only the current recommendation); `[SITE_URL]`, `[CITY]`, and `[CATEGORY]` are template variables.
 
 ---
 
@@ -45,12 +45,12 @@ What a resident forwards into their own building/society WhatsApp group after us
 > Ye kaam ki cheez mili — [Site Name] [city] ke local businesses ki ek chhoti directory hai, jo WhatsApp pe reply karte hain. Koi form nahi, bas search karo aur tap karke message karo: [site URL]
 
 **Shorter variant** (for a resident sharing a single listing they found useful, rather than the whole directory):
-- Hinglish: "Ye [business name] mila [Site Name] pe — WhatsApp pe verified hai, seedha message kar sakte ho: [listing URL]"
-- English: "Found [business name] on [Site Name] — verified on WhatsApp, you can message them directly: [listing URL]"
+- Hinglish: "Ye [business name] mila [Site Name] pe — contact checked hai, seedha message kar sakte ho: [listing URL]"
+- English: "Found [business name] on [Site Name] — their contact was checked, so you can message them directly: [listing URL]"
 
 ---
 
-## 3. "Verified local businesses" share card copy
+## 3. "Contact-checked local businesses" share card copy
 
 For posting into local community groups as a standalone resource (not a reply to a specific question — see week-by-week placement in `08-90-day-content-calendar.md`).
 
@@ -72,4 +72,4 @@ For posting into local community groups as a standalone resource (not a reply to
 
 - Always fill `[category]` and `[neighborhood]` with something real and specific — a generic message with no local detail reads as a template (because it is one), which undercuts the neighborly, locally observant voice principle from `03-voice-guidelines.md`.
 - Keep the sign-off (`— [Site Name], [site URL]`) only on outreach messages, not on resident share templates — a resident forwarding a message to their own group shouldn't sound like it's signed by "the company," since the whole value of that forward is that it reads as one neighbor telling another.
-- Do not translate "Verified" or "would recommend" into Hindi/Hinglish inconsistently across templates — pick one rendering (English loanword, in Roman script, e.g. "Verified hai" rather than "सत्यापित है") and keep it fixed everywhere, since these are becoming product terms, not just descriptive words, and consistency matters for recognition.
+- Keep "Contact checked" and "would recommend" consistent across templates. Do not shorten the claim to "verified" in one message and expand it to a quality endorsement in another.

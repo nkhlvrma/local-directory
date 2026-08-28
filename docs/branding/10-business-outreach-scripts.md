@@ -1,6 +1,6 @@
 # Business Outreach Scripts
 
-Fuller conversational scripts for a founder visiting or calling a business in person to recruit them into the directory — not just message templates, but the actual back-and-forth, including objection handling. Written for **[Site Name]** (Karib, per the naming recommendation) in [City] (Lucknow).
+Fuller conversational scripts for a founder visiting or calling a business in person to invite them into the directory — not just message templates, but the actual back-and-forth, including objection handling. Written for **[Site Name]** (Karib is only the current recommendation) in [City] (Lucknow).
 
 ---
 
@@ -30,9 +30,9 @@ Send the actual outreach/verification message live, on the spot, and watch it de
 
 ### Close
 
-> "Bas ho gaya — aap [Site Name] pe live ho aaj se. Agar kabhi hatana ho ya kuch change karna ho, bas mujhe message kar dena."
+> "Aapki permission mil gayi — main [Site Name] pe listing review ke liye daal raha hoon. Live hone ke baad link bhej dunga. Agar kabhi hatana ho ya kuch change karna ho, bas mujhe message kar dena."
 
-*(That's it — you're live on [Site Name] as of today. If you ever want to be removed or change something, just message me.)*
+*(Thanks — with your permission, I'll submit the listing for review and send you the live link. If you ever want to be removed or change something, just message me.)*
 
 ---
 
@@ -49,7 +49,7 @@ Same core pitch as the in-person version, but since you can't watch them receive
 
 > "Main abhi aapke is number pe ek WhatsApp message bhejta hoon — aap bas ek baar reply kar dena, jaise 'haan' ya 'ok', bas itna hi. Uske baad aap live ho jaayenge."
 
-*(I'll send a WhatsApp message to this number right now — just reply once, even just "yes" or "ok", that's all. After that you're live.)*
+*(I'll send a WhatsApp message to this number right now — just reply once, even "yes" or "ok", if you consent to the listing. I'll send the live link after review.)*
 
 Stay on the call (or promise to check back within a few minutes) until the reply comes through, rather than treating it as a separate follow-up task — the drop-off between "said yes on the phone" and "actually confirmed later" is the single biggest place this funnel leaks.
 
@@ -97,9 +97,9 @@ Leave a physical trace they can act on later without the founder present — a s
 
 ### Objection 4 (bonus — commonly comes up): "How do I know this isn't a scam / fake listing service?"
 
-> "Samajh sakta hoon ye sawaal. Dekhiye, main koi payment nahi maang raha, na koi personal detail jaise Aadhaar ya bank account. Sirf aapka business WhatsApp number, jo already public hai waise bhi. Aap khud dekh sakte hain [site URL] pe — [X] businesses already listed hain [City] mein, sab verified."
+> "Samajh sakta hoon ye sawaal. Dekhiye, main koi payment nahi maang raha, na koi personal detail jaise Aadhaar ya bank account. Aapki permission ke bina number publish nahi hoga, aur aap kabhi bhi removal bol sakte hain. Aap [site URL] pe khud dekh sakte hain — yahan contact checked ka matlab sirf itna hai ki number par reply mila, business endorsement nahi."
 
-*(I understand that concern. Look, I'm not asking for any payment, or personal details like Aadhaar or bank account — just your business WhatsApp number, which is already public anyway. You can check for yourself at [site URL] — there are already [X] businesses listed in [City], all verified.)*
+*(I understand that concern. I'm not asking for payment or personal details like Aadhaar or a bank account. You can decide whether you want the number published, and you can ask for removal later. You can also check [site URL] yourself — the site only claims that a contact was checked, not that every business is endorsed.)*
 
 Having a real, checkable site with real listings to point to is the single best answer to this objection — which is also why Phase 1 of the acquisition plan (`07-acquisition-playbooks.md`) sequences supply-building before any public-facing content: there needs to be something real to point to before this objection comes up at scale.
 

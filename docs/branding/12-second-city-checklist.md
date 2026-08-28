@@ -12,7 +12,7 @@ Before evaluating a second city at all, confirm the first one doesn't still need
 
 - [ ] The supply-recruitment playbook (`07-acquisition-playbooks.md`) has been run at least once as a *repeatable* weekly process, not just as an initial launch push — confirmed via the Phase 3 "systemize" checklist.
 - [ ] The north-star metric (`11-measurement-plan.md`) is being tracked and reviewed at least weekly, and shows a stable or improving trend over the most recent 4+ weeks, not a one-time spike from launch novelty.
-- [ ] Verified-listing share is holding near 100% without constant manual chasing — i.e., the verification habit has become routine, not a special effort.
+- [ ] Contact-checked listing share is holding near 100% without constant manual chasing — i.e., the freshness habit has become routine, not a special effort.
 - [ ] There's no open, unresolved trust issue (a spike in report rate, a batch of stale/dead listings) that a second city would distract from fixing.
 
 **If any of these aren't true, the honest answer is "not yet" — expanding to a second city while Lucknow is still fragile risks both cities being under-resourced by one founder.**
@@ -30,7 +30,7 @@ Before evaluating a second city at all, confirm the first one doesn't still need
 
 - [ ] Identified at least 2–3 candidate neighborhood-connector-equivalents in the second city *before* launch — the same RWA/local-shop-owner/group-admin profile described in `07-acquisition-playbooks.md`, not invented from scratch after arriving.
 - [ ] If the founder can't personally spend significant time in the second city, identified a specific local person (paid, volunteer, or otherwise incentivized — decide deliberately, don't default to unpaid) who can do the in-person recruitment work that a remote founder can't. Running the in-person outreach script from `10-business-outreach-scripts.md` remotely (phone-only) is a real degradation from what worked in Lucknow — plan for that gap explicitly rather than hoping it won't matter.
-- [ ] Confirmed this local partner (if one exists) actually understands and will hold the trust rules — no overclaiming "Verified," no accepting payment for listings, no shortcuts on the WhatsApp-reachability check. A partner who doesn't internalize this can damage trust in a way that's hard to walk back.
+- [ ] Confirmed this local partner (if one exists) actually understands and will hold the trust rules — no overclaiming "Contact checked," no accepting payment for inclusion, no shortcuts on the reachability check, and explicit owner consent before publishing a number. A partner who doesn't internalize this can damage trust in a way that's hard to walk back.
 
 ## Category demand validation
 
