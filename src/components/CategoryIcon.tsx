@@ -1,7 +1,14 @@
+"use client";
+
 // Static Lucide icon — kept for headings on category pages where hover
 // animation doesn't fit (single icon next to a heading, no card container).
 // The animated version lives in AnimatedCategoryIcon.tsx and is used
 // on the home grid.
+//
+// Must be a client component: DynamicIcon (lucide-react/dynamic) is
+// client-only, and its `fallback` prop is a function — functions can't be
+// passed as props from a Server Component to a Client Component, so the
+// boundary has to be here rather than at DynamicIcon itself.
 
 import {
   UtensilsCrossed,
