@@ -25,7 +25,7 @@ export function NeighborhoodMap({
           id="neighborhood-map-title"
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
         >
-          Browse by neighbourhood
+          Browse by neighborhood
         </h2>
       </div>
       <div className="overflow-hidden rounded-xl border bg-muted/30">
