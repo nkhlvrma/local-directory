@@ -6,8 +6,9 @@ import { MOCK_TABLES } from "@/lib/mock-data";
 
 type Row = Record<string, unknown>;
 type EqFilter = { kind: "eq"; col: string; val: unknown };
+type NeqFilter = { kind: "neq"; col: string; val: unknown };
 type OrFilter = { kind: "or"; predicate: (r: Row) => boolean };
-type Filter = EqFilter | OrFilter;
+type Filter = EqFilter | NeqFilter | OrFilter;
 
 function getPath(row: Row, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {
@@ -53,6 +54,10 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     this.filters.push({ kind: "eq", col, val });
     return this;
   }
+  neq(col: string, val: unknown) {
+    this.filters.push({ kind: "neq", col, val });
+    return this;
+  }
   or(spec: string) {
     this.filters.push({ kind: "or", predicate: parseOr(spec) });
     return this;
@@ -75,6 +80,7 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     let out = this.rows;
     for (const f of this.filters) {
       if (f.kind === "eq") out = out.filter((r) => getPath(r, f.col) === f.val);
+      else if (f.kind === "neq") out = out.filter((r) => getPath(r, f.col) !== f.val);
       else out = out.filter((r) => f.predicate(r));
     }
     if (this.limitN != null) out = out.slice(0, this.limitN);

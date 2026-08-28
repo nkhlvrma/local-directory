@@ -261,6 +261,7 @@ export default async function ListingPage(
               {similar.map((s) => (
                 <ListingGridCard
                   key={s.id}
+                  id={s.id}
                   href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
                   name={s.name}
                   categorySlug={category.slug}

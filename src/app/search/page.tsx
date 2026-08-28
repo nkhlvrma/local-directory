@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -7,8 +8,10 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
 import { ListingGridCard } from "@/components/ListingGridCard";
 import { SearchBar } from "@/components/SearchBar";
+import { EmptyResults } from "@/components/EmptyResults";
 import { isValidPin } from "@/lib/pin";
 import { isMockMode } from "@/lib/supabase/mock";
+import { logEvent } from "@/lib/analytics";
 import type { WeekHours } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +81,22 @@ export default async function SearchPage(
         pin_code: pinFilter,
       });
     }
+
+    // General funnel event (separate from the zero-result-only search_events
+    // table above), fire-and-forget, works in mock mode too.
+    await logEvent("search_submitted", {
+      metadata: { query, matched_count: rows.length, city_slug: CITY_SLUG },
+    });
+  }
+
+  let suggestions: { name: string; slug: string }[] = [];
+  if (query && rows.length === 0) {
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("name, slug")
+      .order("name")
+      .limit(3);
+    suggestions = (cats ?? []) as { name: string; slug: string }[];
   }
 
   return (
@@ -96,6 +115,14 @@ export default async function SearchPage(
         <SearchBar size="md" initialQuery={query} autoFocus={!query} />
       </header>
 
+      {query ? (
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span>{(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}</span>
+          <ChevronRight className="size-3" />
+          <span className="text-foreground font-medium">&ldquo;{query}&rdquo;</span>
+        </p>
+      ) : null}
+
       {pinFilter ? (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
@@ -110,9 +137,13 @@ export default async function SearchPage(
           Try a business name, category, or keyword.
         </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          No matches in {(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}.
-        </p>
+        <EmptyResults
+          heading={`No matches for "${query}" in ${(city as { name: string } | null)?.name ?? SITE_NAME_FALLBACK}.`}
+          suggestions={suggestions.map((c) => ({
+            name: c.name,
+            href: `/${CITY_SLUG}/c/${c.slug}`,
+          }))}
+        />
       ) : (
         <>
           <p className="text-xs text-muted-foreground">
@@ -122,6 +153,7 @@ export default async function SearchPage(
             {rows.map((l) => (
               <ListingGridCard
                 key={l.id}
+                id={l.id}
                 href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
                 name={l.name}
                 categorySlug={l.categories.slug}

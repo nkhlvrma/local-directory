@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Image as ImageIcon, Clock } from "lucide-react";
+import { CheckCircle2, Image as ImageIcon, Clock, X } from "lucide-react";
 
 export function CategoryFilterBar() {
   const router = useRouter();
@@ -28,8 +28,10 @@ export function CategoryFilterBar() {
         variant={active ? "default" : "outline"}
         onClick={() => toggle(key)}
         className="h-8"
+        aria-pressed={active}
+        title={active ? `Remove "${label}" filter` : label}
       >
-        <Icon className="size-3.5" />
+        {active ? <X className="size-3.5" /> : <Icon className="size-3.5" />}
         {label}
       </Button>
     );

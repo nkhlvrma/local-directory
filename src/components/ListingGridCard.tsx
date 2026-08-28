@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { OpenNowBadge } from "./OpenNowBadge";
 import { CategoryIcon } from "./CategoryIcon";
+import { ListingCardLink } from "./ListingCardLink";
 import type { WeekHours } from "@/lib/types";
 
 type Props = {
+  id: string;
   href: string;
   name: string;
   categorySlug: string; // used for the placeholder image when no photo exists
@@ -23,6 +24,7 @@ type Props = {
 // a tinted placeholder using the category icon so the grid never looks
 // half-empty.
 export function ListingGridCard({
+  id,
   href,
   name,
   categorySlug,
@@ -34,7 +36,7 @@ export function ListingGridCard({
   hours,
 }: Props) {
   return (
-    <Link href={href} className="block group h-full">
+    <ListingCardLink href={href} listingId={id} className="block group h-full">
       <Card
         size="sm"
         className="h-full overflow-hidden gap-0 py-0 border border-border/70 shadow-none ring-0 transition-all hover:border-primary/30 hover:-translate-y-0.5"
@@ -80,6 +82,6 @@ export function ListingGridCard({
           ) : null}
         </CardContent>
       </Card>
-    </Link>
+    </ListingCardLink>
   );
 }

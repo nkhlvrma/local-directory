@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ListingGridCard } from "@/components/ListingGridCard";
 import { LoopingCategoryIcon } from "@/components/LoopingCategoryIcon";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
+import { EmptyResults } from "@/components/EmptyResults";
 import { isValidPin } from "@/lib/pin";
 import { isOpenNow } from "@/lib/hours";
 import type { WeekHours } from "@/lib/types";
@@ -81,6 +83,22 @@ export default async function CategoryPage(
   if (photoOnly) rows = rows.filter((r) => !!r.photo_url);
   if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
 
+  const filtersActive = pinFilter || verifiedOnly || photoOnly || openOnly;
+  let suggestions: { name: string; slug: string }[] = [];
+  if (rows.length === 0) {
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("name, slug")
+      .neq("id", (category as { id: string }).id)
+      .order("name")
+      .limit(3);
+    suggestions = (cats ?? []) as { name: string; slug: string }[];
+  }
+
+  const citySlug = (city as { slug: string }).slug;
+  const cityName = (city as { name: string }).name;
+  const categoryName = (category as { name: string }).name;
+
   return (
     <Container className="py-7 space-y-6">
       <header className="flex items-center gap-3">
@@ -89,7 +107,7 @@ export default async function CategoryPage(
         </span>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight font-heading">
-            {(category as { name: string }).name}
+            {categoryName}
           </h1>
           {pinFilter ? (
             <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
@@ -99,20 +117,33 @@ export default async function CategoryPage(
         </div>
       </header>
 
+      <p className="flex items-center gap-1 text-xs text-muted-foreground -mt-4">
+        <span>{cityName}</span>
+        <ChevronRight className="size-3" />
+        <span className="text-foreground font-medium">{categoryName}</span>
+      </p>
+
       <CategoryFilterBar />
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          {pinFilter || verifiedOnly || photoOnly || openOnly
-            ? "No listings match these filters."
-            : "No listings yet in this category."}
-        </p>
+        <EmptyResults
+          heading={
+            filtersActive
+              ? `No ${categoryName.toLowerCase()} listings match these filters.`
+              : `No ${categoryName.toLowerCase()} listings yet in ${cityName}.`
+          }
+          suggestions={suggestions.map((c) => ({
+            name: c.name,
+            href: `/${citySlug}/c/${c.slug}`,
+          }))}
+        />
       ) : (
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((l) => (
             <ListingGridCard
               key={l.id}
-              href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
+              id={l.id}
+              href={`/${citySlug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
               name={l.name}
               categorySlug={(category as { slug: string }).slug}
               subtitle={l.neighborhoods.name}
