@@ -6,6 +6,7 @@ import { slugify } from "@/lib/slug";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { isValidPin } from "@/lib/pin";
 import { findDuplicates } from "@/lib/dupes";
+import { uploadListingPhoto } from "@/lib/listing-photo";
 
 export async function submitListing(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
@@ -90,19 +91,4 @@ export async function submitListing(fd: FormData) {
     if (!error.message.includes("duplicate")) return { error: error.message };
   }
   return { error: "Could not create a unique slug — try a different name." };
-}
-
-async function uploadListingPhoto(
-  admin: ReturnType<typeof createSupabaseAdminClient>,
-  listingId: string,
-  file: File,
-): Promise<string | null> {
-  const ext = file.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-  const path = `${listingId}/${Date.now()}.${ext}`;
-  const { error } = await admin.storage
-    .from("listing-photos")
-    .upload(path, file, { contentType: file.type, upsert: false });
-  if (error) return null;
-  const { data } = admin.storage.from("listing-photos").getPublicUrl(path);
-  return data.publicUrl;
 }

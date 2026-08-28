@@ -5,6 +5,12 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-auth";
+import { slugify } from "@/lib/slug";
+import { isValidPin } from "@/lib/pin";
+import { findDuplicates } from "@/lib/dupes";
+import { uploadListingPhoto } from "@/lib/listing-photo";
+import { pickCategoryIcon } from "@/lib/category-icon-picker";
+import { CITY_SLUG } from "@/lib/site";
 
 export async function signIn(fd: FormData) {
   const email = String(fd.get("email") ?? "").trim();
@@ -67,4 +73,137 @@ export async function dismissReport(reportId: string): Promise<void> {
   const { error } = await admin.from("listing_reports").delete().eq("id", reportId);
   if (error) console.error("dismissReport failed:", error.message);
   revalidatePath("/admin/reports");
+}
+
+// The three below return {error}/{ok} rather than being void form actions,
+// since their forms need to surface validation errors inline (same pattern
+// as the public list-your-business form).
+
+export async function createListing(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const user = await requireAdmin();
+
+  const name = String(fd.get("name") ?? "").trim();
+  const whatsapp = String(fd.get("whatsapp_number") ?? "").trim();
+  const categoryId = String(fd.get("category_id") ?? "");
+  const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
+  const description = String(fd.get("description") ?? "").trim() || null;
+  const pinRaw = String(fd.get("pin_code") ?? "").trim();
+  const photo = fd.get("photo");
+  const publish = fd.get("publish") === "on";
+  const verified = fd.get("verified") === "on";
+
+  if (!name || name.length < 2) return { error: "Name is required." };
+  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
+    return { error: "WhatsApp number must be in international format like +9198…" };
+  if (!categoryId || !neighborhoodId)
+    return { error: "Category and neighborhood are required." };
+  if (pinRaw && !isValidPin(pinRaw))
+    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+  const pin_code = pinRaw || null;
+
+  const hasPhoto = photo instanceof File && photo.size > 0;
+  if (hasPhoto) {
+    const file = photo as File;
+    if (!file.type.startsWith("image/")) return { error: "Photo must be an image file." };
+    if (file.size > 5 * 1024 * 1024) return { error: "Photo must be under 5MB." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  const dupes = await findDuplicates(admin, { name, whatsapp });
+  const numberMatch = dupes.find((d) => d.whatsapp_number === whatsapp);
+  if (numberMatch) {
+    return { error: `That WhatsApp number is already listed as "${numberMatch.name}".` };
+  }
+
+  const now = new Date().toISOString();
+  const base = slugify(name);
+  for (let i = 0; i < 20; i++) {
+    const slug = i === 0 ? base : `${base}-${i + 1}`;
+    const { data, error } = await admin
+      .from("listings")
+      .insert({
+        name,
+        slug,
+        category_id: categoryId,
+        neighborhood_id: neighborhoodId,
+        description,
+        whatsapp_number: whatsapp,
+        pin_code,
+        status: publish ? "approved" : "pending",
+        source: "manual",
+        approved_at: publish ? now : null,
+        approved_by: publish ? user.id : null,
+        verified,
+        verified_at: verified ? now : null,
+      })
+      .select("id")
+      .single();
+
+    if (!error) {
+      if (hasPhoto) {
+        const uploaded = await uploadListingPhoto(admin, data.id, photo as File);
+        if (uploaded) await admin.from("listings").update({ photo_url: uploaded }).eq("id", data.id);
+      }
+      revalidatePath("/admin");
+      return { ok: true };
+    }
+    if (!error.message.includes("duplicate")) return { error: error.message };
+  }
+  return { error: "Could not create a unique slug — try a different name." };
+}
+
+export async function createCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+
+  const name = String(fd.get("name") ?? "").trim();
+  const slugRaw = String(fd.get("slug") ?? "").trim();
+
+  if (!name || name.length < 2) return { error: "Name is required." };
+  const slug = slugify(slugRaw || name);
+  if (!slug) return { error: "Could not derive a slug from that name — try adding letters." };
+
+  // Icon is auto-assigned from the Lucide set based on the category name —
+  // see category-icon-picker.ts. No manual icon input in the admin form.
+  const icon = pickCategoryIcon(name);
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("categories").insert({ name, slug, icon });
+  if (error) {
+    if (error.message.includes("duplicate"))
+      return { error: `A category with slug "${slug}" already exists.` };
+    return { error: error.message };
+  }
+  revalidatePath("/admin/categories");
+  return { ok: true };
+}
+
+export async function createNeighborhood(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+
+  const name = String(fd.get("name") ?? "").trim();
+  const slugRaw = String(fd.get("slug") ?? "").trim();
+
+  if (!name || name.length < 2) return { error: "Name is required." };
+  const slug = slugify(slugRaw || name);
+  if (!slug) return { error: "Could not derive a slug from that name — try adding letters." };
+
+  const admin = createSupabaseAdminClient();
+  const { data: city, error: cityError } = await admin
+    .from("cities")
+    .select("id")
+    .eq("slug", CITY_SLUG)
+    .maybeSingle();
+  if (cityError || !city) return { error: "Could not find the active city record." };
+
+  const { error } = await admin
+    .from("neighborhoods")
+    .insert({ city_id: (city as { id: string }).id, name, slug });
+  if (error) {
+    if (error.message.includes("duplicate"))
+      return { error: `A neighborhood with slug "${slug}" already exists.` };
+    return { error: error.message };
+  }
+  revalidatePath("/admin/neighborhoods");
+  return { ok: true };
 }
