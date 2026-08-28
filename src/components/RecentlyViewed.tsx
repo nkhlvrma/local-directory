@@ -68,7 +68,7 @@ export function RecentlyViewed() {
                   <img
                     src={r.photo_url}
                     alt=""
-                    style={{ width: 48, height: 48 }}
+                    style={{ width: 72, height: 72 }}
                     className="rounded-lg object-cover shrink-0"
                   />
                 ) : null}

@@ -49,8 +49,11 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero */}
-      <div className="relative" style={{ marginTop: -HEADER_HEIGHT }}>
+      {/* Hero — fills the viewport; header sits transparently on top */}
+      <div
+        className="relative min-h-dvh flex items-center"
+        style={{ marginTop: -HEADER_HEIGHT }}
+      >
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <Image
             src="/hero-street.png"
@@ -63,10 +66,7 @@ export default async function Home() {
           <div className="absolute inset-0 bg-black/45" />
         </div>
 
-        <Container
-          className="pt-12 pb-10"
-          style={{ paddingTop: HEADER_HEIGHT + 48 }}
-        >
+        <Container className="py-10 w-full">
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
           <div className="mb-5 hero-in" style={{ animationDelay: "0ms" }}>
             <LocationBar />

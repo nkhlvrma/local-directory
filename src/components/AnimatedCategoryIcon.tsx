@@ -9,8 +9,9 @@
 // with Lucide static paths + our own variants.
 
 import { motion, useAnimation, type Variants } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import { SmileIcon, type SmileIconHandle } from "@/components/ui/smile";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -340,6 +341,21 @@ function CarIcon({ animating, size = 22 }: IconProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Installed via `npx shadcn add @lucide-animated/smile` from
+// lucide-animated.com — exposes an imperative startAnimation/stopAnimation
+// ref API rather than this file's `animating` prop convention, so adapt it.
+// ---------------------------------------------------------------------------
+
+function SmileIconAdapter({ animating, size = 22 }: IconProps) {
+  const ref = useRef<SmileIconHandle>(null);
+  useEffect(() => {
+    if (animating) ref.current?.startAnimation();
+    else ref.current?.stopAnimation();
+  }, [animating]);
+  return <SmileIcon ref={ref} size={size} />;
+}
+
+// ---------------------------------------------------------------------------
 // Fallback dot
 // ---------------------------------------------------------------------------
 
@@ -366,6 +382,7 @@ const MAP: Record<
   plumbers: WrenchIcon,
   "tuition-coaching": GraduationCapIcon,
   "car-bike-repair": CarIcon,
+  dentists: SmileIconAdapter,
   salons: Building2Icon,
 };
 
