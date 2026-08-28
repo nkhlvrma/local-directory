@@ -62,7 +62,7 @@ export function NeighborhoodMap({
         </CardFooter>
       </Card>
       {neighborhoods.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 py-3">
           {neighborhoods.map((neighborhood) => (
             <Link
               key={neighborhood.slug}

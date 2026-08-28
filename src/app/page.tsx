@@ -82,7 +82,7 @@ export default async function Home() {
               speed={65}
               deleteSpeed={35}
               waitTime={1800}
-              className="text-primary"
+              className="text-amber-400"
               cursorClassName="text-white/50"
             />
             .

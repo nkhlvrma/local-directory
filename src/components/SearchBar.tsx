@@ -48,7 +48,7 @@ export function SearchBar({
             autoFocus={autoFocus}
             name="q"
             autoComplete="off"
-            className="h-14 rounded-xl bg-background shadow-sm pl-11 pr-3 text-base focus-visible:border-primary/50 focus-visible:ring-2"
+            className="h-14 rounded-xl bg-background dark:bg-background shadow-sm pl-11 pr-3 text-base focus-visible:border-primary/50 focus-visible:ring-2"
           />
         </div>
         <Button type="submit" disabled={!q.trim()} className="h-14 rounded-xl px-6">

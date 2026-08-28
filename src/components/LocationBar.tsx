@@ -34,7 +34,7 @@ export function LocationBar({}: { initialPin?: string }) {
           <ChevronDown className="size-3.5 text-white/70" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 space-y-3">
+      <PopoverContent className="w-64 space-y-3 bg-popover/80 backdrop-blur-md">
         <div>
           <Label className="text-xs text-muted-foreground">City</Label>
           <div className="mt-1 font-medium">{cityName}</div>
