@@ -9,7 +9,7 @@ import { Container } from "@/components/ui/container";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Agentation } from "agentation";
+import { DevToolbar } from "@/components/DevToolbar";
 
 const robotoSlabHeading = Roboto_Slab({subsets:['latin'],variable:'--font-heading'});
 
@@ -107,7 +107,7 @@ export default async function RootLayout({
           </div>
           </TooltipProvider>
         </ThemeProvider>
-        {process.env.NODE_ENV === "development" && <Agentation />}
+        <DevToolbar />
       </body>
     </html>
   );
