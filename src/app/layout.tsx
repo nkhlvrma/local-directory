@@ -93,7 +93,7 @@ export default async function RootLayout({
             </Container>
           </header>
 
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 min-h-[75dvh]">{children}</main>
 
           <footer className="border-t mt-16">
             <Container className="py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
