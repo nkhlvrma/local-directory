@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { AdminNav } from "../AdminNav";
+import { AdminShell } from "../AdminShell";
 import { dismissReport } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -29,14 +29,8 @@ export default async function AdminReportsPage() {
   const reports = (data ?? []) as unknown as Row[];
 
   return (
-    <Container size="md" className="py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight font-heading">Admin</h1>
-        <p className="text-muted-foreground text-sm">Review submissions and manage verification.</p>
-      </header>
-
-      <AdminNav active="reports" />
-
+    <AdminShell title="Admin Dashboard" description="Review submissions and manage verification.">
+    <Container size="md" className="py-8 space-y-8">
       <section className="space-y-3">
         <h2 className="font-semibold">
           Reports <span className="text-muted-foreground font-normal">({reports.length})</span>
@@ -74,5 +68,6 @@ export default async function AdminReportsPage() {
         )}
       </section>
     </Container>
+    </AdminShell>
   );
 }

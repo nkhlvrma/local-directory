@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, AlertTriangle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { createListing } from "../../actions";
@@ -142,20 +143,19 @@ export function NewListingForm({
         <p className="text-xs text-muted-foreground">JPG or PNG, under 5MB.</p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            name="publish"
-            type="checkbox"
-            defaultChecked
-            className="size-4 rounded border-input accent-primary"
-          />
-          Publish immediately (skip pending queue)
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input name="verified" type="checkbox" className="size-4 rounded border-input accent-primary" />
-          Mark as verified
-        </label>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2.5">
+          <Switch id="publish" name="publish" defaultChecked />
+          <Label htmlFor="publish" className="font-normal">
+            Publish immediately (skip pending queue)
+          </Label>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Switch id="verified" name="verified" />
+          <Label htmlFor="verified" className="font-normal">
+            Mark as verified
+          </Label>
+        </div>
       </div>
 
       {error ? (

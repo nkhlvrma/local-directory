@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/container";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { AdminNav } from "../AdminNav";
+import { AdminShell } from "../AdminShell";
 import { CategoryForm } from "./CategoryForm";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +20,8 @@ export default async function AdminCategoriesPage() {
   const categories = (data ?? []) as Row[];
 
   return (
-    <Container size="md" className="py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight font-heading">Admin</h1>
-        <p className="text-muted-foreground text-sm">Manage the category taxonomy.</p>
-      </header>
-
-      <AdminNav active="categories" />
-
+    <AdminShell title="Admin Dashboard" description="Manage the category taxonomy.">
+    <Container size="md" className="py-8 space-y-8">
       <CategoryForm />
 
       <section className="space-y-3">
@@ -49,5 +43,6 @@ export default async function AdminCategoriesPage() {
         </div>
       </section>
     </Container>
+    </AdminShell>
   );
 }

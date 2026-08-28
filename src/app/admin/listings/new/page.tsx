@@ -1,9 +1,8 @@
-import { Container } from "@/components/ui/container";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG } from "@/lib/site";
-import { AdminNav } from "../../AdminNav";
-import { NewListingForm } from "./NewListingForm";
+import { AdminShell } from "../../AdminShell";
+import { NewListingSheet } from "./NewListingSheet";
 
 export const dynamic = "force-dynamic";
 
@@ -26,20 +25,11 @@ export default async function AdminNewListingPage() {
   ]);
 
   return (
-    <Container size="md" className="py-10 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight font-heading">Admin</h1>
-        <p className="text-muted-foreground text-sm">
-          Create a listing directly — publishes immediately unless you uncheck it.
-        </p>
-      </header>
-
-      <AdminNav active="new-listing" />
-
-      <NewListingForm
+    <AdminShell title="Admin Dashboard" description="Create a listing directly.">
+      <NewListingSheet
         categories={(categories ?? []) as { id: string; name: string }[]}
         neighborhoods={(neighborhoods ?? []) as { id: string; name: string }[]}
       />
-    </Container>
+    </AdminShell>
   );
 }

@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Container } from "@/components/ui/container";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Agentation } from "agentation";
 
@@ -77,6 +78,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <TooltipProvider delayDuration={300}>
           <div className="flex min-h-dvh flex-col">
           <SiteHeader />
 
@@ -100,6 +102,7 @@ export default async function RootLayout({
 
           <Toaster />
           </div>
+          </TooltipProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
