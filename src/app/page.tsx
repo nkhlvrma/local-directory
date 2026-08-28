@@ -6,9 +6,21 @@ import { NeighborhoodMap } from "@/components/NeighborhoodMap";
 import { LocationBar } from "@/components/LocationBar";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
-import { ListingGridCard } from "@/components/ListingGridCard";
+import BounceCards from "@/components/BounceCards";
 import Typewriter from "@/components/fancy/text/typewriter";
+import { placeholderCardImage } from "@/lib/placeholder-image";
 import type { WeekHours } from "@/lib/types";
+
+// BounceCards' default fan layout is built for 5 cards — reused verbatim
+// from the React Bits source rather than generated, so the spacing/rotation
+// stays hand-tuned regardless of how many cards actually render.
+const BOUNCE_TRANSFORMS = [
+  "rotate(10deg) translate(-170px)",
+  "rotate(5deg) translate(-85px)",
+  "rotate(-3deg)",
+  "rotate(-10deg) translate(85px)",
+  "rotate(2deg) translate(170px)",
+];
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +55,10 @@ export default async function Home() {
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
 
+  // Capped at 5 to match BounceCards' hand-tuned default fan layout.
+  // Listings without a photo fall back to a generated placeholder image
+  // (see placeholder-image.ts) rather than being excluded — most listings
+  // don't have photos yet, and this section shouldn't just disappear.
   const { data: popularRaw } = await supabase
     .from("listings")
     .select(
@@ -53,7 +69,7 @@ export default async function Home() {
     .eq("status", "approved")
     .eq("neighborhoods.city_id", (city as { id: string }).id)
     .order("whatsapp_clicks", { ascending: false })
-    .limit(6);
+    .limit(5);
   type PopularRow = {
     id: string;
     name: string;
@@ -67,6 +83,7 @@ export default async function Home() {
     categories: { name: string; slug: string };
   };
   const popular = (popularRaw ?? []) as unknown as PopularRow[];
+  const citySlug = (city as { slug: string }).slug;
 
   return (
     <>
@@ -103,28 +120,27 @@ export default async function Home() {
       <Container className="py-10 space-y-12">
         <RecentlyViewed />
 
-        {/* Popular */}
+        {/* Popular services */}
         {popular.length > 0 ? (
           <section>
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-              Popular in {(city as { name: string }).name}
+              Popular services
             </h2>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-              {popular.map((l) => (
-                <ListingGridCard
-                  key={l.id}
-                  id={l.id}
-                  href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
-                  name={l.name}
-                  categorySlug={l.categories.slug}
-                  subtitle={l.categories.name}
-                  description={l.description}
-                  verified={l.verified}
-                  pin={l.pin_code}
-                  photo_url={l.photo_url}
-                  hours={l.hours_json}
-                />
-              ))}
+            <div className="flex justify-center overflow-x-auto py-6">
+              <BounceCards
+                images={popular.map((l) => l.photo_url || placeholderCardImage(l.name))}
+                alts={popular.map((l) => l.name)}
+                hrefs={popular.map(
+                  (l) => `/${citySlug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`,
+                )}
+                containerWidth={560}
+                containerHeight={260}
+                animationDelay={0.3}
+                animationStagger={0.08}
+                easeType="elastic.out(1, 0.5)"
+                transformStyles={BOUNCE_TRANSFORMS.slice(0, popular.length)}
+                enableHover
+              />
             </div>
           </section>
         ) : null}
