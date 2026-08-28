@@ -10,7 +10,7 @@ type Props = {
   href: string;
   name: string;
   categorySlug: string; // used for the placeholder image when no photo exists
-  neighborhood?: string | null;
+  subtitle?: string | null; // secondary label — neighborhood, category, or both
   description?: string | null;
   verified?: boolean;
   pin?: string | null;
@@ -26,7 +26,7 @@ export function ListingGridCard({
   href,
   name,
   categorySlug,
-  neighborhood,
+  subtitle,
   description,
   verified,
   pin,
@@ -66,7 +66,7 @@ export function ListingGridCard({
           </span>
           <div className="flex items-center gap-1.5 flex-wrap text-xs text-muted-foreground">
             <OpenNowBadge hours={hours ?? null} />
-            {neighborhood ? <span>{neighborhood}</span> : null}
+            {subtitle ? <span>{subtitle}</span> : null}
             {pin ? (
               <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
                 {pin}

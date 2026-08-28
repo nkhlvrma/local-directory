@@ -13,7 +13,7 @@ import { OpenNowBadge } from "@/components/OpenNowBadge";
 import { HoursTable } from "@/components/HoursTable";
 import { ShareButton } from "@/components/ShareButton";
 import { TrackView } from "@/components/TrackView";
-import { ListingCard } from "@/components/ListingCard";
+import { ListingGridCard } from "@/components/ListingGridCard";
 import { SITE_URL } from "@/lib/site";
 import type { WeekHours, FieldDef } from "@/lib/types";
 
@@ -257,12 +257,13 @@ export default async function ListingPage(
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 font-heading">
               More {category.name.toLowerCase()} in {neighborhood.name}
             </h2>
-            <div className="grid gap-2">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
               {similar.map((s) => (
-                <ListingCard
+                <ListingGridCard
                   key={s.id}
                   href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
                   name={s.name}
+                  categorySlug={category.slug}
                   description={s.description}
                   verified={s.verified}
                   pin={s.pin_code}

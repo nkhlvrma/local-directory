@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ListingCard } from "@/components/ListingCard";
+import { ListingGridCard } from "@/components/ListingGridCard";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { isValidPin } from "@/lib/pin";
 import { isOpenNow } from "@/lib/hours";
@@ -88,20 +88,15 @@ export default async function NeighborhoodPage(
 
   return (
     <Container className="py-7 space-y-6">
-      <header className="space-y-1">
-        <p className="text-xs text-muted-foreground">
-          {(city as { name: string }).name}
-        </p>
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight font-heading">
-            {(neighborhood as { name: string }).name}
-          </h1>
-          {pinFilter ? (
-            <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
-              {pinFilter}
-            </Badge>
-          ) : null}
-        </div>
+      <header className="flex items-center gap-2.5 flex-wrap">
+        <h1 className="text-2xl font-bold tracking-tight font-heading">
+          {(neighborhood as { name: string }).name}
+        </h1>
+        {pinFilter ? (
+          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
+            {pinFilter}
+          </Badge>
+        ) : null}
       </header>
 
       <CategoryFilterBar />
@@ -111,13 +106,14 @@ export default async function NeighborhoodPage(
           No listings match these filters.
         </p>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((l) => (
-            <ListingCard
+            <ListingGridCard
               key={l.id}
               href={`/${(city as { slug: string }).slug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
               name={l.name}
-              category={l.categories.name}
+              categorySlug={l.categories.slug}
+              subtitle={l.categories.name}
               description={l.description}
               verified={l.verified}
               pin={l.pin_code}

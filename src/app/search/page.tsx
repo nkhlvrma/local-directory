@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
-import { ListingCard } from "@/components/ListingCard";
+import { ListingGridCard } from "@/components/ListingGridCard";
 import { SearchBar } from "@/components/SearchBar";
 import { isValidPin } from "@/lib/pin";
 import { isMockMode } from "@/lib/supabase/mock";
@@ -118,14 +118,14 @@ export default async function SearchPage(
           <p className="text-xs text-muted-foreground">
             {rows.length} result{rows.length !== 1 ? "s" : ""}
           </p>
-          <div className="grid gap-2">
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {rows.map((l) => (
-              <ListingCard
+              <ListingGridCard
                 key={l.id}
                 href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
                 name={l.name}
-                category={l.categories.name}
-                neighborhood={l.neighborhoods.name}
+                categorySlug={l.categories.slug}
+                subtitle={`${l.categories.name} · ${l.neighborhoods.name}`}
                 description={l.description}
                 verified={l.verified}
                 pin={l.pin_code}

@@ -115,7 +115,7 @@ export default async function CategoryPage(
               href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
               name={l.name}
               categorySlug={(category as { slug: string }).slug}
-              neighborhood={l.neighborhoods.name}
+              subtitle={l.neighborhoods.name}
               description={l.description}
               verified={l.verified}
               pin={l.pin_code}
