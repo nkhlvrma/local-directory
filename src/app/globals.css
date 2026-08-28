@@ -125,7 +125,12 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-* {
+/* Buttons excluded: this rule is unlayered, so per CSS cascade-layers
+   rules it beats any Tailwind utility class (including border-transparent
+   or a variant's own border-color) regardless of specificity — buttons
+   set their own border-color explicitly (resting, focus-visible,
+   aria-invalid) and should not have it forced here. */
+*:not([data-slot="button"]) {
   border-color: var(--border);
 }
 body {
