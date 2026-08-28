@@ -164,6 +164,24 @@ export function SubmitForm({
         </div>
       </div>
 
+      <div className="flex items-start gap-2.5">
+        <input
+          id="consent"
+          name="consent"
+          type="checkbox"
+          required
+          className="mt-1 size-4 shrink-0 rounded border-input accent-primary"
+        />
+        <Label htmlFor="consent" className="text-sm font-normal leading-snug text-muted-foreground">
+          I&apos;m authorized to list this business and I agree its name, category,
+          neighborhood, and WhatsApp number will be shown publicly on this
+          site. See our{" "}
+          <a href="/privacy" target="_blank" className="underline underline-offset-4 hover:text-primary">
+            privacy page
+          </a>.
+        </Label>
+      </div>
+
       <Turnstile />
 
       {error ? (

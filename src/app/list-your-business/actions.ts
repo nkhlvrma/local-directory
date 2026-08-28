@@ -13,7 +13,11 @@ export async function submitListing(fd: FormData) {
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
+  const consent = fd.get("consent");
   const turnstileToken = fd.get("cf-turnstile-response");
+
+  if (consent !== "on")
+    return { error: "You must agree to the listing terms before submitting." };
 
   const passed = await verifyTurnstile(
     typeof turnstileToken === "string" ? turnstileToken : null,
