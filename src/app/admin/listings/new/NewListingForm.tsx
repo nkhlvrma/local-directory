@@ -109,7 +109,7 @@ export function NewListingForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="whatsapp_number">WhatsApp (with country code)</Label>
+          <Label htmlFor="whatsapp_number">WhatsApp number</Label>
           <Input
             id="whatsapp_number"
             name="whatsapp_number"
@@ -117,6 +117,7 @@ export function NewListingForm({
             placeholder="+919812345678"
             pattern="^\+[1-9][0-9]{7,14}$"
           />
+          <p className="text-xs text-muted-foreground">With country code, e.g. +9198…</p>
         </div>
 
         <div className="space-y-1.5">
@@ -137,10 +138,21 @@ export function NewListingForm({
         <Textarea id="description" name="description" rows={3} maxLength={300} />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="photo">Photo (optional)</Label>
-        <Input id="photo" name="photo" type="file" accept="image/*" />
-        <p className="text-xs text-muted-foreground">JPG or PNG, under 5MB.</p>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="cover_photo">Cover photo (optional)</Label>
+          <Input id="cover_photo" name="cover_photo" type="file" accept="image/*" />
+          <p className="text-xs text-muted-foreground">
+            Landscape — detail page hero. JPG/PNG, under 5MB.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="photo">Grid photo (optional)</Label>
+          <Input id="photo" name="photo" type="file" accept="image/*" />
+          <p className="text-xs text-muted-foreground">
+            Portrait — used in listing cards. JPG/PNG, under 5MB.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

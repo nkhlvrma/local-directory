@@ -88,7 +88,8 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
-  const photo = fd.get("photo");
+  const photo = fd.get("photo"); // grid/portrait thumbnail
+  const coverPhoto = fd.get("cover_photo"); // detail-page hero, landscape
   const publish = fd.get("publish") === "on";
   const verified = fd.get("verified") === "on";
 
@@ -104,8 +105,14 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   const hasPhoto = photo instanceof File && photo.size > 0;
   if (hasPhoto) {
     const file = photo as File;
-    if (!file.type.startsWith("image/")) return { error: "Photo must be an image file." };
-    if (file.size > 5 * 1024 * 1024) return { error: "Photo must be under 5MB." };
+    if (!file.type.startsWith("image/")) return { error: "Grid photo must be an image file." };
+    if (file.size > 5 * 1024 * 1024) return { error: "Grid photo must be under 5MB." };
+  }
+  const hasCoverPhoto = coverPhoto instanceof File && coverPhoto.size > 0;
+  if (hasCoverPhoto) {
+    const file = coverPhoto as File;
+    if (!file.type.startsWith("image/")) return { error: "Cover photo must be an image file." };
+    if (file.size > 5 * 1024 * 1024) return { error: "Cover photo must be under 5MB." };
   }
 
   const admin = createSupabaseAdminClient();
@@ -141,9 +148,20 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
       .single();
 
     if (!error) {
-      if (hasPhoto) {
-        const uploaded = await uploadListingPhoto(admin, data.id, photo as File);
-        if (uploaded) await admin.from("listings").update({ photo_url: uploaded }).eq("id", data.id);
+      // Independent uploads — run concurrently rather than one after the
+      // other.
+      const [uploadedPhoto, uploadedCover] = await Promise.all([
+        hasPhoto ? uploadListingPhoto(admin, data.id, photo as File, "grid") : null,
+        hasCoverPhoto ? uploadListingPhoto(admin, data.id, coverPhoto as File, "cover") : null,
+      ]);
+      if (uploadedPhoto || uploadedCover) {
+        await admin
+          .from("listings")
+          .update({
+            ...(uploadedPhoto ? { photo_url: uploadedPhoto } : {}),
+            ...(uploadedCover ? { cover_photo_url: uploadedCover } : {}),
+          })
+          .eq("id", data.id);
       }
       revalidatePath("/admin");
       return { ok: true };

@@ -48,7 +48,9 @@ create table if not exists listings (
   description text,
   whatsapp_number text not null,           -- E.164, e.g. +919812345678
   hours_json jsonb,
-  photo_url text,
+  photo_url text,                          -- portrait/grid-card thumbnail
+  cover_photo_url text,                    -- landscape hero for the detail page;
+                                            -- falls back to photo_url when null
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
   verified_at timestamptz,                 -- when we last confirmed the number
   pin_code text,                           -- Indian PIN, 6 digits (optional)

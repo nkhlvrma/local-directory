@@ -56,7 +56,7 @@ async function loadListing(params: Params) {
   const { data: listing } = await supabase
     .from("listings")
     .select(
-      "id, name, slug, description, whatsapp_number, photo_url, hours_json, verified, verified_at, pin_code, fields_values",
+      "id, name, slug, description, whatsapp_number, photo_url, cover_photo_url, hours_json, verified, verified_at, pin_code, fields_values",
     )
     .eq("status", "approved")
     .eq("neighborhood_id", (neighborhood as { id: string }).id)
@@ -83,6 +83,7 @@ async function loadListing(params: Params) {
       description: string | null;
       whatsapp_number: string;
       photo_url: string | null;
+      cover_photo_url: string | null;
       hours_json: WeekHours | null;
       verified: boolean;
       verified_at: string | null;
@@ -105,7 +106,7 @@ export async function generateMetadata(
       listing.description ??
       `${category.name} in ${neighborhood.name}, ${city.name}.`,
     openGraph: {
-      images: listing.photo_url ? [{ url: listing.photo_url }] : undefined,
+      images: heroPhoto(listing) ? [{ url: heroPhoto(listing)! }] : undefined,
     },
   };
 }
@@ -146,7 +147,7 @@ export default async function ListingPage(
     "@type": "LocalBusiness",
     name: listing.name,
     description: listing.description ?? undefined,
-    image: listing.photo_url ?? undefined,
+    image: heroPhoto(listing) ?? undefined,
     url: canonical,
     address: {
       "@type": "PostalAddress",
@@ -179,11 +180,13 @@ export default async function ListingPage(
         verified={listing.verified}
       />
 
-      {/* Photo hero */}
-      {listing.photo_url ? (
+      {/* Photo hero — cover_photo_url (landscape) when set, else falls back
+          to photo_url (portrait, primarily meant for grid cards) so older
+          listings with only one photo still show something. */}
+      {heroPhoto(listing) ? (
         <div className="relative w-full h-[400px] sm:h-[500px]">
           <Image
-            src={listing.photo_url}
+            src={heroPhoto(listing)!}
             alt={listing.name}
             fill
             priority
@@ -323,6 +326,13 @@ export default async function ListingPage(
       <MobileStickyContactBar listingId={listing.id} />
     </>
   );
+}
+
+function heroPhoto(listing: {
+  cover_photo_url: string | null;
+  photo_url: string | null;
+}): string | null {
+  return listing.cover_photo_url ?? listing.photo_url;
 }
 
 function formatVerifiedDate(iso: string): string {
