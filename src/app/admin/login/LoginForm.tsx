@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { AlertTriangle, LogIn } from "lucide-react";
 import { signIn } from "../actions";
 
@@ -53,7 +54,11 @@ export function LoginForm() {
       ) : null}
 
       <Button type="submit" disabled={pending} className="w-full">
-        <LogIn className="size-4" />
+        {pending ? (
+          <Spinner data-icon="inline-start" />
+        ) : (
+          <LogIn className="size-4" data-icon="inline-start" />
+        )}
         {pending ? "Signing in…" : "Sign in"}
       </Button>
     </form>

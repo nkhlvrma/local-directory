@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle2, AlertTriangle, Send } from "lucide-react";
+import { toast } from "sonner";
 import { createListing } from "../../actions";
 
 type Option = { id: string; name: string };
@@ -56,12 +58,15 @@ export function NewListingForm({
         fd.set("neighborhood_id", neighborhoodId);
         startTransition(async () => {
           const res = await createListing(fd);
-          if (res?.error) setError(res.error);
-          else {
+          if (res?.error) {
+            setError(res.error);
+            toast.error(res.error);
+          } else {
             setDone(true);
             setCategoryId("");
             setNeighborhoodId("");
             (e.target as HTMLFormElement).reset();
+            toast.success("Listing created");
           }
         });
       }}
@@ -161,7 +166,11 @@ export function NewListingForm({
       ) : null}
 
       <Button type="submit" disabled={pending}>
-        <Send className="size-4" />
+        {pending ? (
+          <Spinner data-icon="inline-start" />
+        ) : (
+          <Send className="size-4" data-icon="inline-start" />
+        )}
         {pending ? "Creating…" : "Create listing"}
       </Button>
     </form>

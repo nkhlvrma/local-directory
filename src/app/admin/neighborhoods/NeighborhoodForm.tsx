@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { AlertTriangle, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { createNeighborhood } from "../actions";
 
 export function NeighborhoodForm() {
@@ -21,8 +23,13 @@ export function NeighborhoodForm() {
         const fd = new FormData(e.currentTarget);
         startTransition(async () => {
           const res = await createNeighborhood(fd);
-          if (res?.error) setError(res.error);
-          else (e.target as HTMLFormElement).reset();
+          if (res?.error) {
+            setError(res.error);
+            toast.error(res.error);
+          } else {
+            (e.target as HTMLFormElement).reset();
+            toast.success("Neighborhood added");
+          }
         });
       }}
     >
@@ -35,7 +42,11 @@ export function NeighborhoodForm() {
         <Input id="nb-slug" name="slug" maxLength={60} placeholder="auto from name" />
       </div>
       <Button type="submit" disabled={pending}>
-        <Plus className="size-4" />
+        {pending ? (
+          <Spinner data-icon="inline-start" />
+        ) : (
+          <Plus className="size-4" data-icon="inline-start" />
+        )}
         {pending ? "Adding…" : "Add neighborhood"}
       </Button>
       {error ? (
