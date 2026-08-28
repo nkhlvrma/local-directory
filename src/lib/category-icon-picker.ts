@@ -1,4 +1,11 @@
-import { iconNames } from "lucide-react/dynamic";
+// Import the plain data module directly rather than "lucide-react/dynamic" —
+// that entry point also bundles the client-only DynamicIcon component, and
+// pulling it into this server-only file (imported from a "use server"
+// action) makes Next's server/client boundary handling mangle the iconNames
+// export into something without a working .includes at runtime.
+import dynamicIconImports from "lucide-react/dynamicIconImports";
+
+const ICON_NAMES = new Set(Object.keys(dynamicIconImports));
 
 // Server-side only (uses the full 2000+ icon dynamic-import registry).
 // Auto-assigns a Lucide icon to a category at creation time, so admins never
@@ -68,7 +75,7 @@ const DEFAULT_ICON = "store";
 export function pickCategoryIcon(name: string): string {
   const norm = name.toLowerCase();
   for (const [pattern, icon] of KEYWORD_ICONS) {
-    if (pattern.test(norm) && iconNames.includes(icon as (typeof iconNames)[number])) {
+    if (pattern.test(norm) && ICON_NAMES.has(icon)) {
       return icon;
     }
   }
