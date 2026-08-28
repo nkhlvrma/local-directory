@@ -28,16 +28,31 @@ const geistMono = Geist_Mono({
 
 const SITE_NAME = "Local Directory";
 
+const DESCRIPTION =
+  "A curated directory of neighborhood shops, services and workers. Chat directly on WhatsApp — no forms, no spam calls.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: `${SITE_NAME} — verified local businesses on WhatsApp`,
     template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "A curated directory of neighborhood shops, services and workers. Chat directly on WhatsApp — no forms, no spam calls.",
+  description: DESCRIPTION,
   applicationName: SITE_NAME,
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "/",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — verified local businesses on WhatsApp`,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — verified local businesses on WhatsApp`,
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
