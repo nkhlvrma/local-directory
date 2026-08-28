@@ -24,7 +24,7 @@ export function NeighborhoodMap({
   const mapUrl = `https://www.openstreetmap.org/?mlat=${map.latitude}&mlon=${map.longitude}#map=${map.zoom}/${map.latitude}/${map.longitude}`;
 
   return (
-    <section aria-labelledby="neighborhood-map-title" className="space-y-4">
+    <section aria-labelledby="neighborhood-map-title" className="space-y-4 py-6">
       <div>
         <h2
           id="neighborhood-map-title"

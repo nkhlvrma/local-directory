@@ -51,7 +51,11 @@ export function SearchBar({
             className="h-14 rounded-xl bg-background dark:bg-background shadow-sm pl-11 pr-3 text-base focus-visible:border-primary/50 focus-visible:ring-2"
           />
         </div>
-        <Button type="submit" disabled={!q.trim()} className="h-14 rounded-xl px-6">
+        <Button
+          type="submit"
+          disabled={!q.trim()}
+          className="h-14 rounded-xl px-6 disabled:opacity-100"
+        >
           Search
         </Button>
       </form>
