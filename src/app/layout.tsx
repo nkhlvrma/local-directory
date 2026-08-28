@@ -1,17 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Roboto_Slab } from "next/font/google";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
-import { LocationBar } from "@/components/LocationBar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { Agentation } from "agentation";
 
 const robotoSlabHeading = Roboto_Slab({subsets:['latin'],variable:'--font-heading'});
 
@@ -52,8 +51,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const pin = cookieStore.get("pin")?.value ?? "";
   const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   return (
@@ -78,11 +75,9 @@ export default async function RootLayout({
           <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-40">
             <Container className="py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <Link href="/" className="flex items-center gap-2 shrink-0">
-                  <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+                <Link href="/" className="flex items-center shrink-0">
                   <span className="font-bold text-base tracking-tight">{SITE_NAME}</span>
                 </Link>
-                <LocationBar initialPin={pin} />
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <ThemeToggle />
@@ -101,14 +96,9 @@ export default async function RootLayout({
 
           <footer className="border-t mt-16">
             <Container className="py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-                  <span className="text-sm font-semibold">{SITE_NAME}</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Community-verified · no spam calls · WhatsApp only
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+                <span className="text-sm font-semibold">{SITE_NAME}</span>
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <Link href="/list-your-business" className="hover:text-foreground transition-colors">
@@ -123,6 +113,7 @@ export default async function RootLayout({
 
           <Toaster />
         </ThemeProvider>
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );
