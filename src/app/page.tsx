@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
@@ -55,13 +54,15 @@ export default async function Home() {
         style={{ marginTop: -HEADER_HEIGHT }}
       >
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          <Image
-            src="/hero-street.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover blur-[2px] scale-105"
+          {/* Day/night hero art, swapped per Tailwind's class-based dark
+              variant (tracks next-themes' resolved theme, including a
+              manual toggle override — not just OS prefers-color-scheme)
+              and per viewport width for portrait vs landscape crops. A CSS
+              background-image (rather than <Image>/<picture>) means the
+              browser only ever fetches the one variant that actually
+              applies, instead of downloading all four. */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[2px] scale-105 bg-[url('/daytimePortrait.jpg')] sm:bg-[url('/daytimeCover.jpg')] dark:bg-[url('/dusktimePortrait.jpg')] dark:sm:bg-[url('/dusktimeCover.jpg')]"
           />
           <div className="absolute inset-0 bg-black/45" />
         </div>
