@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ListingCard } from "@/components/ListingCard";
-import { CategoryIcon } from "@/components/CategoryIcon";
+import { ListingGridCard } from "@/components/ListingGridCard";
+import { LoopingCategoryIcon } from "@/components/LoopingCategoryIcon";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { isValidPin } from "@/lib/pin";
 import { isOpenNow } from "@/lib/hours";
@@ -83,14 +83,11 @@ export default async function CategoryPage(
 
   return (
     <Container className="py-7 space-y-6">
-      <header className="space-y-1">
-        <p className="text-xs text-muted-foreground">
-          {(city as { name: string }).name}
-        </p>
-        <div className="flex items-center gap-2.5">
-          <span className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <CategoryIcon slug={(category as { slug: string }).slug} size={20} />
-          </span>
+      <header className="flex items-center gap-3">
+        <span className="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+          <LoopingCategoryIcon slug={(category as { slug: string }).slug} size={26} />
+        </span>
+        <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight font-heading">
             {(category as { name: string }).name}
           </h1>
@@ -111,12 +108,13 @@ export default async function CategoryPage(
             : "No listings yet in this category."}
         </p>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((l) => (
-            <ListingCard
+            <ListingGridCard
               key={l.id}
               href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
               name={l.name}
+              categorySlug={(category as { slug: string }).slug}
               neighborhood={l.neighborhoods.name}
               description={l.description}
               verified={l.verified}
