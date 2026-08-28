@@ -99,13 +99,31 @@ const readOnlyError = {
   },
 };
 
+// Tables where demo mode should actually accept inserts (rather than the
+// generic read-only error) so client-side features that write — like
+// analytics logging — keep working without a real Supabase project.
+const WRITABLE_MOCK_TABLES = new Set(["analytics_events"]);
+
+let mockIdCounter = 0;
+
 export function createMockSupabaseClient() {
   return {
     from(table: string) {
       const rows = MOCK_TABLES[table] ?? [];
       const q = new MockQuery(rows);
       return Object.assign(q, {
-        insert: async () => readOnlyError,
+        insert: async (values: Row | Row[]) => {
+          if (!WRITABLE_MOCK_TABLES.has(table)) return readOnlyError;
+          const arr = Array.isArray(values) ? values : [values];
+          for (const v of arr) {
+            rows.push({
+              id: `mock-${table}-${++mockIdCounter}`,
+              created_at: new Date().toISOString(),
+              ...v,
+            });
+          }
+          return { error: null };
+        },
         update: () => ({
           eq: async () => readOnlyError,
         }),

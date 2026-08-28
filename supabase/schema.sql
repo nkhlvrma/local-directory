@@ -50,6 +50,7 @@ create table if not exists listings (
   hours_json jsonb,
   photo_url text,
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
+  verified_at timestamptz,                 -- when we last confirmed the number
   pin_code text,                           -- Indian PIN, 6 digits (optional)
   whatsapp_clicks integer not null default 0,
   fields_values jsonb,                     -- values keyed by categories.fields_schema[].key
@@ -191,6 +192,29 @@ drop policy if exists "public insert search_events" on search_events;
 create policy "public insert search_events" on search_events for insert with check (true);
 drop policy if exists "admin read search_events" on search_events;
 create policy "admin read search_events" on search_events for select using (is_admin());
+
+-- ---------------------------------------------------------------------------
+-- Analytics events (generic funnel instrumentation — search, card clicks,
+-- listing views, WhatsApp/call clicks, share, map interaction, submission
+-- funnel). No admin UI reads this yet; the read policy is here for later.
+-- ---------------------------------------------------------------------------
+
+create table if not exists analytics_events (
+  id uuid primary key default uuid_generate_v4(),
+  event_name text not null,
+  listing_id uuid references listings(id) on delete set null,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists analytics_events_name_idx
+  on analytics_events(event_name, created_at desc);
+create index if not exists analytics_events_listing_idx on analytics_events(listing_id);
+
+alter table analytics_events enable row level security;
+drop policy if exists "public insert analytics_events" on analytics_events;
+create policy "public insert analytics_events" on analytics_events for insert with check (true);
+drop policy if exists "admin read analytics_events" on analytics_events;
+create policy "admin read analytics_events" on analytics_events for select using (is_admin());
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket for listing photos (create manually in Supabase UI too):
