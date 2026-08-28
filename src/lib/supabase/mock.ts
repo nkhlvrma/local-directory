@@ -43,6 +43,8 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
   private filters: Filter[] = [];
   private single = false;
   private limitN: number | null = null;
+  private orderCol: string | null = null;
+  private orderAsc = true;
 
   constructor(private rows: Row[]) {}
 
@@ -62,9 +64,9 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     this.filters.push({ kind: "or", predicate: parseOr(spec) });
     return this;
   }
-  order(_col: string, _opts?: unknown) {
-    void _col;
-    void _opts;
+  order(col: string, opts?: { ascending?: boolean }) {
+    this.orderCol = col;
+    this.orderAsc = opts?.ascending ?? true;
     return this;
   }
   limit(n: number) {
@@ -82,6 +84,20 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
       if (f.kind === "eq") out = out.filter((r) => getPath(r, f.col) === f.val);
       else if (f.kind === "neq") out = out.filter((r) => getPath(r, f.col) !== f.val);
       else out = out.filter((r) => f.predicate(r));
+    }
+    if (this.orderCol) {
+      const col = this.orderCol;
+      const asc = this.orderAsc;
+      out = [...out].sort((a, b) => {
+        const av = getPath(a, col);
+        const bv = getPath(b, col);
+        if (av == null && bv == null) return 0;
+        if (av == null) return asc ? -1 : 1;
+        if (bv == null) return asc ? 1 : -1;
+        if (av < bv) return asc ? -1 : 1;
+        if (av > bv) return asc ? 1 : -1;
+        return 0;
+      });
     }
     if (this.limitN != null) out = out.slice(0, this.limitN);
     return this.single

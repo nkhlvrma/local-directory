@@ -6,7 +6,9 @@ import { NeighborhoodMap } from "@/components/NeighborhoodMap";
 import { LocationBar } from "@/components/LocationBar";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { ListingGridCard } from "@/components/ListingGridCard";
 import Typewriter from "@/components/fancy/text/typewriter";
+import type { WeekHours } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,32 @@ export default async function Home() {
     ]);
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
   const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
+
+  const { data: popularRaw } = await supabase
+    .from("listings")
+    .select(
+      `id, name, slug, description, verified, pin_code, photo_url, hours_json,
+       neighborhoods!inner ( name, slug, city_id ),
+       categories!inner ( name, slug )`,
+    )
+    .eq("status", "approved")
+    .eq("neighborhoods.city_id", (city as { id: string }).id)
+    .order("whatsapp_clicks", { ascending: false })
+    .limit(6);
+  type PopularRow = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    verified: boolean;
+    pin_code: string | null;
+    photo_url: string | null;
+    hours_json: WeekHours | null;
+    neighborhoods: { name: string; slug: string };
+    categories: { name: string; slug: string };
+  };
+  const popular = (popularRaw ?? []) as unknown as PopularRow[];
+
   return (
     <>
       {/* Hero */}
@@ -74,6 +102,32 @@ export default async function Home() {
 
       <Container className="py-10 space-y-12">
         <RecentlyViewed />
+
+        {/* Popular */}
+        {popular.length > 0 ? (
+          <section>
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              Popular in {(city as { name: string }).name}
+            </h2>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              {popular.map((l) => (
+                <ListingGridCard
+                  key={l.id}
+                  id={l.id}
+                  href={`/${(city as { slug: string }).slug}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
+                  name={l.name}
+                  categorySlug={l.categories.slug}
+                  subtitle={l.categories.name}
+                  description={l.description}
+                  verified={l.verified}
+                  pin={l.pin_code}
+                  photo_url={l.photo_url}
+                  hours={l.hours_json}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* Categories */}
         <section>
