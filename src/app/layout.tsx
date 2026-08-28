@@ -51,8 +51,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   return (
     <html
       lang="en"
@@ -67,12 +65,6 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex min-h-dvh flex-col">
-          {isDemo ? (
-            <div className="bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs text-center py-1.5 px-4 border-b border-amber-200 dark:border-amber-900">
-              Demo mode — using in-memory data.
-            </div>
-          ) : null}
-
           <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-40">
             <Container className="py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -98,7 +90,6 @@ export default async function RootLayout({
           <footer className="border-t mt-16">
             <Container className="py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
                 <span className="text-sm font-semibold">{SITE_NAME}</span>
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
