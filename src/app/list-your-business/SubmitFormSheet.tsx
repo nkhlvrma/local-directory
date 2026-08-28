@@ -12,9 +12,12 @@ import { SubmitForm } from "./SubmitForm";
 
 type Option = { id: string; name: string };
 
-// Same treatment as the admin "new listing" sheet — opens on page load,
-// closing it goes back to the homepage. Still a real route
-// (/list-your-business) for links and bookmarking.
+// Used both as the intercepted @modal route (sheet on top of whatever page
+// you clicked "List your business" from) and as the full-page fallback for
+// a direct visit/reload — router.back() is the right close behavior for
+// both: it dismisses the sheet back to the real previous page when
+// intercepted, and is a reasonable no-op-ish fallback (leaves the site or
+// falls through to browser history) otherwise.
 export function SubmitFormSheet({
   categories,
   neighborhoods,
@@ -28,7 +31,7 @@ export function SubmitFormSheet({
     <Sheet
       defaultOpen
       onOpenChange={(open) => {
-        if (!open) router.push("/");
+        if (!open) router.back();
       }}
     >
       <SheetContent className="sm:max-w-lg overflow-y-auto">

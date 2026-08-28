@@ -62,8 +62,10 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   return (
     <html
@@ -101,6 +103,7 @@ export default async function RootLayout({
           </footer>
 
           <Toaster />
+          {modal}
           </div>
           </TooltipProvider>
         </ThemeProvider>
