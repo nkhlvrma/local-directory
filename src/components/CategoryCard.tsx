@@ -8,10 +8,12 @@ import { AnimatedCategoryIcon } from "./AnimatedCategoryIcon";
 export function CategoryCard({
   slug,
   name,
+  icon,
   href,
 }: {
   slug: string;
   name: string;
+  icon?: string | null;
   href: string;
 }) {
   const [hover, setHover] = useState(false);
@@ -38,7 +40,7 @@ export function CategoryCard({
                 : "bg-muted text-muted-foreground"
             }`}
           >
-            <AnimatedCategoryIcon slug={slug} animating={hover} size={20} />
+            <AnimatedCategoryIcon slug={slug} icon={icon} animating={hover} size={20} />
           </span>
           <span className="text-sm font-semibold leading-tight">{name}</span>
         </CardContent>

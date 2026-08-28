@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +12,7 @@ type Props = {
   href: string;
   name: string;
   categorySlug: string; // used for the placeholder image when no photo exists
+  categoryIcon?: string | null; // DB-stored Lucide icon name, auto-assigned per category
   subtitle?: string | null; // secondary label — neighborhood, category, or both
   description?: string | null;
   verified?: boolean;
@@ -28,6 +30,7 @@ export function ListingGridCard({
   href,
   name,
   categorySlug,
+  categoryIcon,
   subtitle,
   description,
   verified,
@@ -43,16 +46,16 @@ export function ListingGridCard({
       >
         <div className="aspect-4/3 w-full overflow-hidden bg-primary/5 relative">
           {photo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={photo_url}
               alt=""
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              fill
+              sizes="(min-width: 1024px) 23vw, (min-width: 640px) 32vw, 48vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-primary/35">
-              <CategoryIcon slug={categorySlug} size={40} strokeWidth={1.5} />
+              <CategoryIcon slug={categorySlug} icon={categoryIcon} size={40} strokeWidth={1.5} />
             </div>
           )}
           {verified ? (

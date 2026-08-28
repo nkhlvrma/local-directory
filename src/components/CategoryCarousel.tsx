@@ -31,6 +31,7 @@ export function CategoryCarousel({ categories }: { categories: Category[] }) {
             <CategoryCard
               slug={category.slug}
               name={category.name}
+              icon={category.icon}
               href={category.href}
             />
           </CarouselItem>

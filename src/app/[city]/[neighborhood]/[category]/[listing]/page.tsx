@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +48,7 @@ async function loadListing(params: Params) {
 
   const { data: category } = await supabase
     .from("categories")
-    .select("id, name, slug, fields_schema")
+    .select("id, name, slug, icon, fields_schema")
     .eq("slug", params.category)
     .maybeSingle();
   if (!category) return null;
@@ -72,6 +73,7 @@ async function loadListing(params: Params) {
       name: string;
       slug: string;
       id: string;
+      icon: string | null;
       fields_schema: FieldDef[] | null;
     },
     listing: listing as {
@@ -179,13 +181,16 @@ export default async function ListingPage(
 
       {/* Photo hero */}
       {listing.photo_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={listing.photo_url}
-          alt={listing.name}
-          className="w-full object-cover"
-          style={{ maxHeight: 400 }}
-        />
+        <div className="relative w-full h-[400px]">
+          <Image
+            src={listing.photo_url}
+            alt={listing.name}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
       ) : null}
 
       <Container className="py-7 space-y-6 pb-28 md:pb-7">
@@ -291,6 +296,7 @@ export default async function ListingPage(
                   href={`/${city.slug}/${neighborhood.slug}/${category.slug}/${s.slug}`}
                   name={s.name}
                   categorySlug={category.slug}
+                  categoryIcon={category.icon}
                   description={s.description}
                   verified={s.verified}
                   pin={s.pin_code}

@@ -15,6 +15,7 @@ import {
   Dot,
   type LucideIcon,
 } from "lucide-react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 
 const MAP: Record<string, LucideIcon> = {
   "tiffin-services": UtensilsCrossed,
@@ -29,13 +30,28 @@ const MAP: Record<string, LucideIcon> = {
 
 export function CategoryIcon({
   slug,
+  icon,
   size = 22,
   strokeWidth = 1.75,
 }: {
   slug: string;
+  // DB-stored Lucide icon name (kebab-case), auto-assigned at category
+  // creation — see category-icon-picker.ts. Used when the slug isn't one
+  // of the hand-picked categories above.
+  icon?: string | null;
   size?: number;
   strokeWidth?: number;
 }) {
-  const Icon = MAP[slug] ?? Dot;
-  return <Icon size={size} strokeWidth={strokeWidth} />;
+  const Icon = MAP[slug];
+  if (Icon) return <Icon size={size} strokeWidth={strokeWidth} />;
+  if (icon)
+    return (
+      <DynamicIcon
+        name={icon as IconName}
+        size={size}
+        strokeWidth={strokeWidth}
+        fallback={() => <Dot size={size} strokeWidth={strokeWidth} />}
+      />
+    );
+  return <Dot size={size} strokeWidth={strokeWidth} />;
 }

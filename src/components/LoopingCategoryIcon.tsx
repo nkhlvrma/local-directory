@@ -11,9 +11,11 @@ const OFF_MS = 1400; // pause between replays
 
 export function LoopingCategoryIcon({
   slug,
+  icon,
   size = 24,
 }: {
   slug: string;
+  icon?: string | null;
   size?: number;
 }) {
   const [animating, setAnimating] = useState(true);
@@ -36,5 +38,5 @@ export function LoopingCategoryIcon({
     };
   }, []);
 
-  return <AnimatedCategoryIcon slug={slug} animating={animating} size={size} />;
+  return <AnimatedCategoryIcon slug={slug} icon={icon} animating={animating} size={size} />;
 }

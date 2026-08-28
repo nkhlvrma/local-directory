@@ -50,7 +50,7 @@ export default async function SearchPage(
     photo_url: string | null;
     hours_json: WeekHours | null;
     neighborhoods: { name: string; slug: string; city_id: string };
-    categories: { name: string; slug: string };
+    categories: { name: string; slug: string; icon: string | null };
   };
   let rows: Row[] = [];
 
@@ -62,7 +62,7 @@ export default async function SearchPage(
       .select(
         `id, name, slug, description, verified, pin_code, photo_url, hours_json,
          neighborhoods!inner ( name, slug, city_id ),
-         categories!inner ( name, slug )`,
+         categories!inner ( name, slug, icon )`,
       )
       .eq("status", "approved")
       .eq("neighborhoods.city_id", (city as { id: string }).id)
@@ -157,6 +157,7 @@ export default async function SearchPage(
                 href={`/${CITY_SLUG}/${l.neighborhoods.slug}/${l.categories.slug}/${l.slug}`}
                 name={l.name}
                 categorySlug={l.categories.slug}
+                categoryIcon={l.categories.icon}
                 subtitle={`${l.categories.name} · ${l.neighborhoods.name}`}
                 description={l.description}
                 verified={l.verified}

@@ -22,7 +22,7 @@ async function loadContext(params: Params) {
   const supabase = await createSupabaseServerClient();
   const [{ data: city }, { data: category }] = await Promise.all([
     supabase.from("cities").select("id, name, slug").eq("slug", params.city).maybeSingle(),
-    supabase.from("categories").select("id, name, slug").eq("slug", params.category).maybeSingle(),
+    supabase.from("categories").select("id, name, slug, icon").eq("slug", params.category).maybeSingle(),
   ]);
   return { supabase, city, category };
 }
@@ -103,7 +103,11 @@ export default async function CategoryPage(
     <Container className="py-7 space-y-6">
       <header className="flex items-center gap-3">
         <span className="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <LoopingCategoryIcon slug={(category as { slug: string }).slug} size={26} />
+          <LoopingCategoryIcon
+            slug={(category as { slug: string }).slug}
+            icon={(category as { icon: string | null }).icon}
+            size={26}
+          />
         </span>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight font-heading">
@@ -146,6 +150,7 @@ export default async function CategoryPage(
               href={`/${citySlug}/${l.neighborhoods.slug}/${(category as { slug: string }).slug}/${l.slug}`}
               name={l.name}
               categorySlug={(category as { slug: string }).slug}
+              categoryIcon={(category as { icon: string | null }).icon}
               subtitle={l.neighborhoods.name}
               description={l.description}
               verified={l.verified}

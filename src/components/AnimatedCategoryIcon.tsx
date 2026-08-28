@@ -10,6 +10,7 @@
 
 import { motion, useAnimation, type Variants } from "motion/react";
 import { useEffect } from "react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -370,14 +371,25 @@ const MAP: Record<
 
 export function AnimatedCategoryIcon({
   slug,
+  icon,
   animating,
   size = 22,
 }: {
   slug: string;
+  // DB-stored Lucide icon name (kebab-case, e.g. "wrench"), auto-assigned
+  // when the category was created — see category-icon-picker.ts. Used as a
+  // fallback for categories that don't have a hand-authored animated
+  // variant below; renders static (no hover animation) since we can't
+  // auto-generate motion for an arbitrary icon.
+  icon?: string | null;
   animating: boolean;
   size?: number;
 }) {
   const Icon = MAP[slug];
-  if (!Icon) return <DotIcon size={size} />;
-  return <Icon animating={animating} size={size} />;
+  if (Icon) return <Icon animating={animating} size={size} />;
+  if (icon)
+    return (
+      <DynamicIcon name={icon as IconName} size={size} fallback={() => <DotIcon size={size} />} />
+    );
+  return <DotIcon size={size} />;
 }

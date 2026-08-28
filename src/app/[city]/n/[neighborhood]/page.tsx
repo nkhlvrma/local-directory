@@ -65,7 +65,7 @@ export default async function NeighborhoodPage(
     .from("listings")
     .select(
       `id, name, slug, description, verified, pin_code, photo_url, hours_json,
-       categories!inner ( name, slug )`,
+       categories!inner ( name, slug, icon )`,
     )
     .eq("status", "approved")
     .eq("neighborhood_id", (neighborhood as { id: string }).id);
@@ -82,7 +82,7 @@ export default async function NeighborhoodPage(
     pin_code: string | null;
     photo_url: string | null;
     hours_json: WeekHours | null;
-    categories: { name: string; slug: string };
+    categories: { name: string; slug: string; icon: string | null };
   };
   let rows = (listings ?? []) as unknown as Row[];
   if (photoOnly) rows = rows.filter((r) => !!r.photo_url);
@@ -145,6 +145,7 @@ export default async function NeighborhoodPage(
               href={`/${citySlug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
               name={l.name}
               categorySlug={l.categories.slug}
+              categoryIcon={l.categories.icon}
               subtitle={l.categories.name}
               description={l.description}
               verified={l.verified}
