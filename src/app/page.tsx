@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
@@ -7,6 +8,11 @@ import { LocationBar } from "@/components/LocationBar";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import Typewriter from "@/components/fancy/text/typewriter";
+
+// Matches the header's rendered height (Container py-3 + the size="icon"
+// theme toggle button, 36px) so the hero image tucks in behind the
+// transparent header instead of leaving a gap.
+const HEADER_HEIGHT = 60;
 
 export const dynamic = "force-dynamic";
 
@@ -44,13 +50,28 @@ export default async function Home() {
   return (
     <>
       {/* Hero */}
-      <div>
-        <Container className="pt-12 pb-10">
+      <div className="relative" style={{ marginTop: -HEADER_HEIGHT }}>
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <Image
+            src="/hero-street.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover blur-[2px] scale-105"
+          />
+          <div className="absolute inset-0 bg-black/45" />
+        </div>
+
+        <Container
+          className="pt-12 pb-10"
+          style={{ paddingTop: HEADER_HEIGHT + 48 }}
+        >
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
           <div className="mb-5">
             <LocationBar />
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] font-heading text-balance">
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] font-heading text-balance text-white">
             Find trusted<br />
             <Typewriter
               as="span"
@@ -59,11 +80,11 @@ export default async function Home() {
               deleteSpeed={35}
               waitTime={1800}
               className="text-primary"
-              cursorClassName="text-foreground/50"
+              cursorClassName="text-white/50"
             />
             .
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-xl leading-relaxed text-pretty">
+          <p className="mt-4 text-lg text-white/80 max-w-xl leading-relaxed text-pretty">
             Find community-verified local services and chat with them directly on WhatsApp.
           </p>
           <div className="mt-8 w-full max-w-xl">

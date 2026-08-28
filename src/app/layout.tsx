@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Roboto_Slab } from "next/font/google";
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Container } from "@/components/ui/container";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -80,25 +78,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <div className="flex min-h-dvh flex-col">
-          <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-40">
-            <Container className="py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <Link href="/" className="flex items-center shrink-0">
-                  <span className="font-bold text-base tracking-tight">{SITE_NAME}</span>
-                </Link>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <ThemeToggle />
-                <Link href="/list-your-business">
-                  <Button size="sm" className="gap-1.5">
-                    <Plus className="size-3.5" />
-                    <span className="hidden sm:inline">List your business</span>
-                    <span className="sm:hidden">List</span>
-                  </Button>
-                </Link>
-              </div>
-            </Container>
-          </header>
+          <SiteHeader />
 
           <main className="flex-1 min-h-[75dvh]">{children}</main>
 
