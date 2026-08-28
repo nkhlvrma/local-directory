@@ -162,6 +162,14 @@ export function SubmitForm({
           <Label htmlFor="description">Short description</Label>
           <Textarea id="description" name="description" rows={3} maxLength={300} />
         </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="photo">Photo</Label>
+          <Input id="photo" name="photo" type="file" accept="image/*" />
+          <p className="text-xs text-muted-foreground">
+            Optional. JPG or PNG, under 5MB.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-start gap-2.5">

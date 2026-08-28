@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isMockMode } from "@/lib/supabase/mock";
 import { slugify } from "@/lib/slug";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { isValidPin } from "@/lib/pin";
@@ -15,6 +16,7 @@ export async function submitListing(fd: FormData) {
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
   const consent = fd.get("consent");
   const turnstileToken = fd.get("cf-turnstile-response");
+  const photo = fd.get("photo");
 
   if (consent !== "on")
     return { error: "You must agree to the listing terms before submitting." };
@@ -34,6 +36,15 @@ export async function submitListing(fd: FormData) {
     return { error: "PIN code must be 6 digits (e.g. 226010)." };
   const pin_code = pinRaw || null;
 
+  const hasPhoto = photo instanceof File && photo.size > 0;
+  if (hasPhoto) {
+    const file = photo as File;
+    if (!file.type.startsWith("image/"))
+      return { error: "Photo must be an image file." };
+    if (file.size > 5 * 1024 * 1024)
+      return { error: "Photo must be under 5MB." };
+  }
+
   const base = slugify(name);
   const admin = createSupabaseAdminClient();
 
@@ -49,19 +60,49 @@ export async function submitListing(fd: FormData) {
 
   for (let i = 0; i < 20; i++) {
     const slug = i === 0 ? base : `${base}-${i + 1}`;
-    const { error } = await admin.from("listings").insert({
-      name,
-      slug,
-      category_id: categoryId,
-      neighborhood_id: neighborhoodId,
-      description,
-      whatsapp_number: whatsapp,
-      pin_code,
-      status: "pending",
-      source: "self_serve",
-    });
-    if (!error) return { ok: true };
+    const { data, error } = await admin
+      .from("listings")
+      .insert({
+        name,
+        slug,
+        category_id: categoryId,
+        neighborhood_id: neighborhoodId,
+        description,
+        whatsapp_number: whatsapp,
+        pin_code,
+        status: "pending",
+        source: "self_serve",
+      })
+      .select("id")
+      .single();
+
+    if (!error) {
+      if (hasPhoto && !isMockMode()) {
+        // Photo upload is best-effort: a failure here shouldn't fail the
+        // whole submission — the business is still listed, just photo-less.
+        const uploaded = await uploadListingPhoto(admin, data.id, photo as File);
+        if (uploaded) {
+          await admin.from("listings").update({ photo_url: uploaded }).eq("id", data.id);
+        }
+      }
+      return { ok: true };
+    }
     if (!error.message.includes("duplicate")) return { error: error.message };
   }
   return { error: "Could not create a unique slug — try a different name." };
+}
+
+async function uploadListingPhoto(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  listingId: string,
+  file: File,
+): Promise<string | null> {
+  const ext = file.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+  const path = `${listingId}/${Date.now()}.${ext}`;
+  const { error } = await admin.storage
+    .from("listing-photos")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) return null;
+  const { data } = admin.storage.from("listing-photos").getPublicUrl(path);
+  return data.publicUrl;
 }
