@@ -1,17 +1,19 @@
 type Props = {
   listingId: string;
+  className?: string;
 };
 
 // Routes through /api/wa/[id] so we can count clicks. The API route
 // increments an atomic counter, then 302s to wa.me. Small friction to the
 // user (one extra hop), big value for us (we can prove leads to businesses).
-export function WhatsAppButton({ listingId }: Props) {
+// Primary contact CTA — WhatsApp stays first and greenest; Call is secondary.
+export function WhatsAppButton({ listingId, className }: Props) {
   return (
     <a
       href={`/api/wa/${listingId}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 rounded-full bg-[#25D366] text-black font-medium px-5 py-3 shadow-sm hover:brightness-95"
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#25D366] text-black font-medium px-5 py-3 shadow-sm hover:brightness-95 ${className ?? ""}`}
     >
       <svg
         aria-hidden="true"

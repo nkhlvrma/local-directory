@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, AlertTriangle } from "lucide-react";
+import { ChevronRight, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { CallButton } from "@/components/CallButton";
+import { MobileStickyContactBar } from "@/components/MobileStickyContactBar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { OpenNowBadge } from "@/components/OpenNowBadge";
 import { HoursTable } from "@/components/HoursTable";
@@ -53,7 +55,7 @@ async function loadListing(params: Params) {
   const { data: listing } = await supabase
     .from("listings")
     .select(
-      "id, name, slug, description, whatsapp_number, photo_url, hours_json, verified, pin_code, fields_values",
+      "id, name, slug, description, whatsapp_number, photo_url, hours_json, verified, verified_at, pin_code, fields_values",
     )
     .eq("status", "approved")
     .eq("neighborhood_id", (neighborhood as { id: string }).id)
@@ -81,6 +83,7 @@ async function loadListing(params: Params) {
       photo_url: string | null;
       hours_json: WeekHours | null;
       verified: boolean;
+      verified_at: string | null;
       pin_code: string | null;
       fields_values: Record<string, string | number | boolean | null> | null;
     },
@@ -185,7 +188,7 @@ export default async function ListingPage(
         />
       ) : null}
 
-      <Container className="py-7 space-y-6">
+      <Container className="py-7 space-y-6 pb-28 md:pb-7">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
           <Link href={`/${city.slug}/c/${category.slug}`} className="hover:text-foreground transition-colors">
@@ -214,15 +217,38 @@ export default async function ListingPage(
           ) : null}
         </header>
 
-        {/* CTA */}
+        {/* CTA — WhatsApp primary, Call secondary */}
         <div className="flex gap-2 flex-wrap items-center">
           <WhatsAppButton listingId={listing.id} />
+          <CallButton listingId={listing.id} />
           <ShareButton
             title={listing.name}
             url={canonical}
             text={`Found ${listing.name} on Local Directory.`}
+            listingId={listing.id}
           />
         </div>
+
+        {/* Trust panel */}
+        {listing.verified ? (
+          <div className="flex items-start gap-2 text-xs text-muted-foreground border border-primary/20 bg-primary/5 rounded-lg px-3 py-2.5">
+            <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
+            <p>
+              <span className="text-foreground font-medium">Verified</span> — we confirmed this
+              WhatsApp number is active
+              {listing.verified_at ? (
+                <> ({formatVerifiedDate(listing.verified_at)})</>
+              ) : null}
+              . {" "}
+              <Link
+                href={`/report?listing=${listing.id}`}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Something wrong? Report it.
+              </Link>
+            </p>
+          </div>
+        ) : null}
 
         {/* Custom fields */}
         {shownFields.length > 0 ? (
@@ -287,8 +313,20 @@ export default async function ListingPage(
           </Link>
         </div>
       </Container>
+
+      <MobileStickyContactBar listingId={listing.id} />
     </>
   );
+}
+
+function formatVerifiedDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric" }).format(
+      new Date(iso),
+    );
+  } catch {
+    return "";
+  }
 }
 
 function formatFieldValue(

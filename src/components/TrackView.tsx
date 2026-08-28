@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics-client";
 
 const KEY = "recently-viewed-v1";
 const MAX = 8;
@@ -29,6 +30,10 @@ export function TrackView(props: RecentEntry) {
     } catch {
       // storage blocked (private mode, quota) — silent no-op
     }
+    trackEvent("listing_viewed", {
+      listingId: props.id,
+      metadata: { category: props.category, neighborhood: props.neighborhood },
+    });
     // Only run once per mount; props for a page load are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { whatsappLink, defaultOpener } from "@/lib/whatsapp";
 import { SITE_NAME } from "@/lib/site";
 import { isMockMode } from "@/lib/supabase/mock";
+import { logEvent } from "@/lib/analytics";
 
 // GET /api/wa/[id] — logs a click for tracking, then 302-redirects to the
 // listing's wa.me link. The WhatsApp CTA on every listing page points here
@@ -33,6 +34,7 @@ export async function GET(
     // Fire-and-forget increment. Failure here shouldn't block the redirect.
     await admin.rpc("increment_whatsapp_click", { p_listing_id: id });
   }
+  await logEvent("whatsapp_clicked", { listingId: id });
 
   const target = whatsappLink(
     listing.whatsapp_number,

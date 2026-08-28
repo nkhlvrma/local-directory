@@ -3,19 +3,23 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2, Check } from "lucide-react";
+import { trackEvent } from "@/lib/analytics-client";
 
 export function ShareButton({
   title,
   url,
   text,
+  listingId,
 }: {
   title: string;
   url: string;
   text?: string;
+  listingId?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
   async function onClick() {
+    trackEvent("share_clicked", { listingId, metadata: { title } });
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ title, text, url });

@@ -1,7 +1,11 @@
+"use client";
+
+import Link from "next/link";
 import { ExternalLink, MapPin } from "lucide-react";
 import { CITY_MAPS } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardFooter } from "@/components/ui/card";
+import { trackEvent } from "@/lib/analytics-client";
 
 export function NeighborhoodMap({
   citySlug,
@@ -49,6 +53,7 @@ export function NeighborhoodMap({
             href={mapUrl}
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackEvent("map_interacted", { metadata: { action: "open_map" } })}
             className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
           >
             Open map
@@ -59,13 +64,22 @@ export function NeighborhoodMap({
       {neighborhoods.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {neighborhoods.map((neighborhood) => (
-            <Badge
+            <Link
               key={neighborhood.slug}
-              variant="outline"
-              className="cursor-pointer py-1.5 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary transition-colors"
+              href={`/${citySlug}/n/${neighborhood.slug}`}
+              onClick={() =>
+                trackEvent("map_interacted", {
+                  metadata: { action: "neighborhood_badge", neighborhood: neighborhood.slug },
+                })
+              }
             >
-              {neighborhood.name}
-            </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer py-1.5 px-3 text-sm font-medium hover:border-primary/40 hover:text-primary transition-colors"
+              >
+                {neighborhood.name}
+              </Badge>
+            </Link>
           ))}
         </div>
       ) : null}
