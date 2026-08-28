@@ -90,7 +90,10 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-1.5 p-4", className)}
+      // pr-14 reserves room for the close button (absolute top-4 right-4,
+      // size-8), which otherwise overlaps a title/description long enough
+      // to reach the same corner.
+      className={cn("flex flex-col gap-1.5 p-4 pr-14", className)}
       {...props}
     />
   )

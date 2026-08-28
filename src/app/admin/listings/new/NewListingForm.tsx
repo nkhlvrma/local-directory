@@ -36,9 +36,9 @@ export function NewListingForm({
 
   if (done) {
     return (
-      <Alert>
-        <CheckCircle2 className="size-4 text-green-600" />
-        <AlertDescription className="flex items-center justify-between gap-4">
+      <Alert className="flex items-center gap-2.5">
+        <CheckCircle2 className="size-4 text-green-600 shrink-0" />
+        <AlertDescription className="flex flex-1 items-center justify-between gap-4">
           <span>Listing created.</span>
           <Button size="sm" variant="outline" onClick={() => setDone(false)}>
             Add another
