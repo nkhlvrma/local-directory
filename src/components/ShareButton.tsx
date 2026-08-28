@@ -38,8 +38,12 @@ export function ShareButton({
   }
 
   return (
-    <Button variant="outline" onClick={onClick}>
-      {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
+    <Button variant="outline" onClick={onClick} className="h-11 min-h-11 px-5">
+      {copied ? (
+        <Check className="size-5" strokeWidth={2.25} />
+      ) : (
+        <Share2 className="size-5" strokeWidth={2.25} />
+      )}
       {copied ? "Link copied" : "Share"}
     </Button>
   );

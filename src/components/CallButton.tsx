@@ -13,7 +13,7 @@ export function CallButton({ listingId, className }: Props) {
   return (
     <Button asChild variant="outline" className={`h-11 min-h-11 px-5 ${className ?? ""}`}>
       <a href={`/api/call/${listingId}`}>
-        <Phone className="size-4" />
+        <Phone className="size-5" strokeWidth={2.25} />
         Call
       </a>
     </Button>

@@ -181,7 +181,7 @@ export default async function ListingPage(
 
       {/* Photo hero */}
       {listing.photo_url ? (
-        <div className="relative w-full h-[400px]">
+        <div className="relative w-full h-[400px] sm:h-[500px]">
           <Image
             src={listing.photo_url}
             alt={listing.name}

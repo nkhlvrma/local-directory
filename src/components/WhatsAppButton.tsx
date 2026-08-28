@@ -14,7 +14,7 @@ export function WhatsAppButton({ listingId, className, compact }: Props) {
       href={`/api/wa/${listingId}`}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#25D366] text-black font-medium px-5 py-3 shadow-sm hover:brightness-95 ${className ?? ""}`}
+      className={`inline-flex h-11 min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#25D366] text-white font-medium px-5 shadow-sm hover:brightness-95 active:scale-[0.98] transition-transform duration-150 ease-out ${className ?? ""}`}
     >
       <svg
         aria-hidden="true"
