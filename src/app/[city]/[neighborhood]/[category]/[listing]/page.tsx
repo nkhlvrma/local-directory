@@ -5,6 +5,7 @@ import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -225,8 +226,8 @@ export default async function ListingPage(
 
         {/* Custom fields */}
         {shownFields.length > 0 ? (
-          <div className="rounded-xl border border-border/70 p-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <Card size="sm" className="border border-border/70 shadow-none ring-0">
+            <CardContent className="grid gap-4 sm:grid-cols-2">
               {shownFields.map((f) => (
                 <div key={f.key}>
                   <div className="text-xs text-muted-foreground">{f.label}</div>
@@ -235,8 +236,8 @@ export default async function ListingPage(
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ) : null}
 
         {/* Hours */}

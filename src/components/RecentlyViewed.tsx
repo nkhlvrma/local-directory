@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import type { RecentEntry } from "./TrackView";
 
 const KEY = "recently-viewed-v1";
@@ -57,28 +58,33 @@ export function RecentlyViewed() {
       <div className="grid gap-2 sm:grid-cols-2">
         {shown.map((r) => (
           <Link key={r.id} href={r.href} className="block group">
-            <div className="flex gap-3 rounded-xl border border-border/70 px-4 py-3 transition-all hover:border-primary/30 hover:bg-muted/30">
-              {r.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={r.photo_url}
-                  alt=""
-                  style={{ width: 48, height: 48 }}
-                  className="rounded-lg object-cover shrink-0"
-                />
-              ) : null}
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold truncate">{r.name}</span>
-                  {r.verified ? (
-                    <Check className="size-3.5 text-primary shrink-0" strokeWidth={2.5} />
-                  ) : null}
+            <Card
+              size="sm"
+              className="border border-border/70 shadow-none ring-0 transition-all hover:border-primary/30 hover:bg-muted/30"
+            >
+              <CardContent className="flex gap-3">
+                {r.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={r.photo_url}
+                    alt=""
+                    style={{ width: 48, height: 48 }}
+                    className="rounded-lg object-cover shrink-0"
+                  />
+                ) : null}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold truncate">{r.name}</span>
+                    {r.verified ? (
+                      <Check className="size-3.5 text-primary shrink-0" strokeWidth={2.5} />
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {r.category} · {r.neighborhood}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {r.category} · {r.neighborhood}
-                </p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>

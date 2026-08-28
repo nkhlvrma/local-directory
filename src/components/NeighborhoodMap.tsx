@@ -1,6 +1,7 @@
 import { ExternalLink, MapPin } from "lucide-react";
 import { CITY_MAPS } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardFooter } from "@/components/ui/card";
 
 export function NeighborhoodMap({
   citySlug,
@@ -28,7 +29,10 @@ export function NeighborhoodMap({
           Browse by neighborhood
         </h2>
       </div>
-      <div className="overflow-hidden rounded-xl border bg-muted/30">
+      <Card
+        size="sm"
+        className="overflow-hidden gap-0 py-0 border shadow-none ring-0 bg-muted/30"
+      >
         <iframe
           title={`${cityName} map`}
           src={embedUrl}
@@ -36,7 +40,7 @@ export function NeighborhoodMap({
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         />
-        <div className="flex items-center justify-between gap-4 border-t bg-background px-4 py-3">
+        <CardFooter className="border-t bg-background justify-between gap-4 py-3">
           <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
             <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
             <span className="truncate">{cityName} and nearby neighborhoods</span>
@@ -50,8 +54,8 @@ export function NeighborhoodMap({
             Open map
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </a>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
       {neighborhoods.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {neighborhoods.map((neighborhood) => (
