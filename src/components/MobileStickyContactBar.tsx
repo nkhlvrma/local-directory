@@ -12,7 +12,7 @@ export function MobileStickyContactBar({ listingId }: { listingId: string }) {
       className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t bg-background/95 px-4 pt-3 backdrop-blur-sm md:hidden"
       style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
-      <WhatsAppButton listingId={listingId} className="flex-1 rounded-md" />
+      <WhatsAppButton listingId={listingId} compact className="flex-1 rounded-md" />
       <CallButton listingId={listingId} className="flex-1" />
     </div>
   );
