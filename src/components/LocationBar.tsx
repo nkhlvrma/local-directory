@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 import { CITY_SLUG } from "@/lib/site";
 
 const CITY_LABEL: Record<string, string> = {
@@ -24,13 +24,14 @@ export function LocationBar({}: { initialPin?: string }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="link"
+          variant="ghost"
           size="sm"
-          className="h-auto gap-1 border-0 px-1 text-sm font-medium underline underline-offset-4"
+          className="h-auto gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/15 hover:text-white"
           aria-label={`Select city, currently ${cityName}`}
         >
+          <MapPin className="size-3.5" />
           {cityName}
-          <ChevronDown className="size-3.5 text-muted-foreground" />
+          <ChevronDown className="size-3.5 text-white/70" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 space-y-3">
