@@ -13,27 +13,28 @@ export default async function AdminNeighborhoodsPage() {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
-  const { data: city } = await admin
-    .from("cities")
-    .select("id, name")
-    .eq("slug", CITY_SLUG)
-    .maybeSingle();
-
-  const { data } = city
-    ? await admin
-        .from("neighborhoods")
-        .select("id, name, slug")
-        .eq("city_id", (city as { id: string }).id)
-        .order("name")
-    : { data: [] as Row[] };
+  // Independent queries — run concurrently instead of city-then-
+  // neighborhoods. Matters more than usual given the cross-region latency
+  // (Supabase ap-south-1, this runs on Vercel iad1) — each extra sequential
+  // round trip adds up, and city-then-neighborhoods was forcing two even
+  // though neither depends on the other's result (only on CITY_SLUG).
+  const [{ data: city }, { data }] = await Promise.all([
+    admin.from("cities").select("name").eq("slug", CITY_SLUG).maybeSingle(),
+    admin
+      .from("neighborhoods")
+      .select("id, name, slug, cities!inner(slug)")
+      .eq("cities.slug", CITY_SLUG)
+      .order("name"),
+  ]);
   const neighborhoods = (data ?? []) as Row[];
+  const cityName = (city as { name: string } | null)?.name ?? CITY_SLUG;
 
   return (
     <Container size="md" className="py-10 space-y-8">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight font-heading">Admin</h1>
         <p className="text-muted-foreground text-sm">
-          Manage neighborhoods for {(city as { name: string } | null)?.name ?? CITY_SLUG}.
+          Manage neighborhoods for {cityName}.
         </p>
       </header>
 

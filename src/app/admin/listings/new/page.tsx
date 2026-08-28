@@ -11,21 +11,18 @@ export default async function AdminNewListingPage() {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
-  const { data: city } = await admin
-    .from("cities")
-    .select("id")
-    .eq("slug", CITY_SLUG)
-    .maybeSingle();
-
+  // Both independent of each other — no need for the city lookup this used
+  // to do first (neighborhoods filtered by city slug via join instead), so
+  // this is one round trip "wave" instead of two sequential ones. Matters
+  // more than usual given the cross-region latency (Supabase ap-south-1,
+  // this runs on Vercel iad1).
   const [{ data: categories }, { data: neighborhoods }] = await Promise.all([
     admin.from("categories").select("id, name").order("name"),
-    city
-      ? admin
-          .from("neighborhoods")
-          .select("id, name")
-          .eq("city_id", (city as { id: string }).id)
-          .order("name")
-      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    admin
+      .from("neighborhoods")
+      .select("id, name, cities!inner(slug)")
+      .eq("cities.slug", CITY_SLUG)
+      .order("name"),
   ]);
 
   return (

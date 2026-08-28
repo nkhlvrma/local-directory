@@ -25,22 +25,26 @@ export default async function AdminQueuePage() {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
-  const { data: pending } = await admin
-    .from("listings")
-    .select(
-      "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
-    )
-    .eq("status", "pending")
-    .order("created_at", { ascending: true });
-
-  const { data: approved } = await admin
-    .from("listings")
-    .select(
-      "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
-    )
-    .eq("status", "approved")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  // Independent queries — run concurrently rather than one-after-another.
+  // Matters more than usual here since Supabase (ap-south-1) is a long way
+  // from wherever this runs, and every extra sequential round trip adds up.
+  const [{ data: pending }, { data: approved }] = await Promise.all([
+    admin
+      .from("listings")
+      .select(
+        "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
+      )
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }),
+    admin
+      .from("listings")
+      .select(
+        "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
+      )
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
   const pendingRows = (pending ?? []) as unknown as Row[];
   const approvedRows = (approved ?? []) as unknown as Row[];
