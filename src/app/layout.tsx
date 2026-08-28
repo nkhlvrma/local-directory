@@ -66,6 +66,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <div className="flex min-h-dvh flex-col">
           {isDemo ? (
             <div className="bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs text-center py-1.5 px-4 border-b border-amber-200 dark:border-amber-900">
               Demo mode — using in-memory data.
@@ -92,7 +93,7 @@ export default async function RootLayout({
             </Container>
           </header>
 
-          <main>{children}</main>
+          <main className="flex-1">{children}</main>
 
           <footer className="border-t mt-16">
             <Container className="py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -112,6 +113,7 @@ export default async function RootLayout({
           </footer>
 
           <Toaster />
+          </div>
         </ThemeProvider>
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
