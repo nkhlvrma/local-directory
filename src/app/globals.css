@@ -143,3 +143,37 @@ body {
     @apply font-sans;
   }
 }
+
+/* Stronger custom easings — the built-in CSS ones (ease, ease-out) are too
+   weak to feel intentional. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* One-shot hero entrance, staggered per element. Not interruptible/rapidly
+   retriggered (it plays once on page load), so a keyframe animation is the
+   right tool here rather than a transition. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-in {
+  animation: hero-in 500ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation-duration: 1ms;
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
+}

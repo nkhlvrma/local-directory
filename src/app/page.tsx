@@ -68,10 +68,13 @@ export default async function Home() {
           style={{ paddingTop: HEADER_HEIGHT + 48 }}
         >
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-          <div className="mb-5">
+          <div className="mb-5 hero-in" style={{ animationDelay: "0ms" }}>
             <LocationBar />
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] font-heading text-balance text-white">
+          <h1
+            className="hero-in text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] font-heading text-balance text-white"
+            style={{ animationDelay: "60ms" }}
+          >
             Find trusted<br />
             <Typewriter
               as="span"
@@ -84,10 +87,13 @@ export default async function Home() {
             />
             .
           </h1>
-          <p className="mt-4 text-lg text-white/80 max-w-xl leading-relaxed text-pretty">
+          <p
+            className="hero-in mt-4 text-lg text-white/80 max-w-xl leading-relaxed text-pretty"
+            style={{ animationDelay: "120ms" }}
+          >
             Find community-verified local services and chat with them directly on WhatsApp.
           </p>
-          <div className="mt-8 w-full max-w-xl">
+          <div className="hero-in mt-8 w-full max-w-xl" style={{ animationDelay: "180ms" }}>
             <SearchBar size="lg" />
           </div>
           </div>

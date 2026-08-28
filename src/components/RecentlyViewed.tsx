@@ -57,10 +57,10 @@ export function RecentlyViewed() {
       </h2>
       <div className="grid gap-2 sm:grid-cols-2">
         {shown.map((r) => (
-          <Link key={r.id} href={r.href} className="block group">
+          <Link key={r.id} href={r.href} className="block group active:scale-[0.98] transition-transform duration-150 ease-out">
             <Card
               size="sm"
-              className="border border-border/70 shadow-none ring-0 transition-all hover:border-primary/30 hover:bg-muted/30"
+              className="border border-border/70 shadow-none ring-0 transition-[border-color,background-color] duration-150 ease-out hover:border-primary/30 hover:bg-muted/30"
             >
               <CardContent className="flex gap-3">
                 {r.photo_url ? (
