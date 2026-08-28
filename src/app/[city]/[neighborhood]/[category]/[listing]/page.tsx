@@ -234,8 +234,8 @@ export default async function ListingPage(
           <div className="flex items-start gap-2 text-xs text-muted-foreground border border-primary/20 bg-primary/5 rounded-lg px-3 py-2.5">
             <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
             <p>
-              <span className="text-foreground font-medium">Verified</span> — we confirmed this
-              WhatsApp number is active
+              <span className="text-foreground font-medium">Verified</span> — manually reviewed
+              by our team
               {listing.verified_at ? (
                 <> ({formatVerifiedDate(listing.verified_at)})</>
               ) : null}
