@@ -51,7 +51,7 @@ export function CategoryCard({
           >
             <AnimatedCategoryIcon slug={slug} icon={icon} animating={hover} size={20} />
           </span>
-          <span className="text-sm font-semibold leading-tight">{name}</span>
+          <span className="text-sm font-semibold leading-tight whitespace-nowrap">{name}</span>
         </CardContent>
       </Card>
     </Link>

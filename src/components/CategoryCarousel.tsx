@@ -26,7 +26,12 @@ export function CategoryCarousel({ categories }: { categories: Category[] }) {
         {categories.map((category) => (
           <CarouselItem
             key={category.slug}
-            className="basis-1/2 pl-2 sm:basis-1/4"
+            // basis-auto so each card hugs its label instead of being
+            // stretched to a fixed fraction of the track — at desktop
+            // widths a quarter-width card left the icon and a two-word
+            // label floating in ~250px of empty space. The min-width keeps
+            // short names ("Salons") from collapsing to a stub.
+            className="basis-auto pl-2 min-w-36"
           >
             <CategoryCard
               slug={category.slug}
