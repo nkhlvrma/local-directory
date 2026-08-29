@@ -285,9 +285,11 @@ export async function uploadListingImage(
   if (kind === "gallery" && gallery.length >= MAX_GALLERY_PHOTOS)
     return { error: `A listing can have at most ${MAX_GALLERY_PHOTOS} gallery photos.` };
 
-  // Timestamped path, so replacing a photo never collides with the one it
-  // replaces while both briefly exist.
-  const url = await uploadListingPhoto(admin, listingId, file, `${kind}-${Date.now()}`);
+  // uploadListingPhoto already timestamps the filename, which is what keeps
+  // a replacement from colliding with the file it replaces while both
+  // briefly exist — passing a timestamp in the kind as well just produced
+  // names like cover-1787969010065-1787969010065.png.
+  const url = await uploadListingPhoto(admin, listingId, file, kind);
   if (!url) return { error: "Upload failed — try again." };
 
   const replaced =
