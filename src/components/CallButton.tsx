@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { contactActionClass } from "@/components/contact-action";
 import { PhoneCallIcon, type PhoneCallIconHandle } from "@/components/ui/phone-call";
 
 type Props = {
@@ -30,11 +30,7 @@ export function CallButton({ listingId, className, iconOnly }: Props) {
       // against the dark page background here.
       variant="secondary"
       size={iconOnly ? "icon" : "default"}
-      className={cn(
-        "rounded-full",
-        iconOnly ? "size-11" : "h-11 px-5",
-        className,
-      )}
+      className={contactActionClass(iconOnly, className)}
       onMouseEnter={() => icon.current?.startAnimation()}
       onMouseLeave={() => icon.current?.stopAnimation()}
     >

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { contactActionClass } from "@/components/contact-action";
 
 type Props = {
   listingId: string;
@@ -25,10 +26,12 @@ export function WhatsAppButton({ listingId, className, compact, iconOnly }: Prop
     <Button
       asChild
       size={iconOnly ? "icon" : "default"}
-      className={cn(
-        "rounded-full bg-[#25D366] text-white shadow-sm hover:bg-[#25D366] hover:brightness-95",
-        iconOnly ? "size-11" : "h-11 px-5",
-        className,
+      className={contactActionClass(
+        iconOnly,
+        cn(
+          "bg-[#25D366] text-white shadow-sm hover:bg-[#25D366] hover:brightness-95",
+          className,
+        ),
       )}
     >
       <a

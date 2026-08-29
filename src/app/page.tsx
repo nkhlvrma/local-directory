@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CITY_SLUG, HEADER_HEIGHT } from "@/lib/site";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
-import { NeighborhoodMap } from "@/components/NeighborhoodMap";
+import { NeighborhoodMap, type MapNeighborhood } from "@/components/NeighborhoodMap";
 import { LocationBar } from "@/components/LocationBar";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -39,12 +39,7 @@ export default async function Home() {
         .order("name"),
     ]);
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
-  const hoods = (neighborhoods ?? []) as {
-    slug: string;
-    name: string;
-    latitude: number | null;
-    longitude: number | null;
-  }[];
+  const hoods = (neighborhoods ?? []) as MapNeighborhood[];
 
   return (
     <>

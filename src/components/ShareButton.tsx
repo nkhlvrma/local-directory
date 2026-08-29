@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { contactActionClass } from "@/components/contact-action";
 import { UploadIcon, type UploadIconHandle } from "@/components/ui/upload";
 import { CheckIcon, type CheckIconHandle } from "@/components/ui/check";
 import { trackEvent } from "@/lib/analytics-client";
@@ -59,7 +59,7 @@ export function ShareButton({
       onClick={onClick}
       aria-label={iconOnly ? (copied ? "Link copied" : "Share") : undefined}
       title={iconOnly ? "Share" : undefined}
-      className={cn("rounded-full", iconOnly ? "size-11" : "h-11 px-5")}
+      className={contactActionClass(iconOnly)}
       // Driven from the button so the arrow lifts on hovering the whole
       // control, not just the glyph.
       onMouseEnter={() => icon.current?.startAnimation()}

@@ -22,7 +22,3 @@ export async function verifyTurnstile(token: string | null): Promise<boolean> {
     return false;
   }
 }
-
-export function turnstileEnabled(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-}
