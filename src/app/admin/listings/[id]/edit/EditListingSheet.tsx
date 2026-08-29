@@ -8,20 +8,20 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { ListingForm } from "../ListingForm";
+import { ListingForm, type EditableListing } from "../../ListingForm";
 
 type Option = { id: string; name: string };
 
-// Opens as a sheet on page load rather than sitting inline in the page —
-// closing it (X, overlay click, or Esc) goes back to the pending queue.
-// Still a real navigable route (/admin/listings/new) for the sidebar CTA
-// and for bookmarking/sharing.
-export function NewListingSheet({
+// Mirrors NewListingSheet: a real route that presents as a sheet, closing
+// back to the dashboard.
+export function EditListingSheet({
   categories,
   neighborhoods,
+  listing,
 }: {
   categories: Option[];
   neighborhoods: Option[];
+  listing: EditableListing;
 }) {
   const router = useRouter();
 
@@ -34,13 +34,17 @@ export function NewListingSheet({
     >
       <SheetContent className="sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>New listing</SheetTitle>
+          <SheetTitle>Edit listing</SheetTitle>
           <SheetDescription>
-            Publishes immediately unless you uncheck it below.
+            Changes go live immediately. Photos you remove are deleted on save.
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-6">
-          <ListingForm categories={categories} neighborhoods={neighborhoods} />
+          <ListingForm
+            categories={categories}
+            neighborhoods={neighborhoods}
+            listing={listing}
+          />
         </div>
       </SheetContent>
     </Sheet>

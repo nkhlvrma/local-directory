@@ -8,7 +8,11 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { slugify } from "@/lib/slug";
 import { isValidPin } from "@/lib/pin";
 import { findDuplicates } from "@/lib/dupes";
-import { uploadListingPhoto } from "@/lib/listing-photo";
+import {
+  uploadListingPhoto,
+  deleteListingPhotos,
+  storagePathFromUrl,
+} from "@/lib/listing-photo";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 
@@ -82,6 +86,15 @@ export async function dismissReport(reportId: string): Promise<void> {
 // since their forms need to surface validation errors inline (same pattern
 // as the public list-your-business form).
 
+// Shared by createListing and updateListing so the two can't drift.
+// Returns an error string, or null when the file is absent or acceptable.
+function validateImage(file: unknown, label: string): string | null {
+  if (!(file instanceof File) || file.size === 0) return null;
+  if (!file.type.startsWith("image/")) return `${label} must be an image file.`;
+  if (file.size > 5 * 1024 * 1024) return `${label} must be under 5MB.`;
+  return null;
+}
+
 export async function createListing(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
   const user = await requireAdmin();
 
@@ -111,26 +124,15 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   const pin_code = pinRaw || null;
 
   const hasPhoto = photo instanceof File && photo.size > 0;
-  if (hasPhoto) {
-    const file = photo as File;
-    if (!file.type.startsWith("image/")) return { error: "Grid photo must be an image file." };
-    if (file.size > 5 * 1024 * 1024) return { error: "Grid photo must be under 5MB." };
-  }
   const hasCoverPhoto = coverPhoto instanceof File && coverPhoto.size > 0;
-  if (hasCoverPhoto) {
-    const file = coverPhoto as File;
-    if (!file.type.startsWith("image/")) return { error: "Cover photo must be an image file." };
-    if (file.size > 5 * 1024 * 1024) return { error: "Cover photo must be under 5MB." };
-  }
-
+  const photoError =
+    validateImage(photo, "Grid photo") ??
+    validateImage(coverPhoto, "Cover photo") ??
+    galleryPhotos.map((f) => validateImage(f, "Each gallery photo")).find(Boolean) ??
+    null;
+  if (photoError) return { error: photoError };
   if (galleryPhotos.length > MAX_GALLERY_PHOTOS)
     return { error: `Choose at most ${MAX_GALLERY_PHOTOS} gallery photos.` };
-  for (const file of galleryPhotos) {
-    if (!file.type.startsWith("image/"))
-      return { error: "Gallery photos must be image files." };
-    if (file.size > 5 * 1024 * 1024)
-      return { error: "Each gallery photo must be under 5MB." };
-  }
 
   const admin = createSupabaseAdminClient();
 
@@ -194,6 +196,148 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
     if (!error.message.includes("duplicate")) return { error: error.message };
   }
   return { error: "Could not create a unique slug — try a different name." };
+}
+
+
+export async function updateListing(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+
+  const id = String(fd.get("id") ?? "");
+  if (!id) return { error: "Missing listing id." };
+
+  const name = String(fd.get("name") ?? "").trim();
+  const whatsapp = String(fd.get("whatsapp_number") ?? "").trim();
+  const categoryId = String(fd.get("category_id") ?? "");
+  const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
+  const description = String(fd.get("description") ?? "").trim() || null;
+  const pinRaw = String(fd.get("pin_code") ?? "").trim();
+  const photo = fd.get("photo");
+  const coverPhoto = fd.get("cover_photo");
+  const galleryPhotos = fd
+    .getAll("gallery")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  // Gallery images the admin left ticked. Anything already on the listing
+  // but missing from this list has been removed in the form.
+  const keptGallery = fd.getAll("keep_gallery").map(String);
+  const verified = fd.get("verified") === "on";
+
+  if (!name || name.length < 2) return { error: "Name is required." };
+  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
+    return { error: "WhatsApp number must be in international format like +9198…" };
+  if (!categoryId || !neighborhoodId)
+    return { error: "Category and neighborhood are required." };
+  if (pinRaw && !isValidPin(pinRaw))
+    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+  const pin_code = pinRaw || null;
+
+  const photoError =
+    validateImage(photo, "Grid photo") ??
+    validateImage(coverPhoto, "Cover photo") ??
+    galleryPhotos.map((f) => validateImage(f, "Each gallery photo")).find(Boolean) ??
+    null;
+  if (photoError) return { error: photoError };
+  if (keptGallery.length + galleryPhotos.length > MAX_GALLERY_PHOTOS)
+    return {
+      error: `A listing can have at most ${MAX_GALLERY_PHOTOS} gallery photos — remove some before adding more.`,
+    };
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: existing, error: loadError } = await admin
+    .from("listings")
+    .select("id, verified, verified_at, photo_url, cover_photo_url, gallery_urls")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { error: loadError.message };
+  if (!existing) return { error: "That listing no longer exists." };
+  const current = existing as {
+    verified: boolean;
+    verified_at: string | null;
+    photo_url: string | null;
+    cover_photo_url: string | null;
+    gallery_urls: string[] | null;
+  };
+
+  // Same guard as create, minus this listing — otherwise saving an
+  // unchanged number would report the listing as a duplicate of itself.
+  const dupes = await findDuplicates(admin, { name, whatsapp });
+  const numberMatch = dupes.find(
+    (d) => d.whatsapp_number === whatsapp && d.id !== id,
+  );
+  if (numberMatch)
+    return { error: `That WhatsApp number is already listed as "${numberMatch.name}".` };
+
+  const [uploadedPhoto, uploadedCover, uploadedGallery] = await Promise.all([
+    photo instanceof File && photo.size > 0
+      ? uploadListingPhoto(admin, id, photo, "grid")
+      : null,
+    coverPhoto instanceof File && coverPhoto.size > 0
+      ? uploadListingPhoto(admin, id, coverPhoto, "cover")
+      : null,
+    Promise.all(
+      galleryPhotos.map((file, i) =>
+        uploadListingPhoto(admin, id, file, `gallery-${Date.now()}-${i + 1}`),
+      ),
+    ).then((urls) => urls.filter((u): u is string => !!u)),
+  ]);
+
+  const now = new Date().toISOString();
+  const { error } = await admin
+    .from("listings")
+    .update({
+      name,
+      category_id: categoryId,
+      neighborhood_id: neighborhoodId,
+      description,
+      whatsapp_number: whatsapp,
+      pin_code,
+      verified,
+      // Only stamp a fresh verified_at when verification actually flips on,
+      // so re-saving a listing doesn't keep moving the date forward.
+      verified_at: verified ? (current.verified ? current.verified_at : now) : null,
+      ...(uploadedPhoto ? { photo_url: uploadedPhoto } : {}),
+      ...(uploadedCover ? { cover_photo_url: uploadedCover } : {}),
+      gallery_urls: [...keptGallery, ...uploadedGallery],
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  // Clear out images this edit orphaned: gallery entries that were dropped,
+  // plus any cover/grid photo that was replaced. Only files in our own
+  // bucket, and only after the row is safely updated.
+  const orphaned = [
+    ...(current.gallery_urls ?? []).filter((u) => !keptGallery.includes(u)),
+    ...(uploadedPhoto && current.photo_url ? [current.photo_url] : []),
+    ...(uploadedCover && current.cover_photo_url ? [current.cover_photo_url] : []),
+  ];
+  const paths = orphaned
+    .map(storagePathFromUrl)
+    .filter((p): p is string => !!p);
+  if (paths.length > 0) {
+    await admin.storage.from("listing-photos").remove(paths);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+// Hard delete. Safe at the schema level: reports cascade with the listing
+// and analytics_events keep their rows with a null listing_id, so history
+// survives without dangling references.
+export async function deleteListing(listingId: string): Promise<void> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+
+  // Images first: once the row is gone we've lost the id that scopes them,
+  // and orphaned files would sit in the bucket forever.
+  await deleteListingPhotos(admin, listingId);
+
+  const { error } = await admin.from("listings").delete().eq("id", listingId);
+  if (error) console.error("deleteListing failed:", error.message);
+
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
 }
 
 export async function createCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {

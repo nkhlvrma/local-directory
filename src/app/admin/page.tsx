@@ -1,10 +1,12 @@
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, ShieldCheck } from "lucide-react";
+import { Check, X, ShieldCheck, Pencil } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import Link from "next/link";
 import { AdminShell } from "./AdminShell";
+import { DeleteListingButton } from "./DeleteListingButton";
 import { approveListing, rejectListing, setVerified } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +88,13 @@ export default async function AdminQueuePage() {
                         Reject
                       </Button>
                     </form>
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/admin/listings/${l.id}/edit`} aria-label={`Edit ${l.name}`}>
+                        <Pencil className="size-4" />
+                        Edit
+                      </Link>
+                    </Button>
+                    <DeleteListingButton listingId={l.id} listingName={l.name} />
                   </div>
                 </div>
               </div>
@@ -117,12 +126,21 @@ export default async function AdminQueuePage() {
                   {l.categories?.name} · {l.neighborhoods?.name}
                 </p>
               </div>
-              <form action={setVerified.bind(null, l.id, !l.verified)} className="shrink-0">
-                <Button type="submit" size="sm" variant={l.verified ? "outline" : "default"}>
-                  <ShieldCheck className="size-4" />
-                  {l.verified ? "Unverify" : "Mark verified"}
+              <div className="flex shrink-0 items-center gap-2">
+                <form action={setVerified.bind(null, l.id, !l.verified)}>
+                  <Button type="submit" size="sm" variant={l.verified ? "outline" : "default"}>
+                    <ShieldCheck className="size-4" />
+                    {l.verified ? "Unverify" : "Mark verified"}
+                  </Button>
+                </form>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/admin/listings/${l.id}/edit`} aria-label={`Edit ${l.name}`}>
+                    <Pencil className="size-4" />
+                    Edit
+                  </Link>
                 </Button>
-              </form>
+                <DeleteListingButton listingId={l.id} listingName={l.name} />
+              </div>
             </div>
           ))}
         </div>

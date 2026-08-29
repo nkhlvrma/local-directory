@@ -196,14 +196,31 @@ export default async function ListingPage(
 
         {/* Header and actions sit side by side once there's width for it,
             so the contact controls are level with the listing details
-            instead of pushing the rest of the page down. Below md they
-            stack back to their original order. */}
+            instead of pushing the rest of the page down. */}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
           <header className="space-y-3 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-3xl font-bold tracking-tight font-heading">{listing.name}</h1>
-              {listing.verified ? <VerifiedBadge /> : null}
-              <OpenNowBadge hours={listing.hours_json} />
+            <div className="flex items-start gap-2">
+              {/* Title and badges wrap among themselves; Share is kept out
+                  of that wrapping group so it stays pinned to the right of
+                  the name's first line rather than being pushed onto a row
+                  of its own by a long name. */}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight font-heading">{listing.name}</h1>
+                {listing.verified ? <VerifiedBadge /> : null}
+                <OpenNowBadge hours={listing.hours_json} />
+              </div>
+              {/* On phones the contact actions live in the sticky bar, which
+                  has no room for Share — so Share sits here instead, and
+                  hides once the full action cluster appears at md. */}
+              <div className="ml-auto shrink-0 md:hidden">
+                <ShareButton
+                  title={listing.name}
+                  url={canonical}
+                  text={`Found ${listing.name} on Local Directory.`}
+                  listingId={listing.id}
+                  iconOnly
+                />
+              </div>
             </div>
             {listing.description ? (
               <p className="text-base text-foreground/80 leading-relaxed max-w-prose">
@@ -213,7 +230,7 @@ export default async function ListingPage(
           </header>
 
           {/* CTA — WhatsApp primary, Call secondary */}
-          <div className="flex gap-2 flex-wrap items-center md:shrink-0">
+          <div className="hidden gap-2 flex-wrap items-center md:flex md:shrink-0">
             <WhatsAppButton listingId={listing.id} iconOnly />
             <CallButton listingId={listing.id} iconOnly />
             <ShareButton

@@ -22,3 +22,27 @@ export async function uploadListingPhoto(
   const { data } = admin.storage.from("listing-photos").getPublicUrl(path);
   return data.publicUrl;
 }
+
+// Everything uploaded for a listing lives under a {listingId}/ prefix, so
+// removing the listing's images is a list-then-remove of that folder.
+// Best-effort: a storage failure shouldn't block deleting the listing
+// itself, it just leaves files behind.
+export async function deleteListingPhotos(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  listingId: string,
+): Promise<void> {
+  const { data, error } = await admin.storage.from("listing-photos").list(listingId);
+  if (error || !data?.length) return;
+  await admin.storage
+    .from("listing-photos")
+    .remove(data.map((f) => `${listingId}/${f.name}`));
+}
+
+// Storage path for a public URL produced by uploadListingPhoto, or null if
+// the URL doesn't belong to this bucket (e.g. a hand-entered external
+// image) — callers use it to avoid trying to delete something we don't own.
+export function storagePathFromUrl(url: string): string | null {
+  const marker = "/storage/v1/object/public/listing-photos/";
+  const i = url.indexOf(marker);
+  return i === -1 ? null : url.slice(i + marker.length);
+}
