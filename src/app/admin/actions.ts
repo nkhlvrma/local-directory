@@ -14,7 +14,7 @@ import {
   storagePathFromUrl,
 } from "@/lib/listing-photo";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
-import { CITY_SLUG } from "@/lib/site";
+import { CITY_SLUG, SITE_URL } from "@/lib/site";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
 const MAX_GALLERY_PHOTOS = 4;
@@ -34,6 +34,61 @@ export async function signOut() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/admin/login");
+}
+
+
+// Minimum we enforce ourselves; Supabase's own floor is lower, and a
+// 6-character admin password isn't worth defending.
+const MIN_PASSWORD_LENGTH = 8;
+
+// Step 1 of the reset: email a recovery link.
+//
+// The reply is deliberately the same whether or not the address has an
+// account. This form sits on a login page anyone can reach, and a response
+// that differed would turn it into a way to test which addresses are
+// registered.
+export async function requestPasswordReset(
+  fd: FormData,
+): Promise<{ error?: string; ok?: boolean }> {
+  const email = String(fd.get("email") ?? "").trim();
+  if (!email || !email.includes("@")) return { error: "Enter a valid email address." };
+
+  const supabase = await createSupabaseServerClient();
+  // The callback exchanges the emailed code for a session, then forwards to
+  // the form where the new password is set.
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${SITE_URL}/admin/auth/callback?next=/admin/reset-password`,
+  });
+
+  return { ok: true };
+}
+
+// Step 2: set the new password. Reached with the short-lived session the
+// callback established from the emailed link, so there's no old password to
+// re-enter — possession of the link is the proof.
+export async function updatePassword(
+  fd: FormData,
+): Promise<{ error?: string; ok?: boolean }> {
+  const password = String(fd.get("password") ?? "");
+  const confirm = String(fd.get("confirm_password") ?? "");
+
+  if (password.length < MIN_PASSWORD_LENGTH)
+    return { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` };
+  if (password !== confirm) return { error: "Those passwords don't match." };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return {
+      error: "That reset link has expired. Request a new one and try again.",
+    };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+
+  return { ok: true };
 }
 
 // These four are bound directly as <form action={...}> handlers, which
@@ -95,7 +150,9 @@ function validateImage(file: unknown, label: string): string | null {
   return null;
 }
 
-export async function createListing(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+export async function createListing(
+  fd: FormData,
+): Promise<{ error?: string; ok?: boolean; id?: string }> {
   const user = await requireAdmin();
 
   const name = String(fd.get("name") ?? "").trim();
@@ -104,13 +161,6 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
-  const photo = fd.get("photo"); // grid/portrait thumbnail
-  const coverPhoto = fd.get("cover_photo"); // detail-page hero, landscape
-  // Extra hero images for the detail-page carousel. The cover leads, so the
-  // gallery holds the remainder up to the carousel's cap.
-  const galleryPhotos = fd
-    .getAll("gallery")
-    .filter((f): f is File => f instanceof File && f.size > 0);
   const publish = fd.get("publish") === "on";
   const verified = fd.get("verified") === "on";
 
@@ -122,17 +172,6 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   if (pinRaw && !isValidPin(pinRaw))
     return { error: "PIN code must be 6 digits (e.g. 226010)." };
   const pin_code = pinRaw || null;
-
-  const hasPhoto = photo instanceof File && photo.size > 0;
-  const hasCoverPhoto = coverPhoto instanceof File && coverPhoto.size > 0;
-  const photoError =
-    validateImage(photo, "Grid photo") ??
-    validateImage(coverPhoto, "Cover photo") ??
-    galleryPhotos.map((f) => validateImage(f, "Each gallery photo")).find(Boolean) ??
-    null;
-  if (photoError) return { error: photoError };
-  if (galleryPhotos.length > MAX_GALLERY_PHOTOS)
-    return { error: `Choose at most ${MAX_GALLERY_PHOTOS} gallery photos.` };
 
   const admin = createSupabaseAdminClient();
 
@@ -167,31 +206,9 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
       .single();
 
     if (!error) {
-      // Independent uploads — run concurrently rather than one after the
-      // other.
-      const [uploadedPhoto, uploadedCover, uploadedGallery] = await Promise.all([
-        hasPhoto ? uploadListingPhoto(admin, data.id, photo as File, "grid") : null,
-        hasCoverPhoto ? uploadListingPhoto(admin, data.id, coverPhoto as File, "cover") : null,
-        // Preserves the order the admin picked; a failed upload returns null
-        // and is dropped rather than leaving a hole in the carousel.
-        Promise.all(
-          galleryPhotos.map((file, i) =>
-            uploadListingPhoto(admin, data.id, file, `gallery-${i + 1}`),
-          ),
-        ).then((urls) => urls.filter((u): u is string => !!u)),
-      ]);
-      if (uploadedPhoto || uploadedCover || uploadedGallery.length > 0) {
-        await admin
-          .from("listings")
-          .update({
-            ...(uploadedPhoto ? { photo_url: uploadedPhoto } : {}),
-            ...(uploadedCover ? { cover_photo_url: uploadedCover } : {}),
-            ...(uploadedGallery.length > 0 ? { gallery_urls: uploadedGallery } : {}),
-          })
-          .eq("id", data.id);
-      }
+      // Photos follow as their own requests, keyed on this id.
       revalidatePath("/admin");
-      return { ok: true };
+      return { ok: true, id: data.id as string };
     }
     if (!error.message.includes("duplicate")) return { error: error.message };
   }
@@ -199,7 +216,105 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
 }
 
 
-export async function updateListing(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+
+type RevalidateTarget = {
+  slug: string;
+  categories: { slug: string } | null;
+  neighborhoods: { slug: string; cities: { slug: string } | null } | null;
+};
+
+// Revalidate exactly the pages a listing appears on.
+//
+// This used to be revalidatePath("/", "layout"), which purges the entire
+// route tree: every save made the router refetch the whole app (and, in
+// production, threw away the ISR cache for every page) — slow enough that a
+// save looked like it had hung.
+function revalidateListing(target: RevalidateTarget | null) {
+  revalidatePath("/admin");
+  if (!target) return;
+  const city = target.neighborhoods?.cities?.slug;
+  const hood = target.neighborhoods?.slug;
+  const category = target.categories?.slug;
+  if (city && hood && category) {
+    revalidatePath(`/${city}/${hood}/${category}/${target.slug}`);
+    revalidatePath(`/${city}/c/${category}`);
+    revalidatePath(`/${city}/n/${hood}`);
+  }
+}
+
+
+// Photos upload one per request, rather than riding along with the rest of
+// the form.
+//
+// A listing can carry six images at up to 5MB each, but a Server Action
+// request is capped far below that — Next's own bodySizeLimit, and on
+// Vercel a hard ~4.5MB serverless body limit that no config can raise. Sent
+// together they blew past it and the save failed with a 413 after a long
+// stall. One file per request keeps every upload comfortably inside the cap.
+export async function uploadListingImage(
+  fd: FormData,
+): Promise<{ url?: string; error?: string }> {
+  await requireAdmin();
+
+  const listingId = String(fd.get("listing_id") ?? "");
+  const kind = String(fd.get("kind") ?? "");
+  const file = fd.get("file");
+
+  if (!listingId) return { error: "Missing listing id." };
+  if (!["cover", "grid", "gallery"].includes(kind)) return { error: "Unknown photo kind." };
+  if (!(file instanceof File) || file.size === 0) return { error: "No file received." };
+
+  const invalid = validateImage(file, "Photo");
+  if (invalid) return { error: invalid };
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: existing } = await admin
+    .from("listings")
+    .select("photo_url, cover_photo_url, gallery_urls")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (!existing) return { error: "That listing no longer exists." };
+  const current = existing as {
+    photo_url: string | null;
+    cover_photo_url: string | null;
+    gallery_urls: string[] | null;
+  };
+
+  const gallery = current.gallery_urls ?? [];
+  if (kind === "gallery" && gallery.length >= MAX_GALLERY_PHOTOS)
+    return { error: `A listing can have at most ${MAX_GALLERY_PHOTOS} gallery photos.` };
+
+  // Timestamped path, so replacing a photo never collides with the one it
+  // replaces while both briefly exist.
+  const url = await uploadListingPhoto(admin, listingId, file, `${kind}-${Date.now()}`);
+  if (!url) return { error: "Upload failed — try again." };
+
+  const replaced =
+    kind === "cover" ? current.cover_photo_url : kind === "grid" ? current.photo_url : null;
+
+  const { error } = await admin
+    .from("listings")
+    .update(
+      kind === "cover"
+        ? { cover_photo_url: url }
+        : kind === "grid"
+          ? { photo_url: url }
+          : { gallery_urls: [...gallery, url] },
+    )
+    .eq("id", listingId);
+  if (error) return { error: error.message };
+
+  // Only bin the old file once the row points at the new one.
+  const replacedPath = replaced ? storagePathFromUrl(replaced) : null;
+  if (replacedPath) await admin.storage.from("listing-photos").remove([replacedPath]);
+
+  return { url };
+}
+
+export async function updateListing(
+  fd: FormData,
+): Promise<{ error?: string; ok?: boolean; id?: string }> {
   await requireAdmin();
 
   const id = String(fd.get("id") ?? "");
@@ -211,11 +326,6 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
   const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
   const description = String(fd.get("description") ?? "").trim() || null;
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
-  const photo = fd.get("photo");
-  const coverPhoto = fd.get("cover_photo");
-  const galleryPhotos = fd
-    .getAll("gallery")
-    .filter((f): f is File => f instanceof File && f.size > 0);
   // Gallery images the admin left ticked. Anything already on the listing
   // but missing from this list has been removed in the form.
   const keptGallery = fd.getAll("keep_gallery").map(String);
@@ -230,27 +340,21 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
     return { error: "PIN code must be 6 digits (e.g. 226010)." };
   const pin_code = pinRaw || null;
 
-  const photoError =
-    validateImage(photo, "Grid photo") ??
-    validateImage(coverPhoto, "Cover photo") ??
-    galleryPhotos.map((f) => validateImage(f, "Each gallery photo")).find(Boolean) ??
-    null;
-  if (photoError) return { error: photoError };
-  if (keptGallery.length + galleryPhotos.length > MAX_GALLERY_PHOTOS)
-    return {
-      error: `A listing can have at most ${MAX_GALLERY_PHOTOS} gallery photos — remove some before adding more.`,
-    };
-
   const admin = createSupabaseAdminClient();
 
   const { data: existing, error: loadError } = await admin
     .from("listings")
-    .select("id, verified, verified_at, photo_url, cover_photo_url, gallery_urls")
+    .select(
+      "id, slug, verified, verified_at, photo_url, cover_photo_url, gallery_urls, categories(slug), neighborhoods(slug, cities(slug))",
+    )
     .eq("id", id)
     .maybeSingle();
   if (loadError) return { error: loadError.message };
   if (!existing) return { error: "That listing no longer exists." };
-  const current = existing as {
+  const current = existing as unknown as {
+    slug: string;
+    categories: { slug: string } | null;
+    neighborhoods: { slug: string; cities: { slug: string } | null } | null;
     verified: boolean;
     verified_at: string | null;
     photo_url: string | null;
@@ -267,20 +371,6 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
   if (numberMatch)
     return { error: `That WhatsApp number is already listed as "${numberMatch.name}".` };
 
-  const [uploadedPhoto, uploadedCover, uploadedGallery] = await Promise.all([
-    photo instanceof File && photo.size > 0
-      ? uploadListingPhoto(admin, id, photo, "grid")
-      : null,
-    coverPhoto instanceof File && coverPhoto.size > 0
-      ? uploadListingPhoto(admin, id, coverPhoto, "cover")
-      : null,
-    Promise.all(
-      galleryPhotos.map((file, i) =>
-        uploadListingPhoto(admin, id, file, `gallery-${Date.now()}-${i + 1}`),
-      ),
-    ).then((urls) => urls.filter((u): u is string => !!u)),
-  ]);
-
   const now = new Date().toISOString();
   const { error } = await admin
     .from("listings")
@@ -295,9 +385,7 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
       // Only stamp a fresh verified_at when verification actually flips on,
       // so re-saving a listing doesn't keep moving the date forward.
       verified_at: verified ? (current.verified ? current.verified_at : now) : null,
-      ...(uploadedPhoto ? { photo_url: uploadedPhoto } : {}),
-      ...(uploadedCover ? { cover_photo_url: uploadedCover } : {}),
-      gallery_urls: [...keptGallery, ...uploadedGallery],
+      gallery_urls: keptGallery,
     })
     .eq("id", id);
   if (error) return { error: error.message };
@@ -305,11 +393,9 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
   // Clear out images this edit orphaned: gallery entries that were dropped,
   // plus any cover/grid photo that was replaced. Only files in our own
   // bucket, and only after the row is safely updated.
-  const orphaned = [
-    ...(current.gallery_urls ?? []).filter((u) => !keptGallery.includes(u)),
-    ...(uploadedPhoto && current.photo_url ? [current.photo_url] : []),
-    ...(uploadedCover && current.cover_photo_url ? [current.cover_photo_url] : []),
-  ];
+  const orphaned = (current.gallery_urls ?? []).filter(
+    (u) => !keptGallery.includes(u),
+  );
   const paths = orphaned
     .map(storagePathFromUrl)
     .filter((p): p is string => !!p);
@@ -317,9 +403,8 @@ export async function updateListing(fd: FormData): Promise<{ error?: string; ok?
     await admin.storage.from("listing-photos").remove(paths);
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/", "layout");
-  return { ok: true };
+  revalidateListing(current);
+  return { ok: true, id };
 }
 
 // Hard delete. Safe at the schema level: reports cascade with the listing
@@ -329,6 +414,15 @@ export async function deleteListing(listingId: string): Promise<void> {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
+  // Read the slugs before the row goes — they're needed to revalidate the
+  // public pages this listing appeared on.
+  const { data: row } = await admin
+    .from("listings")
+    .select("slug, categories(slug), neighborhoods(slug, cities(slug))")
+    .eq("id", listingId)
+    .maybeSingle();
+  const target = row as unknown as RevalidateTarget | null;
+
   // Images first: once the row is gone we've lost the id that scopes them,
   // and orphaned files would sit in the bucket forever.
   await deleteListingPhotos(admin, listingId);
@@ -336,8 +430,7 @@ export async function deleteListing(listingId: string): Promise<void> {
   const { error } = await admin.from("listings").delete().eq("id", listingId);
   if (error) console.error("deleteListing failed:", error.message);
 
-  revalidatePath("/admin");
-  revalidatePath("/", "layout");
+  revalidateListing(target);
 }
 
 export async function createCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {

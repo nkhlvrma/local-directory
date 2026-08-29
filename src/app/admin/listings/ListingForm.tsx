@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, AlertTriangle, Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { createListing, updateListing } from "../actions";
+import { createListing, updateListing, uploadListingImage } from "../actions";
 
 type Option = { id: string; name: string };
 
@@ -49,6 +50,7 @@ export function ListingForm({
   listing?: EditableListing;
 }) {
   const editing = !!listing;
+  const router = useRouter();
 
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +61,42 @@ export function ListingForm({
   // keep_gallery so the server knows what to retain; anything dropped here
   // gets deleted from storage on save.
   const [keptGallery, setKeptGallery] = useState<string[]>(listing?.gallery_urls ?? []);
+  // Photos upload one request at a time after the record is saved, so the
+  // admin gets told where they are rather than watching a single button
+  // spin through several uploads.
+  const [progress, setProgress] = useState<string | null>(null);
+
+  // Each image is its own request: six 5MB photos in one Server Action blew
+  // through both Next's body limit and Vercel's hard ~4.5MB serverless cap,
+  // which is what made saving hang and then fail.
+  async function uploadPhotos(listingId: string, form: HTMLFormElement) {
+    const pick = (name: string) =>
+      Array.from((form.elements.namedItem(name) as HTMLInputElement | null)?.files ?? []);
+
+    const queue: { kind: string; file: File }[] = [
+      ...pick("cover_photo").map((file) => ({ kind: "cover", file })),
+      ...pick("photo").map((file) => ({ kind: "grid", file })),
+      ...pick("gallery").map((file) => ({ kind: "gallery", file })),
+    ];
+    if (queue.length === 0) return null;
+
+    for (let i = 0; i < queue.length; i++) {
+      setProgress(`Uploading photo ${i + 1} of ${queue.length}…`);
+      const photoFd = new FormData();
+      photoFd.set("listing_id", listingId);
+      photoFd.set("kind", queue[i].kind);
+      photoFd.set("file", queue[i].file);
+      const res = await uploadListingImage(photoFd);
+      if (res?.error) {
+        setProgress(null);
+        // The record itself is already saved, so say which step failed
+        // rather than implying the whole edit was lost.
+        return `Saved, but a photo didn't upload: ${res.error}`;
+      }
+    }
+    setProgress(null);
+    return null;
+  }
 
   if (done && !editing) {
     return (
@@ -81,7 +119,11 @@ export function ListingForm({
         e.preventDefault();
         setError(null);
         const form = e.currentTarget;
+        // Files are stripped: they go up individually via uploadPhotos.
         const fd = new FormData(form);
+        fd.delete("cover_photo");
+        fd.delete("photo");
+        fd.delete("gallery");
         fd.set("category_id", categoryId);
         fd.set("neighborhood_id", neighborhoodId);
         if (listing) fd.set("id", listing.id);
@@ -92,9 +134,19 @@ export function ListingForm({
             toast.error(res.error);
             return;
           }
+
+          const listingId = listing?.id ?? res.id;
+          const photoError = listingId ? await uploadPhotos(listingId, form) : null;
+          if (photoError) {
+            setError(photoError);
+            toast.error(photoError);
+            return;
+          }
+
           toast.success(editing ? "Listing saved" : "Listing created");
           if (editing) {
             setDone(true);
+            router.refresh();
           } else {
             setDone(true);
             setCategoryId("");
@@ -270,9 +322,7 @@ export function ListingForm({
             <Send className="size-4" data-icon="inline-start" />
           )}
           {pending
-            ? editing
-              ? "Saving…"
-              : "Creating…"
+            ? (progress ?? (editing ? "Saving…" : "Creating…"))
             : editing
               ? "Save changes"
               : "Create listing"}

@@ -8,14 +8,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertTriangle, LogIn } from "lucide-react";
-import { signIn } from "../actions";
+import { AlertTriangle, CheckCircle2, Mail } from "lucide-react";
+import { requestPasswordReset } from "../actions";
 
-export function LoginForm() {
+const LINK_ERRORS: Record<string, string> = {
+  link_invalid: "That reset link was missing information. Request a new one below.",
+  link_expired:
+    "That reset link has expired or was already used. Request a new one below.",
+};
+
+export function ForgotPasswordForm() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const sp = useSearchParams();
-  const notAdmin = sp.get("error") === "not_admin";
+  const linkError = LINK_ERRORS[sp.get("error") ?? ""];
+
+  if (sent) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <CheckCircle2 className="size-4 text-green-600" />
+          <AlertDescription>
+            If that address belongs to an account, a reset link is on its way.
+            The link works once and expires shortly.
+          </AlertDescription>
+        </Alert>
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/admin/login">Back to sign in</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -25,8 +49,9 @@ export function LoginForm() {
         setError(null);
         const fd = new FormData(e.currentTarget);
         startTransition(async () => {
-          const res = await signIn(fd);
+          const res = await requestPasswordReset(fd);
           if (res?.error) setError(res.error);
+          else setSent(true);
         });
       }}
     >
@@ -34,25 +59,11 @@ export function LoginForm() {
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="username" />
       </div>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/admin/forgot-password"
-            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <Input id="password" name="password" type="password" required autoComplete="current-password" />
-      </div>
 
-      {notAdmin ? (
+      {linkError ? (
         <Alert variant="destructive">
           <AlertTriangle className="size-4" />
-          <AlertDescription>
-            That account isn&apos;t authorized as an admin.
-          </AlertDescription>
+          <AlertDescription>{linkError}</AlertDescription>
         </Alert>
       ) : null}
       {error ? (
@@ -66,9 +77,12 @@ export function LoginForm() {
         {pending ? (
           <Spinner data-icon="inline-start" />
         ) : (
-          <LogIn className="size-4" data-icon="inline-start" />
+          <Mail className="size-4" data-icon="inline-start" />
         )}
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Sending…" : "Send reset link"}
+      </Button>
+      <Button asChild variant="ghost" className="w-full">
+        <Link href="/admin/login">Back to sign in</Link>
       </Button>
     </form>
   );
