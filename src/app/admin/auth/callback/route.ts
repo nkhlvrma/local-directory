@@ -17,8 +17,12 @@ export async function GET(request: NextRequest) {
       ? nextParam
       : "/admin/reset-password";
 
+  // Supabase reports a bad or spent token in the URL *fragment*, which never
+  // reaches the server — it just arrives here with no code. So a missing code
+  // means an expired link far more often than a malformed one, and "expired"
+  // is the message that tells the admin what to actually do about it.
   if (!code) {
-    return NextResponse.redirect(`${origin}/admin/forgot-password?error=link_invalid`);
+    return NextResponse.redirect(`${origin}/admin/forgot-password?error=link_expired`);
   }
 
   const supabase = await createSupabaseServerClient();

@@ -14,7 +14,8 @@ import {
   storagePathFromUrl,
 } from "@/lib/listing-photo";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
-import { CITY_SLUG, SITE_URL } from "@/lib/site";
+import { CITY_SLUG } from "@/lib/site";
+import { requestOrigin } from "@/lib/request-origin";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
 const MAX_GALLERY_PHOTOS = 4;
@@ -56,8 +57,14 @@ export async function requestPasswordReset(
   const supabase = await createSupabaseServerClient();
   // The callback exchanges the emailed code for a session, then forwards to
   // the form where the new password is set.
+  //
+  // Sent without a query string on purpose: Supabase matches this against its
+  // Redirect URLs allow list and drops it for the Site URL root when it fails
+  // to match, which lands the admin on the homepage holding an unused code.
+  // A bare path is the easiest shape to allow-list correctly. The callback
+  // already defaults to /admin/reset-password, so `next` adds nothing here.
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${SITE_URL}/admin/auth/callback?next=/admin/reset-password`,
+    redirectTo: `${await requestOrigin()}/admin/auth/callback`,
   });
 
   return { ok: true };
