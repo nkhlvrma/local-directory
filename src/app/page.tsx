@@ -1,17 +1,12 @@
 import { Container } from "@/components/ui/container";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { CITY_SLUG } from "@/lib/site";
+import { CITY_SLUG, HEADER_HEIGHT } from "@/lib/site";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { NeighborhoodMap } from "@/components/NeighborhoodMap";
 import { LocationBar } from "@/components/LocationBar";
 import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import Typewriter from "@/components/fancy/text/typewriter";
-
-// Matches the header's rendered height (Container py-3 + the size="icon"
-// theme toggle button, 36px) so the hero image tucks in behind the
-// transparent header instead of leaving a gap.
-const HEADER_HEIGHT = 60;
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +45,7 @@ export default async function Home() {
     <>
       {/* Hero — fills the viewport; header sits transparently on top */}
       <div
+        data-page-hero
         className="relative min-h-dvh flex items-center"
         style={{ marginTop: -HEADER_HEIGHT }}
       >

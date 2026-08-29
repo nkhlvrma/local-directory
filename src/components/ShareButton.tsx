@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Check } from "lucide-react";
+import { UploadIcon, type UploadIconHandle } from "@/components/ui/upload";
+import { CheckIcon, type CheckIconHandle } from "@/components/ui/check";
 import { trackEvent } from "@/lib/analytics-client";
 
 export function ShareButton({
@@ -17,6 +18,15 @@ export function ShareButton({
   listingId?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const icon = useRef<UploadIconHandle>(null);
+  const check = useRef<CheckIconHandle>(null);
+
+  // CheckIcon treats itself as externally controlled as soon as its
+  // imperative handle exists, so it won't draw itself in unprompted — kick
+  // it off when the copied state swaps it in.
+  useEffect(() => {
+    if (copied) check.current?.startAnimation();
+  }, [copied]);
 
   async function onClick() {
     trackEvent("share_clicked", { listingId, metadata: { title } });
@@ -38,11 +48,19 @@ export function ShareButton({
   }
 
   return (
-    <Button variant="outline" onClick={onClick} className="h-11 min-h-11 px-5">
+    <Button
+      variant="outline"
+      onClick={onClick}
+      className="h-11 min-h-11 px-5"
+      // Driven from the button so the arrow lifts on hovering the whole
+      // control, not just the glyph.
+      onMouseEnter={() => icon.current?.startAnimation()}
+      onMouseLeave={() => icon.current?.stopAnimation()}
+    >
       {copied ? (
-        <Check className="size-5" strokeWidth={2.25} />
+        <CheckIcon ref={check} size={20} />
       ) : (
-        <Share2 className="size-5" strokeWidth={2.25} />
+        <UploadIcon ref={icon} size={20} />
       )}
       {copied ? "Link copied" : "Share"}
     </Button>

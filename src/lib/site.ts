@@ -32,3 +32,9 @@ export const CITY_MAPS: Record<string, CityMap> = {
     bounds: [77.45, 12.85, 77.75, 13.08],
   },
 };
+
+// Rendered height of the sticky site header (Container py-3 + a 36px
+// icon-sized control). Pages with a full-bleed hero pull it up by this
+// amount so the artwork runs to the top of the viewport behind the
+// transparent header, rather than starting below it.
+export const HEADER_HEIGHT = 60;

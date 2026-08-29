@@ -137,6 +137,14 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+/* Type scale bumped one step platform-wide. Setting the root font-size (not
+   a body font-size) means every rem-based Tailwind size — text-*, spacing,
+   radii — scales together, so proportions hold instead of text growing
+   inside containers sized for smaller text. 17/16 = one step up. */
+html {
+  font-size: 106.25%;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

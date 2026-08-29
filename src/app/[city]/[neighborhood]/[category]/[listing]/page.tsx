@@ -2,9 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,7 +16,7 @@ import { HoursTable } from "@/components/HoursTable";
 import { ShareButton } from "@/components/ShareButton";
 import { TrackView } from "@/components/TrackView";
 import { ListingGridCard } from "@/components/ListingGridCard";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, HEADER_HEIGHT } from "@/lib/site";
 import {
   LISTING_CARD_COLUMNS,
   type ListingCardRow,
@@ -180,7 +179,13 @@ export default async function ListingPage(
           to photo_url (portrait, primarily meant for grid cards) so older
           listings with only one photo still show something. */}
       {heroPhoto(listing) ? (
-        <div className="relative w-full h-[400px] sm:h-[500px]">
+        <div
+          data-page-hero
+          className="relative w-full h-[400px] sm:h-[500px]"
+          // Pulled up behind the transparent header so the artwork reaches
+          // the top of the viewport instead of starting below the header.
+          style={{ marginTop: -HEADER_HEIGHT }}
+        >
           <Image
             src={heroPhoto(listing)!}
             alt={listing.name}
@@ -189,48 +194,47 @@ export default async function ListingPage(
             sizes="100vw"
             className="object-cover"
           />
+          {/* Scrim behind the header only — these photos are arbitrary and
+              often bright at the top, and the header's white text needs a
+              guaranteed dark backing to stay legible over them. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b from-black/55 to-transparent"
+            style={{ height: HEADER_HEIGHT * 2 }}
+          />
         </div>
       ) : null}
 
       <Container className="py-7 space-y-6 pb-28 md:pb-7">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-          <Link href={`/${city.slug}/c/${category.slug}`} className="hover:text-foreground transition-colors">
-            {category.name}
-          </Link>
-          <ChevronRight className="size-3 shrink-0" />
-          <span>{neighborhood.name}</span>
-        </nav>
-
-        {/* Header */}
-        <header className="space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-3xl font-bold tracking-tight font-heading">{listing.name}</h1>
-            {listing.verified ? <VerifiedBadge /> : null}
-            <OpenNowBadge hours={listing.hours_json} />
-            {listing.pin_code ? (
-              <Badge variant="secondary" className="font-mono">
-                {listing.pin_code}
-              </Badge>
+        {/* Header and actions sit side by side once there's width for it,
+            so the contact controls are level with the listing details
+            instead of pushing the rest of the page down. Below md they
+            stack back to their original order. */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
+          <header className="space-y-3 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-3xl font-bold tracking-tight font-heading">{listing.name}</h1>
+              {listing.verified ? <VerifiedBadge /> : null}
+              <OpenNowBadge hours={listing.hours_json} />
+            </div>
+            {listing.description ? (
+              <p className="text-base text-foreground/80 leading-relaxed max-w-prose">
+                {listing.description}
+              </p>
             ) : null}
-          </div>
-          {listing.description ? (
-            <p className="text-base text-foreground/80 leading-relaxed max-w-prose">
-              {listing.description}
-            </p>
-          ) : null}
-        </header>
+          </header>
 
-        {/* CTA — WhatsApp primary, Call secondary */}
-        <div className="flex gap-2 flex-wrap items-center">
-          <WhatsAppButton listingId={listing.id} />
-          <CallButton listingId={listing.id} />
-          <ShareButton
-            title={listing.name}
-            url={canonical}
-            text={`Found ${listing.name} on Local Directory.`}
-            listingId={listing.id}
-          />
+          {/* CTA — WhatsApp primary, Call secondary */}
+          <div className="flex gap-2 flex-wrap items-center md:shrink-0">
+            <WhatsAppButton listingId={listing.id} iconOnly />
+            <CallButton listingId={listing.id} />
+            <ShareButton
+              title={listing.name}
+              url={canonical}
+              text={`Found ${listing.name} on Local Directory.`}
+              listingId={listing.id}
+            />
+          </div>
         </div>
 
         {/* Trust panel */}
