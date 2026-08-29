@@ -202,7 +202,6 @@ export function ListingForm({
             pattern="^\+[1-9][0-9]{7,14}$"
             defaultValue={listing?.whatsapp_number ?? ""}
           />
-          <p className="text-xs text-muted-foreground">With country code, e.g. +9198…</p>
         </div>
 
         <div className="space-y-1.5">
