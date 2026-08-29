@@ -38,7 +38,7 @@ export function SearchBar({
       <form onSubmit={submit} className="flex gap-2">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/70"
             aria-hidden="true"
           />
           <Input
@@ -48,10 +48,20 @@ export function SearchBar({
             autoFocus={autoFocus}
             name="q"
             autoComplete="off"
-            className="pl-9"
+            // Same translucent treatment as the LocationBar pill above it,
+            // so the two controls read as one set against the hero photo.
+            className="pl-9 border-white/20 bg-white/10 text-white backdrop-blur-sm placeholder:text-white/70 focus-visible:border-white/40 dark:bg-white/10"
           />
         </div>
-        <Button type="submit" disabled={!q.trim()}>
+        {/* Stays fully opaque while disabled: the button sits on hero
+            artwork where the default dimming just reads as "washed out"
+            rather than "not yet usable". Dark label because white on amber
+            falls well below a readable contrast ratio. */}
+        <Button
+          type="submit"
+          disabled={!q.trim()}
+          className="bg-amber-500 text-amber-950 hover:bg-amber-400 disabled:opacity-100"
+        >
           Search
         </Button>
       </form>

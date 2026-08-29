@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -183,6 +183,15 @@ export default async function ListingPage(
       <ListingHeroCarousel images={heroImages(listing)} alt={listing.name} />
 
       <Container className="py-7 space-y-6 pb-28 md:pb-7">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+          <Link href={`/${city.slug}/c/${category.slug}`} className="hover:text-foreground transition-colors">
+            {category.name}
+          </Link>
+          <ChevronRight className="size-3 shrink-0" />
+          <span>{neighborhood.name}</span>
+        </nav>
+
         {/* Header and actions sit side by side once there's width for it,
             so the contact controls are level with the listing details
             instead of pushing the rest of the page down. Below md they
