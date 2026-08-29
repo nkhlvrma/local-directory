@@ -38,7 +38,7 @@ export function SearchBar({
       <form onSubmit={submit} className="flex gap-2">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
             aria-hidden="true"
           />
           <Input
@@ -48,14 +48,10 @@ export function SearchBar({
             autoFocus={autoFocus}
             name="q"
             autoComplete="off"
-            className="h-14 rounded-xl bg-background dark:bg-background shadow-sm pl-11 pr-3 text-base focus-visible:border-primary/50 focus-visible:ring-2"
+            className="pl-9"
           />
         </div>
-        <Button
-          type="submit"
-          disabled={!q.trim()}
-          className="h-14 rounded-xl px-6 disabled:opacity-100"
-        >
+        <Button type="submit" disabled={!q.trim()}>
           Search
         </Button>
       </form>

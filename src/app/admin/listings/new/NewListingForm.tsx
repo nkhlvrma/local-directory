@@ -155,6 +155,15 @@ export function NewListingForm({
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <Label htmlFor="gallery">Gallery photos (optional)</Label>
+        <Input id="gallery" name="gallery" type="file" accept="image/*" multiple />
+        <p className="text-xs text-muted-foreground">
+          Up to 4 extra photos for the detail-page carousel — the cover photo
+          leads, so the carousel shows 5 in total. JPG/PNG, under 5MB each.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2.5">
           <Switch id="publish" name="publish" defaultChecked />

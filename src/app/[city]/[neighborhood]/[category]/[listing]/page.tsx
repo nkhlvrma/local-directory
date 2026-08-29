@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,12 +10,13 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CallButton } from "@/components/CallButton";
 import { MobileStickyContactBar } from "@/components/MobileStickyContactBar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ListingHeroCarousel } from "@/components/ListingHeroCarousel";
 import { OpenNowBadge } from "@/components/OpenNowBadge";
 import { HoursTable } from "@/components/HoursTable";
 import { ShareButton } from "@/components/ShareButton";
 import { TrackView } from "@/components/TrackView";
 import { ListingGridCard } from "@/components/ListingGridCard";
-import { SITE_URL, HEADER_HEIGHT } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import {
   LISTING_CARD_COLUMNS,
   type ListingCardRow,
@@ -60,7 +60,7 @@ async function loadListing(params: Params) {
   const { data: listing } = await supabase
     .from("listings")
     .select(
-      "id, name, slug, description, whatsapp_number, photo_url, cover_photo_url, hours_json, verified, verified_at, pin_code, fields_values",
+      "id, name, slug, description, whatsapp_number, photo_url, cover_photo_url, gallery_urls, hours_json, verified, verified_at, pin_code, fields_values",
     )
     .eq("status", "approved")
     .eq("neighborhood_id", (neighborhood as { id: string }).id)
@@ -92,6 +92,7 @@ async function loadListing(params: Params) {
       verified: boolean;
       verified_at: string | null;
       pin_code: string | null;
+      gallery_urls: string[] | null;
       fields_values: Record<string, string | number | boolean | null> | null;
     },
   };
@@ -175,35 +176,11 @@ export default async function ListingPage(
         verified={listing.verified}
       />
 
-      {/* Photo hero — cover_photo_url (landscape) when set, else falls back
-          to photo_url (portrait, primarily meant for grid cards) so older
-          listings with only one photo still show something. */}
-      {heroPhoto(listing) ? (
-        <div
-          data-page-hero
-          className="relative w-full h-[400px] sm:h-[500px]"
-          // Pulled up behind the transparent header so the artwork reaches
-          // the top of the viewport instead of starting below the header.
-          style={{ marginTop: -HEADER_HEIGHT }}
-        >
-          <Image
-            src={heroPhoto(listing)!}
-            alt={listing.name}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          {/* Scrim behind the header only — these photos are arbitrary and
-              often bright at the top, and the header's white text needs a
-              guaranteed dark backing to stay legible over them. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b from-black/55 to-transparent"
-            style={{ height: HEADER_HEIGHT * 2 }}
-          />
-        </div>
-      ) : null}
+      {/* Photo hero — the cover image leads (cover_photo_url, else the
+          portrait photo_url so single-photo listings still show something),
+          followed by any gallery_urls. Renders as a carousel only when
+          there's more than one. */}
+      <ListingHeroCarousel images={heroImages(listing)} alt={listing.name} />
 
       <Container className="py-7 space-y-6 pb-28 md:pb-7">
         {/* Header and actions sit side by side once there's width for it,
@@ -227,36 +204,16 @@ export default async function ListingPage(
           {/* CTA — WhatsApp primary, Call secondary */}
           <div className="flex gap-2 flex-wrap items-center md:shrink-0">
             <WhatsAppButton listingId={listing.id} iconOnly />
-            <CallButton listingId={listing.id} />
+            <CallButton listingId={listing.id} iconOnly />
             <ShareButton
               title={listing.name}
               url={canonical}
               text={`Found ${listing.name} on Local Directory.`}
               listingId={listing.id}
+              iconOnly
             />
           </div>
         </div>
-
-        {/* Trust panel */}
-        {listing.verified ? (
-          <div className="flex items-start gap-2 text-xs text-muted-foreground border border-primary/20 bg-primary/5 rounded-lg px-3 py-2.5">
-            <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
-            <p>
-              <span className="text-foreground font-medium">Verified</span> — manually reviewed
-              by our team
-              {listing.verified_at ? (
-                <> ({formatVerifiedDate(listing.verified_at)})</>
-              ) : null}
-              . {" "}
-              <Link
-                href={`/report?listing=${listing.id}`}
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                Something wrong? Report it.
-              </Link>
-            </p>
-          </div>
-        ) : null}
 
         {/* Custom fields */}
         {shownFields.length > 0 ? (
@@ -328,6 +285,23 @@ export default async function ListingPage(
   );
 }
 
+// Cover image first, then the gallery, de-duplicated (an older listing may
+// have the same URL in both places) and capped so a mis-filled gallery can't
+// turn the hero into an endless reel.
+const MAX_HERO_IMAGES = 5;
+
+function heroImages(listing: {
+  cover_photo_url: string | null;
+  photo_url: string | null;
+  gallery_urls: string[] | null;
+}): string[] {
+  const lead = heroPhoto(listing);
+  const all = [lead, ...(listing.gallery_urls ?? [])].filter(
+    (u): u is string => !!u,
+  );
+  return [...new Set(all)].slice(0, MAX_HERO_IMAGES);
+}
+
 function heroPhoto(listing: {
   cover_photo_url: string | null;
   photo_url: string | null;
@@ -335,15 +309,6 @@ function heroPhoto(listing: {
   return listing.cover_photo_url ?? listing.photo_url;
 }
 
-function formatVerifiedDate(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric" }).format(
-      new Date(iso),
-    );
-  } catch {
-    return "";
-  }
-}
 
 function formatFieldValue(
   v: string | number | boolean | null | undefined,

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { UploadIcon, type UploadIconHandle } from "@/components/ui/upload";
 import { CheckIcon, type CheckIconHandle } from "@/components/ui/check";
 import { trackEvent } from "@/lib/analytics-client";
@@ -11,11 +12,13 @@ export function ShareButton({
   url,
   text,
   listingId,
+  iconOnly,
 }: {
   title: string;
   url: string;
   text?: string;
   listingId?: string;
+  iconOnly?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const icon = useRef<UploadIconHandle>(null);
@@ -49,20 +52,25 @@ export function ShareButton({
 
   return (
     <Button
-      variant="outline"
+      // secondary, not outline — outline all but disappears against the
+      // dark page background next to it.
+      variant="secondary"
+      size={iconOnly ? "icon" : "default"}
       onClick={onClick}
-      className="h-11 min-h-11 px-5"
+      aria-label={iconOnly ? (copied ? "Link copied" : "Share") : undefined}
+      title={iconOnly ? "Share" : undefined}
+      className={cn("rounded-full", iconOnly ? "size-11" : "h-11 px-5")}
       // Driven from the button so the arrow lifts on hovering the whole
       // control, not just the glyph.
       onMouseEnter={() => icon.current?.startAnimation()}
       onMouseLeave={() => icon.current?.stopAnimation()}
     >
       {copied ? (
-        <CheckIcon ref={check} size={20} />
+        <CheckIcon ref={check} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
       ) : (
-        <UploadIcon ref={icon} size={20} />
+        <UploadIcon ref={icon} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
       )}
-      {copied ? "Link copied" : "Share"}
+      {iconOnly ? null : copied ? "Link copied" : "Share"}
     </Button>
   );
 }

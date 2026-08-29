@@ -51,6 +51,9 @@ create table if not exists listings (
   photo_url text,                          -- portrait/grid-card thumbnail
   cover_photo_url text,                    -- landscape hero for the detail page;
                                             -- falls back to photo_url when null
+  gallery_urls text[] not null default '{}', -- extra hero images for the detail-page
+                                            -- carousel, in display order; the cover
+                                            -- image leads and is not repeated here
   verified boolean not null default false, -- "we messaged this WhatsApp and got a reply"
   verified_at timestamptz,                 -- when we last confirmed the number
   pin_code text,                           -- Indian PIN, 6 digits (optional)

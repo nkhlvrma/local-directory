@@ -12,6 +12,9 @@ import { uploadListingPhoto } from "@/lib/listing-photo";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 
+// Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
+const MAX_GALLERY_PHOTOS = 4;
+
 export async function signIn(fd: FormData) {
   const email = String(fd.get("email") ?? "").trim();
   const password = String(fd.get("password") ?? "");
@@ -90,6 +93,11 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
   const pinRaw = String(fd.get("pin_code") ?? "").trim();
   const photo = fd.get("photo"); // grid/portrait thumbnail
   const coverPhoto = fd.get("cover_photo"); // detail-page hero, landscape
+  // Extra hero images for the detail-page carousel. The cover leads, so the
+  // gallery holds the remainder up to the carousel's cap.
+  const galleryPhotos = fd
+    .getAll("gallery")
+    .filter((f): f is File => f instanceof File && f.size > 0);
   const publish = fd.get("publish") === "on";
   const verified = fd.get("verified") === "on";
 
@@ -113,6 +121,15 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
     const file = coverPhoto as File;
     if (!file.type.startsWith("image/")) return { error: "Cover photo must be an image file." };
     if (file.size > 5 * 1024 * 1024) return { error: "Cover photo must be under 5MB." };
+  }
+
+  if (galleryPhotos.length > MAX_GALLERY_PHOTOS)
+    return { error: `Choose at most ${MAX_GALLERY_PHOTOS} gallery photos.` };
+  for (const file of galleryPhotos) {
+    if (!file.type.startsWith("image/"))
+      return { error: "Gallery photos must be image files." };
+    if (file.size > 5 * 1024 * 1024)
+      return { error: "Each gallery photo must be under 5MB." };
   }
 
   const admin = createSupabaseAdminClient();
@@ -150,16 +167,24 @@ export async function createListing(fd: FormData): Promise<{ error?: string; ok?
     if (!error) {
       // Independent uploads — run concurrently rather than one after the
       // other.
-      const [uploadedPhoto, uploadedCover] = await Promise.all([
+      const [uploadedPhoto, uploadedCover, uploadedGallery] = await Promise.all([
         hasPhoto ? uploadListingPhoto(admin, data.id, photo as File, "grid") : null,
         hasCoverPhoto ? uploadListingPhoto(admin, data.id, coverPhoto as File, "cover") : null,
+        // Preserves the order the admin picked; a failed upload returns null
+        // and is dropped rather than leaving a hole in the carousel.
+        Promise.all(
+          galleryPhotos.map((file, i) =>
+            uploadListingPhoto(admin, data.id, file, `gallery-${i + 1}`),
+          ),
+        ).then((urls) => urls.filter((u): u is string => !!u)),
       ]);
-      if (uploadedPhoto || uploadedCover) {
+      if (uploadedPhoto || uploadedCover || uploadedGallery.length > 0) {
         await admin
           .from("listings")
           .update({
             ...(uploadedPhoto ? { photo_url: uploadedPhoto } : {}),
             ...(uploadedCover ? { cover_photo_url: uploadedCover } : {}),
+            ...(uploadedGallery.length > 0 ? { gallery_urls: uploadedGallery } : {}),
           })
           .eq("id", data.id);
       }

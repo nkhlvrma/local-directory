@@ -2,11 +2,15 @@
 
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PhoneCallIcon, type PhoneCallIconHandle } from "@/components/ui/phone-call";
 
 type Props = {
   listingId: string;
   className?: string;
+  // Icon-only for the detail-page action cluster. Opt-in because the mobile
+  // sticky bar shares this component and still wants its label.
+  iconOnly?: boolean;
 };
 
 // Secondary contact channel next to WhatsAppButton. Routes through
@@ -16,20 +20,35 @@ type Props = {
 // The icon animation is driven from the button's own hover rather than the
 // icon's, so it fires anywhere on the control instead of only when the
 // pointer happens to cross the glyph itself.
-export function CallButton({ listingId, className }: Props) {
+export function CallButton({ listingId, className, iconOnly }: Props) {
   const icon = useRef<PhoneCallIconHandle>(null);
 
   return (
     <Button
       asChild
-      variant="outline"
-      className={`h-11 min-h-11 px-5 ${className ?? ""}`}
+      // secondary, not outline: an outline button is nearly invisible
+      // against the dark page background here.
+      variant="secondary"
+      size={iconOnly ? "icon" : "default"}
+      className={cn(
+        "rounded-full",
+        iconOnly ? "size-11" : "h-11 px-5",
+        className,
+      )}
       onMouseEnter={() => icon.current?.startAnimation()}
       onMouseLeave={() => icon.current?.stopAnimation()}
     >
-      <a href={`/api/call/${listingId}`}>
-        <PhoneCallIcon ref={icon} size={20} />
-        Call
+      <a
+        href={`/api/call/${listingId}`}
+        aria-label={iconOnly ? "Call" : undefined}
+        title={iconOnly ? "Call" : undefined}
+      >
+        <PhoneCallIcon
+          ref={icon}
+          size={20}
+          data-icon={iconOnly ? undefined : "inline-start"}
+        />
+        {iconOnly ? null : "Call"}
       </a>
     </Button>
   );
