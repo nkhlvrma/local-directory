@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { CITY_MAPS } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { trackEvent } from "@/lib/analytics-client";
+
+export type MapNeighborhood = {
+  slug: string;
+  name: string;
+  latitude?: number | null;
+  longitude?: number | null;
+};
 
 export function NeighborhoodMap({
   citySlug,
@@ -14,14 +21,27 @@ export function NeighborhoodMap({
 }: {
   citySlug: string;
   cityName: string;
-  neighborhoods: { slug: string; name: string }[];
+  neighborhoods: MapNeighborhood[];
 }) {
   const map = CITY_MAPS[citySlug] ?? CITY_MAPS.lucknow;
+  const [minLon, minLat, maxLon, maxLat] = map.bounds;
   const bbox = map.bounds.join("%2C");
   const embedUrl =
     `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}` +
-    `&layer=mapnik&marker=${map.latitude}%2C${map.longitude}`;
-  const mapUrl = `https://www.openstreetmap.org/?mlat=${map.latitude}&mlon=${map.longitude}#map=${map.zoom}/${map.latitude}/${map.longitude}`;
+    `&layer=mapnik`;
+
+  // Percentage position of a coordinate inside the embed's bounding box.
+  // A linear projection is fine here: the box spans a fraction of a degree,
+  // where Mercator's latitude stretch is far smaller than the pin itself.
+  const place = (lat: number, lon: number) => ({
+    left: `${((lon - minLon) / (maxLon - minLon)) * 100}%`,
+    top: `${((maxLat - lat) / (maxLat - minLat)) * 100}%`,
+  });
+
+  const pinned = neighborhoods.filter(
+    (n): n is MapNeighborhood & { latitude: number; longitude: number } =>
+      typeof n.latitude === "number" && typeof n.longitude === "number",
+  );
 
   return (
     <section aria-labelledby="neighborhood-map-title" className="space-y-4 py-6">
@@ -35,31 +55,43 @@ export function NeighborhoodMap({
       </div>
       <Card
         size="sm"
-        className="overflow-hidden gap-0 py-0 border shadow-none ring-0 bg-muted/30"
+        className="relative overflow-hidden gap-0 py-0 border shadow-none ring-0 bg-muted/30"
       >
+        {/* The embed is a backdrop, not a map you drive: pins are positioned
+            against a fixed bounding box, so letting the iframe pan or zoom
+            would slide the map out from under them. Navigation is the pins
+            and the badges below instead. */}
         <iframe
           title={`${cityName} map`}
           src={embedUrl}
-          className="block h-72 w-full border-0 sm:h-80"
+          className="pointer-events-none block h-80 w-full border-0 sm:h-96"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         />
-        <CardFooter className="border-t bg-background justify-between gap-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
-            <span className="truncate">{cityName} and nearby neighborhoods</span>
-          </div>
-          <a
-            href={mapUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackEvent("map_interacted", { metadata: { action: "open_map" } })}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
+
+        {pinned.map((n) => (
+          <Link
+            key={n.slug}
+            href={`/${citySlug}/n/${n.slug}`}
+            style={place(n.latitude, n.longitude)}
+            onClick={() =>
+              trackEvent("map_interacted", {
+                metadata: { action: "map_pin", neighborhood: n.slug },
+              })
+            }
+            // -translate-x-1/2 puts the pin's point on the coordinate, and
+            // -translate-y-full stands it above rather than centred on it.
+            className="group/pin absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-center"
           >
-            Open map
-            <ExternalLink className="size-3.5" aria-hidden="true" />
-          </a>
-        </CardFooter>
+            <span className="rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium leading-tight shadow-sm ring-1 ring-border whitespace-nowrap group-hover/pin:bg-primary group-hover/pin:text-primary-foreground transition-colors">
+              {n.name}
+            </span>
+            <MapPin
+              className="size-4 -mt-0.5 text-primary drop-shadow-sm fill-background group-hover/pin:scale-110 transition-transform"
+              aria-hidden="true"
+            />
+          </Link>
+        ))}
       </Card>
       {neighborhoods.length > 0 ? (
         <div className="flex flex-wrap gap-2 py-3">

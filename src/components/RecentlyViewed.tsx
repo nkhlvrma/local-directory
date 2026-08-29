@@ -1,9 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import Link from "next/link";
-import { Check } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ListingGridCard } from "@/components/ListingGridCard";
 import type { RecentEntry } from "./TrackView";
 
 const KEY = "recently-viewed-v1";
@@ -55,43 +53,21 @@ export function RecentlyViewed() {
       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
         Recently viewed
       </h2>
-      <div className="grid gap-2 sm:grid-cols-2">
+      {/* Same card as the search results and the category/neighborhood
+          grids, so a listing looks identical wherever it turns up. */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {shown.map((r) => (
-          <Link key={r.id} href={r.href} className="block group h-full active:scale-[0.98] transition-transform duration-150 ease-out">
-            <Card
-              size="sm"
-              className="h-full border border-border/70 shadow-none ring-0 transition-[border-color,background-color] duration-150 ease-out hover:border-primary/30 hover:bg-muted/30"
-            >
-              <CardContent className="flex gap-3">
-                {r.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.photo_url}
-                    alt=""
-                    style={{ width: 72, height: 72 }}
-                    className="rounded-lg object-cover shrink-0"
-                  />
-                ) : (
-                  <div
-                    style={{ width: 72, height: 72 }}
-                    className="rounded-lg bg-muted shrink-0"
-                    aria-hidden="true"
-                  />
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold truncate">{r.name}</span>
-                    {r.verified ? (
-                      <Check className="size-3.5 text-primary shrink-0" strokeWidth={2.5} />
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">
-                    {r.category} · {r.neighborhood}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+          <ListingGridCard
+            key={r.id}
+            id={r.id}
+            href={r.href}
+            name={r.name}
+            categorySlug={r.categorySlug ?? ""}
+            categoryIcon={r.categoryIcon}
+            subtitle={`${r.category} · ${r.neighborhood}`}
+            verified={r.verified}
+            photo_url={r.photo_url}
+          />
         ))}
       </div>
     </section>

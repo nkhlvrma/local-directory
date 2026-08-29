@@ -19,6 +19,10 @@ create table if not exists neighborhoods (
   city_id uuid not null references cities(id) on delete cascade,
   name text not null,
   slug text not null,
+  -- Approximate centre of the locality, used to place a pin on the city
+  -- map. Nullable: a neighborhood without coordinates simply gets no pin.
+  latitude double precision,
+  longitude double precision,
   unique (city_id, slug)
 );
 

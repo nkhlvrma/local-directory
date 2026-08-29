@@ -16,16 +16,18 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* Round icon button, matching the contact actions on the listing
-            page. Ghost keeps it quiet next to the "List your business" CTA,
-            but it also sits over hero photography where a fully transparent
-            control is hard to pick out — hence the faint backdrop. */}
+        {/* Ghost keeps it quiet next to the "List your business" CTA, but
+            it also sits over hero photography where a fully transparent
+            control is hard to pick out — hence the faint backdrop.
+            icon-sm rather than icon so it matches the height and radius of
+            the "List your business" button (size="sm") beside it, which
+            also keeps the header at the height HEADER_HEIGHT assumes. */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           aria-label="Toggle theme"
           title="Toggle theme"
-          className="rounded-full bg-foreground/5 hover:bg-foreground/10"
+          className="bg-foreground/5 hover:bg-foreground/10"
         >
           {/* Both icons are rendered; CSS shows/hides based on active class */}
           <Sun className="size-4 dark:hidden" />

@@ -12,6 +12,11 @@ export type RecentEntry = {
   href: string;
   category: string;
   neighborhood: string;
+  // Needed by ListingGridCard for the icon placeholder when a listing has
+  // no photo. Optional because entries stored before this existed are still
+  // in visitors' localStorage.
+  categorySlug?: string;
+  categoryIcon?: string | null;
   photo_url: string | null;
   verified: boolean;
 };

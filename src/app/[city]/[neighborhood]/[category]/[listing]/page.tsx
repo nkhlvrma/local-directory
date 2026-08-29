@@ -171,6 +171,8 @@ export default async function ListingPage(
         name={listing.name}
         href={canonical.replace(SITE_URL, "")}
         category={category.name}
+        categorySlug={category.slug}
+        categoryIcon={category.icon}
         neighborhood={neighborhood.name}
         photo_url={listing.photo_url}
         verified={listing.verified}

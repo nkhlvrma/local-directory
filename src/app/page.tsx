@@ -34,12 +34,17 @@ export default async function Home() {
       supabase.from("categories").select("name, slug, icon").order("name"),
       supabase
         .from("neighborhoods")
-        .select("name, slug")
+        .select("name, slug, latitude, longitude")
         .eq("city_id", (city as { id: string }).id)
         .order("name"),
     ]);
   const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
-  const hoods = (neighborhoods ?? []) as { slug: string; name: string }[];
+  const hoods = (neighborhoods ?? []) as {
+    slug: string;
+    name: string;
+    latitude: number | null;
+    longitude: number | null;
+  }[];
 
   return (
     <>
@@ -98,7 +103,15 @@ export default async function Home() {
       </div>
 
       <Container className="py-10 space-y-12">
+        {/* Order: pick up where you left off, then browse by area, then by
+            category. */}
         <RecentlyViewed />
+
+        <NeighborhoodMap
+          citySlug={(city as { slug: string }).slug}
+          cityName={(city as { name: string }).name}
+          neighborhoods={hoods}
+        />
 
         {/* Categories */}
         <section>
@@ -112,13 +125,6 @@ export default async function Home() {
             }))}
           />
         </section>
-
-        <NeighborhoodMap
-          citySlug={(city as { slug: string }).slug}
-          cityName={(city as { name: string }).name}
-          neighborhoods={hoods}
-        />
-
       </Container>
     </>
   );
