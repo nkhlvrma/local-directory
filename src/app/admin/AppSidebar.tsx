@@ -9,6 +9,7 @@ import {
   MapPin,
   Plus,
   LogOut,
+  KeyRound,
   ShieldCheck,
 } from "lucide-react";
 import {
@@ -90,6 +91,17 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        {/* Sends a recovery link by email rather than changing the password
+            inline. An inline change from an already-open session would let
+            anyone who found an unattended dashboard lock out the real
+            admin; requiring the emailed link keeps possession of the
+            mailbox as the thing that proves it's you. */}
+        <SidebarMenuButton asChild tooltip="Reset password">
+          <Link href="/admin/forgot-password">
+            <KeyRound />
+            <span>Reset password</span>
+          </Link>
+        </SidebarMenuButton>
         <form action={signOut}>
           <SidebarMenuButton type="submit" tooltip="Sign out">
             <LogOut />
