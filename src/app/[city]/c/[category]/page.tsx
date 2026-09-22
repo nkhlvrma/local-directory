@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { createSupabaseStaticClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { LoopingCategoryIcon } from "@/components/LoopingCategoryIcon";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { ActivePinBadge } from "@/components/ActivePinBadge";
@@ -22,10 +22,12 @@ export const revalidate = 300;
 
 export async function generateStaticParams(): Promise<Params[]> {
   const supabase = createSupabaseStaticClient();
-  const [{ data: cities }, { data: categories }] = await Promise.all([
+  const [citiesRes, categoriesRes] = await Promise.all([
     supabase.from("cities").select("slug").eq("active", true),
     supabase.from("categories").select("slug"),
   ]);
+  const cities = unwrap(citiesRes);
+  const categories = unwrap(categoriesRes);
   const out: Params[] = [];
   for (const c of (cities ?? []) as { slug: string }[])
     for (const cat of (categories ?? []) as { slug: string }[])
@@ -35,11 +37,11 @@ export async function generateStaticParams(): Promise<Params[]> {
 
 async function loadContext(params: Params) {
   const supabase = createSupabaseStaticClient();
-  const [{ data: city }, { data: category }] = await Promise.all([
+  const [cityRes, categoryRes] = await Promise.all([
     supabase.from("cities").select("id, name, slug").eq("slug", params.city).maybeSingle(),
     supabase.from("categories").select("id, name, slug, icon").eq("slug", params.category).maybeSingle(),
   ]);
-  return { supabase, city, category };
+  return { supabase, city: unwrap(cityRes), category: unwrap(categoryRes) };
 }
 
 export async function generateMetadata(
@@ -69,17 +71,19 @@ export default async function CategoryPage(
 
   // Fetch the whole approved set for this category — filters narrow it in the
   // browser. Bounded by a category within one city, so this stays small.
-  const { data: listings } = await supabase
-    .from("listings")
-    .select(
-      `${LISTING_CARD_COLUMNS},
-       neighborhoods!inner ( name, slug, city_id ),
-       categories!inner ( name, slug )`,
-    )
-    .eq("status", "approved")
-    .eq("category_id", categoryId)
-    .eq("neighborhoods.city_id", (city as { id: string }).id)
-    .order("name");
+  const listings = unwrap(
+    await supabase
+      .from("listings")
+      .select(
+        `${LISTING_CARD_COLUMNS},
+         neighborhoods!inner ( name, slug, city_id ),
+         categories!inner ( name, slug )`,
+      )
+      .eq("status", "approved")
+      .eq("category_id", categoryId)
+      .eq("neighborhoods.city_id", (city as { id: string }).id)
+      .order("name"),
+  );
 
   type Row = ListingCardRow & { neighborhoods: { name: string; slug: string } };
   const rows = (listings ?? []) as unknown as Row[];

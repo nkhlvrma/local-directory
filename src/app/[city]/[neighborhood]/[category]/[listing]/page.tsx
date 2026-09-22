@@ -5,7 +5,7 @@ import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { createSupabaseStaticClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CallButton } from "@/components/CallButton";
 import { MobileStickyContactBar } from "@/components/MobileStickyContactBar";
@@ -38,14 +38,16 @@ export const revalidate = 300;
 // dynamicParams stays on, so listings approved later still render on demand.
 export async function generateStaticParams(): Promise<Params[]> {
   const supabase = createSupabaseStaticClient();
-  const { data } = await supabase
-    .from("listings")
-    .select(
-      `slug,
-       neighborhoods!inner ( slug, cities!inner ( slug, active ) ),
-       categories!inner ( slug )`,
-    )
-    .eq("status", "approved");
+  const data = unwrap(
+    await supabase
+      .from("listings")
+      .select(
+        `slug,
+         neighborhoods!inner ( slug, cities!inner ( slug, active ) ),
+         categories!inner ( slug )`,
+      )
+      .eq("status", "approved"),
+  );
   const rows = (data ?? []) as unknown as {
     slug: string;
     neighborhoods: { slug: string; cities: { slug: string; active: boolean } };
@@ -63,38 +65,46 @@ export async function generateStaticParams(): Promise<Params[]> {
 
 async function loadListing(params: Params) {
   const supabase = createSupabaseStaticClient();
-  const { data: city } = await supabase
-    .from("cities")
-    .select("id, name, slug")
-    .eq("slug", params.city)
-    .maybeSingle();
+  const city = unwrap(
+    await supabase
+      .from("cities")
+      .select("id, name, slug")
+      .eq("slug", params.city)
+      .maybeSingle(),
+  );
   if (!city) return null;
 
-  const { data: neighborhood } = await supabase
-    .from("neighborhoods")
-    .select("id, name, slug")
-    .eq("city_id", (city as { id: string }).id)
-    .eq("slug", params.neighborhood)
-    .maybeSingle();
+  const neighborhood = unwrap(
+    await supabase
+      .from("neighborhoods")
+      .select("id, name, slug")
+      .eq("city_id", (city as { id: string }).id)
+      .eq("slug", params.neighborhood)
+      .maybeSingle(),
+  );
   if (!neighborhood) return null;
 
-  const { data: category } = await supabase
-    .from("categories")
-    .select("id, name, slug, icon, fields_schema")
-    .eq("slug", params.category)
-    .maybeSingle();
+  const category = unwrap(
+    await supabase
+      .from("categories")
+      .select("id, name, slug, icon, fields_schema")
+      .eq("slug", params.category)
+      .maybeSingle(),
+  );
   if (!category) return null;
 
-  const { data: listing } = await supabase
-    .from("listings")
-    .select(
-      "id, name, slug, description, whatsapp_number, photo_url, cover_photo_url, gallery_urls, hours_json, verified, verified_at, pin_code, fields_values",
-    )
-    .eq("status", "approved")
-    .eq("neighborhood_id", (neighborhood as { id: string }).id)
-    .eq("category_id", (category as { id: string }).id)
-    .eq("slug", params.listing)
-    .maybeSingle();
+  const listing = unwrap(
+    await supabase
+      .from("listings")
+      .select(
+        "id, name, slug, description, whatsapp_number, photo_url, cover_photo_url, gallery_urls, hours_json, verified, verified_at, pin_code, fields_values",
+      )
+      .eq("status", "approved")
+      .eq("neighborhood_id", (neighborhood as { id: string }).id)
+      .eq("category_id", (category as { id: string }).id)
+      .eq("slug", params.listing)
+      .maybeSingle(),
+  );
   if (!listing) return null;
 
   return {

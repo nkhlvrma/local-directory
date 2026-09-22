@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { createSupabaseStaticClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { ActivePinBadge } from "@/components/ActivePinBadge";
 import {
@@ -19,16 +19,14 @@ export const revalidate = 300;
 
 export async function generateStaticParams(): Promise<Params[]> {
   const supabase = createSupabaseStaticClient();
-  const { data: cities } = await supabase
-    .from("cities")
-    .select("id, slug")
-    .eq("active", true);
+  const cities = unwrap(
+    await supabase.from("cities").select("id, slug").eq("active", true),
+  );
   const out: Params[] = [];
   for (const c of (cities ?? []) as { id: string; slug: string }[]) {
-    const { data: hoods } = await supabase
-      .from("neighborhoods")
-      .select("slug")
-      .eq("city_id", c.id);
+    const hoods = unwrap(
+      await supabase.from("neighborhoods").select("slug").eq("city_id", c.id),
+    );
     for (const n of (hoods ?? []) as { slug: string }[])
       out.push({ city: c.slug, neighborhood: n.slug });
   }
@@ -37,18 +35,22 @@ export async function generateStaticParams(): Promise<Params[]> {
 
 async function loadContext(params: Params) {
   const supabase = createSupabaseStaticClient();
-  const { data: city } = await supabase
-    .from("cities")
-    .select("id, name, slug")
-    .eq("slug", params.city)
-    .maybeSingle();
+  const city = unwrap(
+    await supabase
+      .from("cities")
+      .select("id, name, slug")
+      .eq("slug", params.city)
+      .maybeSingle(),
+  );
   if (!city) return { supabase, city: null, neighborhood: null };
-  const { data: neighborhood } = await supabase
-    .from("neighborhoods")
-    .select("id, name, slug, city_id")
-    .eq("city_id", (city as { id: string }).id)
-    .eq("slug", params.neighborhood)
-    .maybeSingle();
+  const neighborhood = unwrap(
+    await supabase
+      .from("neighborhoods")
+      .select("id, name, slug, city_id")
+      .eq("city_id", (city as { id: string }).id)
+      .eq("slug", params.neighborhood)
+      .maybeSingle(),
+  );
   return { supabase, city, neighborhood };
 }
 
@@ -75,15 +77,17 @@ export default async function NeighborhoodPage(
   const hoodSlug = (neighborhood as { slug: string }).slug;
   const neighborhoodName = (neighborhood as { name: string }).name;
 
-  const { data: listings } = await supabase
-    .from("listings")
-    .select(
-      `${LISTING_CARD_COLUMNS},
-       categories!inner ( name, slug, icon )`,
-    )
-    .eq("status", "approved")
-    .eq("neighborhood_id", (neighborhood as { id: string }).id)
-    .order("name");
+  const listings = unwrap(
+    await supabase
+      .from("listings")
+      .select(
+        `${LISTING_CARD_COLUMNS},
+         categories!inner ( name, slug, icon )`,
+      )
+      .eq("status", "approved")
+      .eq("neighborhood_id", (neighborhood as { id: string }).id)
+      .order("name"),
+  );
 
   type Row = ListingCardRow & {
     categories: { name: string; slug: string; icon: string | null };

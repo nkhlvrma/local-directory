@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
-import { createSupabaseStaticClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { SITE_URL, CITY_SLUG } from "@/lib/site";
+
+// Without a revalidate the sitemap is built once per deploy and never again,
+// so new listings wouldn't appear until the next push.
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Cookie-free client: reading cookies here would make the sitemap dynamic.
@@ -9,14 +13,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
   ];
 
-  const { data: city } = await supabase
-    .from("cities")
-    .select("id, slug")
-    .eq("slug", CITY_SLUG)
-    .maybeSingle();
+  const city = unwrap(
+    await supabase
+      .from("cities")
+      .select("id, slug")
+      .eq("slug", CITY_SLUG)
+      .maybeSingle(),
+  );
   if (!city) return entries;
 
-  const [{ data: categories }, { data: neighborhoods }, { data: listings }] =
+  const [categoriesRes, neighborhoodsRes, listingsRes] =
     await Promise.all([
       supabase.from("categories").select("slug"),
       supabase.from("neighborhoods").select("slug").eq("city_id", city.id),
@@ -30,6 +36,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .eq("status", "approved")
         .eq("neighborhoods.city_id", city.id),
     ]);
+
+  const categories = unwrap(categoriesRes);
+  const neighborhoods = unwrap(neighborhoodsRes);
+  const listings = unwrap(listingsRes);
 
   for (const c of categories ?? [])
     entries.push({ url: `${SITE_URL}/${city.slug}/c/${c.slug}` });
