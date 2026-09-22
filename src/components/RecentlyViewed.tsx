@@ -65,7 +65,6 @@ export function RecentlyViewed() {
             categorySlug={r.categorySlug ?? ""}
             categoryIcon={r.categoryIcon}
             subtitle={`${r.category} · ${r.neighborhood}`}
-            verified={r.verified}
             photo_url={r.photo_url}
           />
         ))}

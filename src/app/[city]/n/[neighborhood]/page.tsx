@@ -1,24 +1,42 @@
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Badge } from "@/components/ui/badge";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ListingGridCard } from "@/components/ListingGridCard";
+import { createSupabaseStaticClient } from "@/lib/supabase/server";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
-import { EmptyResults } from "@/components/EmptyResults";
-import { isValidPin } from "@/lib/pin";
-import { isOpenNow } from "@/lib/hours";
+import { ActivePinBadge } from "@/components/ActivePinBadge";
+import {
+  FilteredListingGrid,
+  type GridItem,
+} from "@/components/FilteredListingGrid";
 import { LISTING_CARD_COLUMNS, type ListingCardRow } from "@/lib/types";
 
 type Params = { city: string; neighborhood: string };
-type SP = { verified?: string; photo?: string; open?: string };
 
-export const dynamic = "force-dynamic";
+// See the category page: cached rather than dynamic, with filtering moved to
+// the client so the prerendered HTML survives.
+export const revalidate = 300;
+
+export async function generateStaticParams(): Promise<Params[]> {
+  const supabase = createSupabaseStaticClient();
+  const { data: cities } = await supabase
+    .from("cities")
+    .select("id, slug")
+    .eq("active", true);
+  const out: Params[] = [];
+  for (const c of (cities ?? []) as { id: string; slug: string }[]) {
+    const { data: hoods } = await supabase
+      .from("neighborhoods")
+      .select("slug")
+      .eq("city_id", c.id);
+    for (const n of (hoods ?? []) as { slug: string }[])
+      out.push({ city: c.slug, neighborhood: n.slug });
+  }
+  return out;
+}
 
 async function loadContext(params: Params) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseStaticClient();
   const { data: city } = await supabase
     .from("cities")
     .select("id, name, slug")
@@ -46,54 +64,48 @@ export async function generateMetadata(
 }
 
 export default async function NeighborhoodPage(
-  {
-    params,
-    searchParams,
-  }: { params: Promise<Params>; searchParams: Promise<SP> },
+  { params }: { params: Promise<Params> },
 ) {
-  const [p, sp] = await Promise.all([params, searchParams]);
+  const p = await params;
   const { supabase, city, neighborhood } = await loadContext(p);
   if (!city || !neighborhood) notFound();
 
-  const pin = (await cookies()).get("pin")?.value ?? "";
-  const pinFilter = isValidPin(pin) ? pin : null;
-  const verifiedOnly = sp.verified === "1";
-  const photoOnly = sp.photo === "1";
-  const openOnly = sp.open === "1";
+  const citySlug = (city as { slug: string }).slug;
+  const cityName = (city as { name: string }).name;
+  const hoodSlug = (neighborhood as { slug: string }).slug;
+  const neighborhoodName = (neighborhood as { name: string }).name;
 
-  let q = supabase
+  const { data: listings } = await supabase
     .from("listings")
     .select(
       `${LISTING_CARD_COLUMNS},
        categories!inner ( name, slug, icon )`,
     )
     .eq("status", "approved")
-    .eq("neighborhood_id", (neighborhood as { id: string }).id);
-  if (pinFilter) q = q.eq("pin_code", pinFilter);
-  if (verifiedOnly) q = q.eq("verified", true);
-  const { data: listings } = await q.order("name");
+    .eq("neighborhood_id", (neighborhood as { id: string }).id)
+    .order("name");
 
   type Row = ListingCardRow & {
     categories: { name: string; slug: string; icon: string | null };
   };
-  let rows = (listings ?? []) as unknown as Row[];
-  if (photoOnly) rows = rows.filter((r) => !!r.photo_url);
-  if (openOnly) rows = rows.filter((r) => isOpenNow(r.hours_json) === true);
+  const rows = (listings ?? []) as unknown as Row[];
 
-  const filtersActive = pinFilter || verifiedOnly || photoOnly || openOnly;
-  let suggestions: { name: string; slug: string }[] = [];
-  if (rows.length === 0) {
-    const { data: cats } = await supabase
-      .from("categories")
-      .select("name, slug")
-      .order("name")
-      .limit(3);
-    suggestions = (cats ?? []) as { name: string; slug: string }[];
-  }
+  const items: GridItem[] = rows.map((l) => ({
+    ...l,
+    href: `/${citySlug}/${hoodSlug}/${l.categories.slug}/${l.slug}`,
+    categorySlug: l.categories.slug,
+    categoryIcon: l.categories.icon,
+    subtitle: l.categories.name,
+  }));
 
-  const citySlug = (city as { slug: string }).slug;
-  const cityName = (city as { name: string }).name;
-  const neighborhoodName = (neighborhood as { name: string }).name;
+  const { data: cats } = await supabase
+    .from("categories")
+    .select("name, slug")
+    .order("name")
+    .limit(3);
+  const suggestions = ((cats ?? []) as { name: string; slug: string }[]).map(
+    (c) => ({ name: c.name, href: `/${citySlug}/c/${c.slug}` }),
+  );
 
   return (
     <Container className="py-7 space-y-6">
@@ -101,11 +113,7 @@ export default async function NeighborhoodPage(
         <h1 className="text-2xl font-bold tracking-tight font-heading">
           {neighborhoodName}
         </h1>
-        {pinFilter ? (
-          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
-            {pinFilter}
-          </Badge>
-        ) : null}
+        <ActivePinBadge />
       </header>
 
       <p className="flex items-center gap-1 text-xs text-muted-foreground -mt-4">
@@ -116,38 +124,12 @@ export default async function NeighborhoodPage(
 
       <CategoryFilterBar />
 
-      {rows.length === 0 ? (
-        <EmptyResults
-          heading={
-            filtersActive
-              ? `No listings in ${neighborhoodName} match these filters.`
-              : `No listings yet in ${neighborhoodName}.`
-          }
-          suggestions={suggestions.map((c) => ({
-            name: c.name,
-            href: `/${citySlug}/c/${c.slug}`,
-          }))}
-        />
-      ) : (
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          {rows.map((l) => (
-            <ListingGridCard
-              key={l.id}
-              id={l.id}
-              href={`/${citySlug}/${(neighborhood as { slug: string }).slug}/${l.categories.slug}/${l.slug}`}
-              name={l.name}
-              categorySlug={l.categories.slug}
-              categoryIcon={l.categories.icon}
-              subtitle={l.categories.name}
-              description={l.description}
-              verified={l.verified}
-              pin={l.pin_code}
-              photo_url={l.photo_url}
-              hours={l.hours_json}
-            />
-          ))}
-        </div>
-      )}
+      <FilteredListingGrid
+        items={items}
+        emptyHeading={`No listings yet in ${neighborhoodName}.`}
+        filteredHeading={`No listings in ${neighborhoodName} match these filters.`}
+        suggestions={suggestions}
+      />
     </Container>
   );
 }
