@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/container";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient } from "@/lib/supabase/server";
 import { CITY_SLUG, HEADER_HEIGHT } from "@/lib/site";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { NeighborhoodMap, type MapNeighborhood } from "@/components/NeighborhoodMap";
@@ -8,10 +8,13 @@ import { SearchBar } from "@/components/SearchBar";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import Typewriter from "@/components/fancy/text/typewriter";
 
-export const dynamic = "force-dynamic";
+// Cities, categories and neighborhoods change rarely and the hero is static;
+// nothing here is per-visitor (RecentlyViewed reads localStorage on the
+// client), so this page is cached rather than rebuilt on every request.
+export const revalidate = 3600;
 
 export default async function Home() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseStaticClient();
   const { data: city } = await supabase
     .from("cities")
     .select("id, name, slug")

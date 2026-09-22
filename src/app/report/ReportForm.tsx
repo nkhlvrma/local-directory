@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { Turnstile } from "@/components/Turnstile";
 import { submitReport } from "./actions";
 
 export function ReportForm({ listingId }: { listingId: string }) {
@@ -63,6 +64,9 @@ export function ReportForm({ listingId }: { listingId: string }) {
         <Label htmlFor="note">Note (optional)</Label>
         <Textarea id="note" name="note" rows={3} maxLength={400} />
       </div>
+      {/* Injects cf-turnstile-response into the form; picked up by the
+          FormData below, same as the listing-submission form. */}
+      <Turnstile />
       {error ? (
         <Alert variant="destructive">
           <AlertTriangle className="size-4" />

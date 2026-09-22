@@ -79,6 +79,16 @@ create index if not exists listings_neighborhood_idx on listings(neighborhood_id
 create index if not exists listings_verified_idx on listings(verified);
 create index if not exists listings_pin_idx on listings(pin_code);
 
+-- Search runs `name ilike '%q%' or description ilike '%q%'`. A leading
+-- wildcard can't use a btree index, so without these every search is a
+-- sequential scan of the whole table. GIN + gin_trgm_ops is what makes an
+-- unanchored ILIKE indexable.
+create extension if not exists pg_trgm;
+create index if not exists listings_name_trgm_idx
+  on listings using gin (name gin_trgm_ops);
+create index if not exists listings_description_trgm_idx
+  on listings using gin (description gin_trgm_ops);
+
 create table if not exists listing_reports (
   id uuid primary key default uuid_generate_v4(),
   listing_id uuid not null references listings(id) on delete cascade,
@@ -167,8 +177,9 @@ drop policy if exists "admin delete listings" on listings;
 create policy "admin delete listings" on listings for delete using (is_admin());
 
 -- Reports: public can insert, admin can read
+-- Reports are inserted by the submitReport server action (service-role) after
+-- a Turnstile check and a rate limit, so anon needs no insert rights here.
 drop policy if exists "public insert reports" on listing_reports;
-create policy "public insert reports" on listing_reports for insert with check (true);
 drop policy if exists "admin read reports" on listing_reports;
 create policy "admin read reports" on listing_reports for select using (is_admin());
 
@@ -197,8 +208,10 @@ create index if not exists search_events_zero_idx
   where matched_count = 0;
 
 alter table search_events enable row level security;
+-- No public insert policy: search_events is written only by the server via
+-- the service-role client (which bypasses RLS). Leaving it anon-writable let
+-- anyone with the publishable key append rows at will.
 drop policy if exists "public insert search_events" on search_events;
-create policy "public insert search_events" on search_events for insert with check (true);
 drop policy if exists "admin read search_events" on search_events;
 create policy "admin read search_events" on search_events for select using (is_admin());
 
@@ -220,8 +233,9 @@ create index if not exists analytics_events_name_idx
 create index if not exists analytics_events_listing_idx on analytics_events(listing_id);
 
 alter table analytics_events enable row level security;
+-- Same as search_events: server-side writes only. Public event reporting
+-- goes through POST /api/track, which validates and rate limits first.
 drop policy if exists "public insert analytics_events" on analytics_events;
-create policy "public insert analytics_events" on analytics_events for insert with check (true);
 drop policy if exists "admin read analytics_events" on analytics_events;
 create policy "admin read analytics_events" on analytics_events for select using (is_admin());
 

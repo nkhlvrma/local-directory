@@ -1,6 +1,6 @@
 # Local Directory
 
-A hyperlocal, WhatsApp-native directory of neighborhood businesses. Built with Next.js 16 (App Router), Tailwind, and Supabase.
+A hyperlocal, WhatsApp-native directory of neighborhood businesses. Built with Next.js 15 (App Router), Tailwind, and Supabase.
 
 ## Stack
 
@@ -41,6 +41,25 @@ npm run dev
 ```
 
 Open http://localhost:3000.
+
+### 4. Migrations
+
+`supabase/schema.sql` is the source of truth for a fresh project. For a
+database that already exists, apply the numbered files in
+`supabase/migrations/` instead — they carry the same changes incrementally
+and are safe to re-run.
+
+## Tests
+
+```bash
+npm test         # vitest, one pass
+npm run test:watch
+npm run lint
+```
+
+Unit tests cover the pure logic in `src/lib` — opening hours (including
+windows that cross midnight), PIN validation, slugs, WhatsApp link building,
+browse-page filtering, and the rate limiter.
 
 ## Routes
 

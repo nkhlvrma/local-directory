@@ -5,7 +5,7 @@ import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient } from "@/lib/supabase/server";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CallButton } from "@/components/CallButton";
 import { MobileStickyContactBar } from "@/components/MobileStickyContactBar";
@@ -33,8 +33,36 @@ type Params = {
 
 export const revalidate = 300;
 
+// Prerender the approved listings that exist at build time so the pages that
+// carry the long-tail search traffic are warm instead of cold on first hit.
+// dynamicParams stays on, so listings approved later still render on demand.
+export async function generateStaticParams(): Promise<Params[]> {
+  const supabase = createSupabaseStaticClient();
+  const { data } = await supabase
+    .from("listings")
+    .select(
+      `slug,
+       neighborhoods!inner ( slug, cities!inner ( slug, active ) ),
+       categories!inner ( slug )`,
+    )
+    .eq("status", "approved");
+  const rows = (data ?? []) as unknown as {
+    slug: string;
+    neighborhoods: { slug: string; cities: { slug: string; active: boolean } };
+    categories: { slug: string };
+  }[];
+  return rows
+    .filter((r) => r.neighborhoods?.cities?.active)
+    .map((r) => ({
+      city: r.neighborhoods.cities.slug,
+      neighborhood: r.neighborhoods.slug,
+      category: r.categories.slug,
+      listing: r.slug,
+    }));
+}
+
 async function loadListing(params: Params) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseStaticClient();
   const { data: city } = await supabase
     .from("cities")
     .select("id, name, slug")
@@ -174,8 +202,8 @@ export default async function ListingPage(
         categorySlug={category.slug}
         categoryIcon={category.icon}
         neighborhood={neighborhood.name}
-        photo_url={listing.photo_url}
         verified={listing.verified}
+        photo_url={listing.photo_url}
       />
 
       {/* Photo hero — the cover image leads (cover_photo_url, else the
@@ -286,8 +314,6 @@ export default async function ListingPage(
                   categorySlug={category.slug}
                   categoryIcon={category.icon}
                   description={s.description}
-                  verified={s.verified}
-                  pin={s.pin_code}
                   photo_url={s.photo_url}
                   hours={s.hours_json}
                 />

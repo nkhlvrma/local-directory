@@ -5,16 +5,28 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 // Funnel event names — keep this list in sync with the product plan's
 // "instrument the key funnel" deliverable. Using a union catches typos at
 // the call site without forcing a rigid enum in the DB.
-export type AnalyticsEventName =
-  | "search_submitted"
-  | "listing_card_click"
-  | "listing_viewed"
-  | "whatsapp_clicked"
-  | "call_clicked"
-  | "share_clicked"
-  | "map_interacted"
-  | "business_submission_started"
-  | "business_submission_completed";
+// Kept as a runtime array (not just a type) so /api/track can reject anything
+// that isn't a known event instead of writing arbitrary strings to the table.
+export const ANALYTICS_EVENT_NAMES = [
+  "search_submitted",
+  "listing_card_click",
+  "listing_viewed",
+  "whatsapp_clicked",
+  "call_clicked",
+  "share_clicked",
+  "map_interacted",
+  "business_submission_started",
+  "business_submission_completed",
+] as const;
+
+export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];
+
+export function isAnalyticsEventName(v: unknown): v is AnalyticsEventName {
+  return (
+    typeof v === "string" &&
+    (ANALYTICS_EVENT_NAMES as readonly string[]).includes(v)
+  );
+}
 
 type LogEventOptions = {
   listingId?: string | null;

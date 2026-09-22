@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient } from "@/lib/supabase/server";
 import { SITE_URL, CITY_SLUG } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createSupabaseServerClient();
+  // Cookie-free client: reading cookies here would make the sitemap dynamic.
+  const supabase = createSupabaseStaticClient();
   const entries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
   ];

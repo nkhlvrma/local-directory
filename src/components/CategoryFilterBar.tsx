@@ -1,37 +1,55 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Image as ImageIcon, Clock, X } from "lucide-react";
+import {
+  getFilterSnapshot,
+  getServerFilterSnapshot,
+  subscribeFilters,
+  toggleFilter,
+  type FilterKey,
+  type ListingFilters,
+} from "@/lib/listing-filters";
 
 export function CategoryFilterBar() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
+  // Deliberately not useSearchParams(): that hook opts a statically rendered
+  // route out of prerendering, which is exactly what these pages need to keep.
+  // The shared store reads the same query string without the bailout.
+  const filters = useSyncExternalStore(
+    subscribeFilters,
+    getFilterSnapshot,
+    getServerFilterSnapshot,
+  );
 
-  function toggle(key: string) {
-    const next = new URLSearchParams(params.toString());
-    if (next.get(key) === "1") next.delete(key);
-    else next.set(key, "1");
-    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-  }
-
+  // Pills, not plain buttons: the `outline` variant leaves the base
+  // `border-transparent` in place, so an inactive chip used to read as a bare
+  // white box. Each state gets an explicit edge — a visible border when off, a
+  // filled surface plus a clear-X when on — so it's obvious these toggle.
   const chip = (
-    key: string,
+    key: FilterKey,
     label: string,
     Icon: React.ComponentType<{ className?: string }>,
   ) => {
-    const active = params.get(key) === "1";
+    const active = filters[key as keyof ListingFilters] === true;
     return (
       <Button
         size="sm"
         variant={active ? "default" : "outline"}
-        onClick={() => toggle(key)}
-        className="h-8"
+        onClick={() => toggleFilter(key)}
+        className={
+          active
+            ? "h-9 rounded-full border-primary px-3.5 shadow-xs"
+            : "h-9 rounded-full border-border px-3.5 text-foreground/80 hover:border-foreground/25 hover:text-foreground"
+        }
         aria-pressed={active}
         title={active ? `Remove "${label}" filter` : label}
       >
-        {active ? <X className="size-3.5" /> : <Icon className="size-3.5" />}
+        {active ? (
+          <X className="size-3.5" />
+        ) : (
+          <Icon className="size-3.5 opacity-60" />
+        )}
         {label}
       </Button>
     );

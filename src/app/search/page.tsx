@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { after } from "next/server";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
@@ -64,20 +65,24 @@ export default async function SearchPage(
     const { data } = await q2;
     rows = (data ?? []) as unknown as Row[];
 
-    if (!isMockMode()) {
-      const adminC = createSupabaseAdminClient();
-      await adminC.from("search_events").insert({
-        query,
-        matched_count: rows.length,
-        city_slug: CITY_SLUG,
-        pin_code: pinFilter,
+    // Logged after the response is flushed — two serial inserts used to sit
+    // between the query and the first byte of a search result.
+    const matched = rows.length;
+    after(async () => {
+      if (!isMockMode()) {
+        const adminC = createSupabaseAdminClient();
+        await adminC.from("search_events").insert({
+          query,
+          matched_count: matched,
+          city_slug: CITY_SLUG,
+          pin_code: pinFilter,
+        });
+      }
+      // General funnel event (separate from the zero-result-only search_events
+      // table above), fire-and-forget, works in mock mode too.
+      await logEvent("search_submitted", {
+        metadata: { query, matched_count: matched, city_slug: CITY_SLUG },
       });
-    }
-
-    // General funnel event (separate from the zero-result-only search_events
-    // table above), fire-and-forget, works in mock mode too.
-    await logEvent("search_submitted", {
-      metadata: { query, matched_count: rows.length, city_slug: CITY_SLUG },
     });
   }
 
@@ -152,8 +157,6 @@ export default async function SearchPage(
                 categoryIcon={l.categories.icon}
                 subtitle={`${l.categories.name} · ${l.neighborhoods.name}`}
                 description={l.description}
-                verified={l.verified}
-                pin={l.pin_code}
                 photo_url={l.photo_url}
                 hours={l.hours_json}
               />
