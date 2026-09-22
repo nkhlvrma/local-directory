@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/container";
-import { createSupabaseStaticClient } from "@/lib/supabase/server";
+import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { CITY_SLUG, HEADER_HEIGHT } from "@/lib/site";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { NeighborhoodMap, type MapNeighborhood } from "@/components/NeighborhoodMap";
@@ -15,11 +15,13 @@ export const revalidate = 3600;
 
 export default async function Home() {
   const supabase = createSupabaseStaticClient();
-  const { data: city } = await supabase
-    .from("cities")
-    .select("id, name, slug")
-    .eq("slug", CITY_SLUG)
-    .maybeSingle();
+  const city = unwrap(
+    await supabase
+      .from("cities")
+      .select("id, name, slug")
+      .eq("slug", CITY_SLUG)
+      .maybeSingle(),
+  );
 
   if (!city) {
     return (
@@ -33,7 +35,7 @@ export default async function Home() {
     );
   }
 
-  const [{ data: categories }, { data: neighborhoods }] = await Promise.all([
+  const [categories, neighborhoods] = await Promise.all([
       supabase.from("categories").select("name, slug, icon").order("name"),
       supabase
         .from("neighborhoods")
@@ -41,8 +43,8 @@ export default async function Home() {
         .eq("city_id", (city as { id: string }).id)
         .order("name"),
     ]);
-  const cats = (categories ?? []) as { slug: string; name: string; icon: string | null }[];
-  const hoods = (neighborhoods ?? []) as MapNeighborhood[];
+  const cats = (unwrap(categories) ?? []) as { slug: string; name: string; icon: string | null }[];
+  const hoods = (unwrap(neighborhoods) ?? []) as MapNeighborhood[];
 
   return (
     <>
