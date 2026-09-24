@@ -24,8 +24,8 @@ describe("slugify", () => {
   });
 
   it("returns an empty string when nothing survives", () => {
-    // Worth knowing: a business named only in Devanagari slugs to "", and the
-    // caller has to handle that rather than assume a usable slug.
+    // A business named only in Devanagari slugs to "" — callers handle it
+    // (insertListingWithUniqueSlug falls back to "listing").
     expect(slugify("मालिश")).toBe("");
   });
 
@@ -33,11 +33,7 @@ describe("slugify", () => {
     expect(slugify("Sector 7 Dental")).toBe("sector-7-dental");
   });
 
-  it("can leave a trailing hyphen after truncation", () => {
-    // The 60-char slice runs after hyphen-trimming, so a cut landing on a
-    // separator leaves one behind. Documented, not asserted as desirable.
-    const out = slugify(`${"a".repeat(59)} b`);
-    expect(out).toHaveLength(60);
-    expect(out.endsWith("-")).toBe(true);
+  it("doesn't leave a trailing hyphen when truncation lands on a separator", () => {
+    expect(slugify(`${"a".repeat(59)} b`)).toBe("a".repeat(59));
   });
 });

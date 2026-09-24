@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -65,7 +66,9 @@ export async function generateStaticParams(): Promise<Params[]> {
     }));
 }
 
-async function loadListing(params: Params) {
+// cache() so generateMetadata and the page share one load per request,
+// instead of each running the same four sequential queries.
+const loadListing = cache(async (params: Params) => {
   const supabase = createSupabaseStaticClient();
   const city = unwrap(
     await supabase
@@ -136,7 +139,7 @@ async function loadListing(params: Params) {
       fields_values: Record<string, string | number | boolean | null> | null;
     },
   };
-}
+});
 
 export async function generateMetadata(
   { params }: { params: Promise<Params> },
@@ -204,7 +207,7 @@ export default async function ListingPage(
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <TrackView
         id={listing.id}
@@ -383,4 +386,11 @@ function formatFieldValue(
   if (v === null || v === undefined || v === "") return "—";
   if (f.type === "boolean") return v ? "Yes" : "No";
   return String(v);
+}
+
+// JSON.stringify doesn't escape "<", so a submitted name or description
+// containing "</script>" would close this tag and inject markup into the
+// page. \u003c is the same character to a JSON parser, but not to HTML.
+function jsonLdScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
