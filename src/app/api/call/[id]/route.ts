@@ -4,7 +4,7 @@ import { createSupabaseStaticClient } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/analytics";
 
 // GET /api/call/[id] — mirrors /api/wa/[id]: logs a "call_clicked" analytics
-// event, then 302-redirects to tel:. Small businesses in Lucknow mostly use
+// event, then 302-redirects to tel:. Small businesses in Dehradun mostly use
 // one number for both WhatsApp and calls, so this reuses whatsapp_number —
 // no separate phone field needed.
 //

@@ -12,6 +12,7 @@ import { ChevronDown, MapPin } from "lucide-react";
 import { CITY_SLUG } from "@/lib/site";
 
 const CITY_LABEL: Record<string, string> = {
+  dehradun: "Dehradun",
   lucknow: "Lucknow",
   bangalore: "Bangalore",
 };

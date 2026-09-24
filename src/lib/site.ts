@@ -3,7 +3,7 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
   "http://localhost:3000";
-export const CITY_SLUG = process.env.NEXT_PUBLIC_CITY_SLUG || "lucknow";
+export const CITY_SLUG = process.env.NEXT_PUBLIC_CITY_SLUG || "dehradun";
 export const SITE_NAME_FALLBACK = "this city";
 
 export type CityMap = {
@@ -17,6 +17,13 @@ export type CityMap = {
 // Coordinates used by the map embed. Keep the list small and explicit until
 // city configuration moves into the database.
 export const CITY_MAPS: Record<string, CityMap> = {
+  dehradun: {
+    name: "Dehradun",
+    latitude: 30.3165,
+    longitude: 78.0322,
+    zoom: 12,
+    bounds: [77.95, 30.25, 78.12, 30.4],
+  },
   lucknow: {
     name: "Lucknow",
     latitude: 26.8467,

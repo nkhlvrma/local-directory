@@ -209,7 +209,7 @@ export function ListingForm({
           <Input
             id="pin_code"
             name="pin_code"
-            placeholder="226010"
+            placeholder="248001"
             inputMode="numeric"
             maxLength={6}
             pattern="[1-9][0-9]{5}"

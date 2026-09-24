@@ -34,7 +34,7 @@ export async function submitListing(fd: FormData) {
   if (!categoryId || !neighborhoodId)
     return { error: "Category and neighborhood are required." };
   if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+    return { error: "PIN code must be 6 digits (e.g. 248001)." };
   const pin_code = pinRaw || null;
 
   const hasPhoto = photo instanceof File && photo.size > 0;

@@ -3,15 +3,15 @@
 type Row = Record<string, unknown>;
 
 const cities: Row[] = [
-  { id: "c1", name: "Lucknow", slug: "lucknow", active: true },
+  { id: "c1", name: "Dehradun", slug: "dehradun", active: true },
 ];
 
 const neighborhoods: Row[] = [
-  { id: "n1", city_id: "c1", name: "Gomti Nagar", slug: "gomti-nagar" },
-  { id: "n2", city_id: "c1", name: "Hazratganj", slug: "hazratganj" },
-  { id: "n3", city_id: "c1", name: "Aliganj", slug: "aliganj" },
-  { id: "n4", city_id: "c1", name: "Indira Nagar", slug: "indira-nagar" },
-  { id: "n5", city_id: "c1", name: "Alambagh", slug: "alambagh" },
+  { id: "n1", city_id: "c1", name: "Rajpur Road", slug: "rajpur-road" },
+  { id: "n2", city_id: "c1", name: "Dalanwala", slug: "dalanwala" },
+  { id: "n3", city_id: "c1", name: "Vasant Vihar", slug: "vasant-vihar" },
+  { id: "n4", city_id: "c1", name: "Prem Nagar", slug: "prem-nagar" },
+  { id: "n5", city_id: "c1", name: "Clement Town", slug: "clement-town" },
 ];
 
 // Tiffin has a starter fields_schema so /admin/categories has something to
@@ -70,7 +70,7 @@ const listings: Row[] = [
     fields_values: { diet: "Both", price_per_meal: 110, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
-    neighborhoods: { name: "Gomti Nagar", slug: "gomti-nagar", city_id: "c1" },
+    neighborhoods: { name: "Rajpur Road", slug: "rajpur-road", city_id: "c1" },
   },
   {
     id: "l2",
@@ -78,7 +78,7 @@ const listings: Row[] = [
     slug: "rasoi-ghar-tiffin",
     category_id: "k1",
     neighborhood_id: "n2",
-    description: "Ghar ka khaana. Roti-sabzi-dal-chawal, ₹90/meal. Delivers Hazratganj + nearby.",
+    description: "Ghar ka khaana. Roti-sabzi-dal-chawal, ₹90/meal. Delivers Dalanwala + nearby.",
     whatsapp_number: "+919811111111",
     hours_json: {
       mon: { open: "11:00", close: "22:00" },
@@ -97,7 +97,7 @@ const listings: Row[] = [
     fields_values: { diet: "Veg", price_per_meal: 90, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
-    neighborhoods: { name: "Hazratganj", slug: "hazratganj", city_id: "c1" },
+    neighborhoods: { name: "Dalanwala", slug: "dalanwala", city_id: "c1" },
   },
   {
     id: "l3",
@@ -115,7 +115,7 @@ const listings: Row[] = [
     fields_values: { diet: "Veg", price_per_meal: 75, delivery: false },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
-    neighborhoods: { name: "Aliganj", slug: "aliganj", city_id: "c1" },
+    neighborhoods: { name: "Vasant Vihar", slug: "vasant-vihar", city_id: "c1" },
   },
   {
     id: "l4",
@@ -134,7 +134,7 @@ const listings: Row[] = [
     fields_values: { diet: "Non-veg", price_per_meal: 130, delivery: true },
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
-    neighborhoods: { name: "Indira Nagar", slug: "indira-nagar", city_id: "c1" },
+    neighborhoods: { name: "Prem Nagar", slug: "prem-nagar", city_id: "c1" },
   },
   {
     id: "l5",
@@ -152,7 +152,7 @@ const listings: Row[] = [
     fields_values: null,
     status: "approved",
     categories: { name: "Tiffin Services", slug: "tiffin-services" },
-    neighborhoods: { name: "Alambagh", slug: "alambagh", city_id: "c1" },
+    neighborhoods: { name: "Clement Town", slug: "clement-town", city_id: "c1" },
   },
 ];
 
@@ -165,12 +165,12 @@ export const MOCK_TABLES: Record<string, Row[]> = {
   listing_reports: [],
   analytics_events: [],
   search_events: [
-    { id: "s1", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-24T12:00:00Z" },
-    { id: "s2", query: "gym trainer", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-24T14:00:00Z" },
-    { id: "s3", query: "carpenter", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-25T09:00:00Z" },
-    { id: "s4", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-25T18:00:00Z" },
-    { id: "s5", query: "chai", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-26T09:00:00Z" },
-    { id: "s6", query: "biryani", matched_count: 0, city_slug: "lucknow", pin_code: null, created_at: "2026-08-26T11:00:00Z" },
+    { id: "s1", query: "biryani", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-24T12:00:00Z" },
+    { id: "s2", query: "gym trainer", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-24T14:00:00Z" },
+    { id: "s3", query: "carpenter", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-25T09:00:00Z" },
+    { id: "s4", query: "biryani", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-25T18:00:00Z" },
+    { id: "s5", query: "chai", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-26T09:00:00Z" },
+    { id: "s6", query: "biryani", matched_count: 0, city_slug: "dehradun", pin_code: null, created_at: "2026-08-26T11:00:00Z" },
   ],
   outreach_leads: [
     {
@@ -186,7 +186,7 @@ export const MOCK_TABLES: Record<string, Row[]> = {
       listing_id: null,
       created_at: "2026-08-20T09:00:00Z",
       categories: { id: "k1", slug: "tiffin-services", name: "Tiffin Services" },
-      neighborhoods: { id: "n2", slug: "hazratganj", name: "Hazratganj" },
+      neighborhoods: { id: "n2", slug: "dalanwala", name: "Dalanwala" },
     },
     {
       id: "o2",
@@ -201,7 +201,7 @@ export const MOCK_TABLES: Record<string, Row[]> = {
       listing_id: null,
       created_at: "2026-08-19T10:00:00Z",
       categories: { id: "k1", slug: "tiffin-services", name: "Tiffin Services" },
-      neighborhoods: { id: "n1", slug: "gomti-nagar", name: "Gomti Nagar" },
+      neighborhoods: { id: "n1", slug: "rajpur-road", name: "Rajpur Road" },
     },
     {
       id: "o3",
@@ -216,7 +216,7 @@ export const MOCK_TABLES: Record<string, Row[]> = {
       listing_id: null,
       created_at: "2026-08-17T09:00:00Z",
       categories: { id: "k1", slug: "tiffin-services", name: "Tiffin Services" },
-      neighborhoods: { id: "n4", slug: "indira-nagar", name: "Indira Nagar" },
+      neighborhoods: { id: "n4", slug: "prem-nagar", name: "Prem Nagar" },
     },
   ],
 };
