@@ -12,6 +12,7 @@ import { ListingGridCard } from "@/components/ListingGridCard";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyResults } from "@/components/EmptyResults";
 import { isValidPin } from "@/lib/pin";
+import { ilikeAnyFilter } from "@/lib/postgrest";
 import { isMockMode } from "@/lib/supabase/mock";
 import { logEvent } from "@/lib/analytics";
 import { LISTING_CARD_COLUMNS, type ListingCardRow } from "@/lib/types";
@@ -47,8 +48,6 @@ export default async function SearchPage(
   let rows: Row[] = [];
 
   if (city && query) {
-    const safe = query.replace(/[\\%_]/g, "\\$&");
-    const like = `%${safe}%`;
     let q2 = supabase
       .from("listings")
       .select(
@@ -58,31 +57,37 @@ export default async function SearchPage(
       )
       .eq("status", "approved")
       .eq("neighborhoods.city_id", (city as { id: string }).id)
-      .or(`name.ilike.${like},description.ilike.${like}`)
+      .or(ilikeAnyFilter(["name", "description"], query))
       .limit(50);
     if (pinFilter) q2 = q2.eq("pin_code", pinFilter);
-    const { data } = await q2;
+    const { data, error } = await q2;
     rows = (data ?? []) as unknown as Row[];
 
     // Logged after the response is flushed — two serial inserts used to sit
-    // between the query and the first byte of a search result.
+    // between the query and the first byte of a search result. A failed
+    // query isn't logged: it would read as a zero-result search and skew the
+    // unmet-demand numbers.
     const matched = rows.length;
-    after(async () => {
-      if (!isMockMode()) {
-        const adminC = createSupabaseAdminClient();
-        await adminC.from("search_events").insert({
-          query,
-          matched_count: matched,
-          city_slug: CITY_SLUG,
-          pin_code: pinFilter,
+    if (error) {
+      console.error("search query failed:", error.message);
+    } else {
+      after(async () => {
+        if (!isMockMode()) {
+          const adminC = createSupabaseAdminClient();
+          await adminC.from("search_events").insert({
+            query,
+            matched_count: matched,
+            city_slug: CITY_SLUG,
+            pin_code: pinFilter,
+          });
+        }
+        // General funnel event (separate from the zero-result-only search_events
+        // table above), fire-and-forget, works in mock mode too.
+        await logEvent("search_submitted", {
+          metadata: { query, matched_count: matched, city_slug: CITY_SLUG },
         });
-      }
-      // General funnel event (separate from the zero-result-only search_events
-      // table above), fire-and-forget, works in mock mode too.
-      await logEvent("search_submitted", {
-        metadata: { query, matched_count: matched, city_slug: CITY_SLUG },
       });
-    });
+    }
   }
 
   let suggestions: { name: string; slug: string }[] = [];

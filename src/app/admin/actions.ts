@@ -6,13 +6,18 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-auth";
 import { slugify } from "@/lib/slug";
-import { isValidPin } from "@/lib/pin";
-import { findDuplicates } from "@/lib/dupes";
+import { findListingByWhatsapp } from "@/lib/dupes";
 import {
   uploadListingPhoto,
   deleteListingPhotos,
   storagePathFromUrl,
 } from "@/lib/listing-photo";
+import {
+  UNIQUE_VIOLATION,
+  insertListingWithUniqueSlug,
+  parseListingFields,
+  validateImage,
+} from "@/lib/listing-input";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 import { TAXONOMY_TAG } from "@/lib/taxonomy";
@@ -37,7 +42,6 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
-
 
 // Minimum we enforce ourselves; Supabase's own floor is lower, and a
 // 6-character admin password isn't worth defending.
@@ -149,13 +153,15 @@ export async function dismissReport(reportId: string): Promise<void> {
 // since their forms need to surface validation errors inline (same pattern
 // as the public list-your-business form).
 
-// Shared by createListing and updateListing so the two can't drift.
-// Returns an error string, or null when the file is absent or acceptable.
-function validateImage(file: unknown, label: string): string | null {
-  if (!(file instanceof File) || file.size === 0) return null;
-  if (!file.type.startsWith("image/")) return `${label} must be an image file.`;
-  if (file.size > 5 * 1024 * 1024) return `${label} must be under 5MB.`;
-  return null;
+// Error for a WhatsApp number some other listing already uses, or null.
+async function duplicateNumberError(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  whatsapp: string,
+  excludeId?: string,
+): Promise<string | null> {
+  const { hit, error } = await findListingByWhatsapp(admin, whatsapp, excludeId);
+  if (error) return error;
+  return hit ? `That WhatsApp number is already listed as "${hit.name}".` : null;
 }
 
 export async function createListing(
@@ -163,68 +169,36 @@ export async function createListing(
 ): Promise<{ error?: string; ok?: boolean; id?: string }> {
   const user = await requireAdmin();
 
-  const name = String(fd.get("name") ?? "").trim();
-  const whatsapp = String(fd.get("whatsapp_number") ?? "").trim();
-  const categoryId = String(fd.get("category_id") ?? "");
-  const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
-  const description = String(fd.get("description") ?? "").trim() || null;
-  const pinRaw = String(fd.get("pin_code") ?? "").trim();
+  const parsed = parseListingFields(fd);
+  if (parsed.error !== undefined) return { error: parsed.error };
+  const { fields } = parsed;
   const publish = fd.get("publish") === "on";
   const verified = fd.get("verified") === "on";
 
-  if (!name || name.length < 2) return { error: "Name is required." };
-  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
-    return { error: "WhatsApp number must be in international format like +9198…" };
-  if (!categoryId || !neighborhoodId)
-    return { error: "Category and neighborhood are required." };
-  if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 248001)." };
-  const pin_code = pinRaw || null;
-
   const admin = createSupabaseAdminClient();
 
-  const dupes = await findDuplicates(admin, { name, whatsapp });
-  const numberMatch = dupes.find((d) => d.whatsapp_number === whatsapp);
-  if (numberMatch) {
-    return { error: `That WhatsApp number is already listed as "${numberMatch.name}".` };
-  }
+  const dupe = await duplicateNumberError(admin, fields.whatsapp_number);
+  if (dupe) return { error: dupe };
 
   const now = new Date().toISOString();
-  const base = slugify(name);
-  for (let i = 0; i < 20; i++) {
-    const slug = i === 0 ? base : `${base}-${i + 1}`;
-    const { data, error } = await admin
-      .from("listings")
-      .insert({
-        name,
-        slug,
-        category_id: categoryId,
-        neighborhood_id: neighborhoodId,
-        description,
-        whatsapp_number: whatsapp,
-        pin_code,
-        status: publish ? "approved" : "pending",
-        source: "manual",
-        approved_at: publish ? now : null,
-        approved_by: publish ? user.id : null,
-        verified,
-        verified_at: verified ? now : null,
-      })
-      .select("id")
-      .single();
+  const inserted = await insertListingWithUniqueSlug(admin, {
+    ...fields,
+    status: publish ? "approved" : "pending",
+    source: "manual",
+    approved_at: publish ? now : null,
+    approved_by: publish ? user.id : null,
+    verified,
+    verified_at: verified ? now : null,
+  });
+  if (inserted.error !== undefined) return { error: inserted.error };
+  const { id } = inserted;
 
-    if (!error) {
-      // Photos follow as their own requests, keyed on this id.
-      if (publish) await revalidateListingById(admin, data.id as string);
-      else revalidatePath("/admin");
-      return { ok: true, id: data.id as string };
-    }
-    if (!error.message.includes("duplicate")) return { error: error.message };
-  }
-  return { error: "Could not create a unique slug — try a different name." };
+  // Photos follow as their own requests, keyed on this id; each upload
+  // revalidates again once it lands.
+  if (publish) await revalidateListingById(admin, id);
+  else revalidatePath("/admin");
+  return { ok: true, id };
 }
-
-
 
 type RevalidateTarget = {
   slug: string;
@@ -269,7 +243,6 @@ async function revalidateListingById(
     .maybeSingle();
   revalidateListing(data as unknown as RevalidateTarget | null);
 }
-
 
 // Photos upload one per request, rather than riding along with the rest of
 // the form.
@@ -339,6 +312,9 @@ export async function uploadListingImage(
   const replacedPath = replaced ? storagePathFromUrl(replaced) : null;
   if (replacedPath) await admin.storage.from("listing-photos").remove([replacedPath]);
 
+  // Photos upload after the record is saved (and revalidated), so without
+  // this a new or replaced photo stayed off the public page for up to an hour.
+  await revalidateListingById(admin, listingId);
   return { url };
 }
 
@@ -350,67 +326,41 @@ export async function updateListing(
   const id = String(fd.get("id") ?? "");
   if (!id) return { error: "Missing listing id." };
 
-  const name = String(fd.get("name") ?? "").trim();
-  const whatsapp = String(fd.get("whatsapp_number") ?? "").trim();
-  const categoryId = String(fd.get("category_id") ?? "");
-  const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
-  const description = String(fd.get("description") ?? "").trim() || null;
-  const pinRaw = String(fd.get("pin_code") ?? "").trim();
-  // Gallery images the admin left ticked. Anything already on the listing
-  // but missing from this list has been removed in the form.
-  const keptGallery = fd.getAll("keep_gallery").map(String);
+  const parsed = parseListingFields(fd);
+  if (parsed.error !== undefined) return { error: parsed.error };
+  const { fields } = parsed;
   const verified = fd.get("verified") === "on";
-
-  if (!name || name.length < 2) return { error: "Name is required." };
-  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
-    return { error: "WhatsApp number must be in international format like +9198…" };
-  if (!categoryId || !neighborhoodId)
-    return { error: "Category and neighborhood are required." };
-  if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 248001)." };
-  const pin_code = pinRaw || null;
 
   const admin = createSupabaseAdminClient();
 
   const { data: existing, error: loadError } = await admin
     .from("listings")
-    .select(
-      "id, slug, verified, verified_at, photo_url, cover_photo_url, gallery_urls, categories(slug), neighborhoods(slug, cities(slug))",
-    )
+    .select(`verified, verified_at, gallery_urls, ${REVALIDATE_TARGET_COLUMNS}`)
     .eq("id", id)
     .maybeSingle();
   if (loadError) return { error: loadError.message };
   if (!existing) return { error: "That listing no longer exists." };
-  const current = existing as unknown as {
-    slug: string;
-    categories: { slug: string } | null;
-    neighborhoods: { slug: string; cities: { slug: string } | null } | null;
+  const current = existing as unknown as RevalidateTarget & {
     verified: boolean;
     verified_at: string | null;
-    photo_url: string | null;
-    cover_photo_url: string | null;
     gallery_urls: string[] | null;
   };
 
-  // Same guard as create, minus this listing — otherwise saving an
-  // unchanged number would report the listing as a duplicate of itself.
-  const dupes = await findDuplicates(admin, { name, whatsapp });
-  const numberMatch = dupes.find(
-    (d) => d.whatsapp_number === whatsapp && d.id !== id,
-  );
-  if (numberMatch)
-    return { error: `That WhatsApp number is already listed as "${numberMatch.name}".` };
+  // Gallery images the admin left ticked. Anything already on the listing
+  // but missing from this list has been removed in the form. Only URLs the
+  // listing already had are honoured, so the form can't add arbitrary ones.
+  const currentGallery = current.gallery_urls ?? [];
+  const kept = new Set(fd.getAll("keep_gallery").map(String));
+  const keptGallery = currentGallery.filter((u) => kept.has(u));
+
+  const dupe = await duplicateNumberError(admin, fields.whatsapp_number, id);
+  if (dupe) return { error: dupe };
 
   const now = new Date().toISOString();
   const { error } = await admin
     .from("listings")
     .update({
-      name,
-      category_id: categoryId,
-      neighborhood_id: neighborhoodId,
-      description,
-      whatsapp_number: whatsapp,
-      pin_code,
+      ...fields,
       verified,
       // Only stamp a fresh verified_at when verification actually flips on,
       // so re-saving a listing doesn't keep moving the date forward.
@@ -418,22 +368,27 @@ export async function updateListing(
       gallery_urls: keptGallery,
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION)
+      return { error: "A listing with this name already exists in that neighborhood." };
+    return { error: error.message };
+  }
 
-  // Clear out images this edit orphaned: gallery entries that were dropped,
-  // plus any cover/grid photo that was replaced. Only files in our own
+  // Clear out gallery images this edit dropped — only files in our own
   // bucket, and only after the row is safely updated.
-  const orphaned = (current.gallery_urls ?? []).filter(
-    (u) => !keptGallery.includes(u),
-  );
-  const paths = orphaned
+  const paths = currentGallery
+    .filter((u) => !kept.has(u))
     .map(storagePathFromUrl)
     .filter((p): p is string => !!p);
   if (paths.length > 0) {
     await admin.storage.from("listing-photos").remove(paths);
   }
 
+  // Purge where the listing was AND where it is now: a changed category or
+  // neighborhood moves it to different browse pages, and purging only the
+  // old ones left it missing from the new ones for up to an hour.
   revalidateListing(current);
+  await revalidateListingById(admin, id);
   return { ok: true, id };
 }
 
@@ -453,25 +408,46 @@ export async function deleteListing(listingId: string): Promise<void> {
     .maybeSingle();
   const target = row as unknown as RevalidateTarget | null;
 
-  // Images first: once the row is gone we've lost the id that scopes them,
-  // and orphaned files would sit in the bucket forever.
+  // Row first, images after: if the delete fails the listing keeps its
+  // photos instead of surviving without them. The {listingId}/ storage
+  // prefix is still known once the row is gone.
+  const { error } = await admin.from("listings").delete().eq("id", listingId);
+  if (error) {
+    console.error("deleteListing failed:", error.message);
+    return;
+  }
   await deleteListingPhotos(admin, listingId);
 
-  const { error } = await admin.from("listings").delete().eq("id", listingId);
-  if (error) console.error("deleteListing failed:", error.message);
-
   revalidateListing(target);
+}
+
+// Name + slug parsing shared by the category and neighborhood forms.
+function parseNameAndSlug(
+  fd: FormData,
+): { name: string; slug: string; error?: undefined } | { error: string } {
+  const name = String(fd.get("name") ?? "").trim();
+  const slugRaw = String(fd.get("slug") ?? "").trim();
+  if (name.length < 2) return { error: "Name is required." };
+  const slug = slugify(slugRaw || name);
+  if (!slug) return { error: "Could not derive a slug from that name — try adding letters." };
+  return { name, slug };
+}
+
+// Categories and neighborhoods feed the home page, the sitemap and the cached
+// taxonomy (see lib/taxonomy), so adding either purges all three.
+function revalidateTaxonomy(adminPath: string) {
+  revalidatePath(adminPath);
+  revalidatePath("/");
+  revalidatePath("/sitemap.xml");
+  revalidateTag(TAXONOMY_TAG);
 }
 
 export async function createCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
   await requireAdmin();
 
-  const name = String(fd.get("name") ?? "").trim();
-  const slugRaw = String(fd.get("slug") ?? "").trim();
-
-  if (!name || name.length < 2) return { error: "Name is required." };
-  const slug = slugify(slugRaw || name);
-  if (!slug) return { error: "Could not derive a slug from that name — try adding letters." };
+  const parsed = parseNameAndSlug(fd);
+  if (parsed.error !== undefined) return { error: parsed.error };
+  const { name, slug } = parsed;
 
   // Icon is auto-assigned from the Lucide set based on the category name —
   // see category-icon-picker.ts. No manual icon input in the admin form.
@@ -480,26 +456,20 @@ export async function createCategory(fd: FormData): Promise<{ error?: string; ok
   const admin = createSupabaseAdminClient();
   const { error } = await admin.from("categories").insert({ name, slug, icon });
   if (error) {
-    if (error.message.includes("duplicate"))
+    if (error.code === UNIQUE_VIOLATION)
       return { error: `A category with slug "${slug}" already exists.` };
     return { error: error.message };
   }
-  revalidatePath("/admin/categories");
-  revalidatePath("/");
-  revalidatePath("/sitemap.xml");
-  revalidateTag(TAXONOMY_TAG);
+  revalidateTaxonomy("/admin/categories");
   return { ok: true };
 }
 
 export async function createNeighborhood(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
   await requireAdmin();
 
-  const name = String(fd.get("name") ?? "").trim();
-  const slugRaw = String(fd.get("slug") ?? "").trim();
-
-  if (!name || name.length < 2) return { error: "Name is required." };
-  const slug = slugify(slugRaw || name);
-  if (!slug) return { error: "Could not derive a slug from that name — try adding letters." };
+  const parsed = parseNameAndSlug(fd);
+  if (parsed.error !== undefined) return { error: parsed.error };
+  const { name, slug } = parsed;
 
   const admin = createSupabaseAdminClient();
   const { data: city, error: cityError } = await admin
@@ -513,13 +483,10 @@ export async function createNeighborhood(fd: FormData): Promise<{ error?: string
     .from("neighborhoods")
     .insert({ city_id: (city as { id: string }).id, name, slug });
   if (error) {
-    if (error.message.includes("duplicate"))
+    if (error.code === UNIQUE_VIOLATION)
       return { error: `A neighborhood with slug "${slug}" already exists.` };
     return { error: error.message };
   }
-  revalidatePath("/admin/neighborhoods");
-  revalidatePath("/");
-  revalidatePath("/sitemap.xml");
-  revalidateTag(TAXONOMY_TAG);
+  revalidateTaxonomy("/admin/neighborhoods");
   return { ok: true };
 }

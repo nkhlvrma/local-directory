@@ -2,24 +2,20 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isMockMode } from "@/lib/supabase/mock";
-import { slugify } from "@/lib/slug";
 import { verifyTurnstile } from "@/lib/turnstile";
-import { isValidPin } from "@/lib/pin";
-import { findDuplicates } from "@/lib/dupes";
+import { findListingByWhatsapp } from "@/lib/dupes";
 import { uploadListingPhoto } from "@/lib/listing-photo";
+import {
+  insertListingWithUniqueSlug,
+  parseListingFields,
+  validateImage,
+} from "@/lib/listing-input";
 
 export async function submitListing(fd: FormData) {
-  const name = String(fd.get("name") ?? "").trim();
-  const whatsapp = String(fd.get("whatsapp_number") ?? "").trim();
-  const categoryId = String(fd.get("category_id") ?? "");
-  const neighborhoodId = String(fd.get("neighborhood_id") ?? "");
-  const description = String(fd.get("description") ?? "").trim() || null;
-  const pinRaw = String(fd.get("pin_code") ?? "").trim();
-  const consent = fd.get("consent");
   const turnstileToken = fd.get("cf-turnstile-response");
   const photo = fd.get("photo");
 
-  if (consent !== "on")
+  if (fd.get("consent") !== "on")
     return { error: "You must agree to the listing terms before submitting." };
 
   const passed = await verifyTurnstile(
@@ -28,67 +24,43 @@ export async function submitListing(fd: FormData) {
   if (!passed)
     return { error: "Bot check failed. Refresh the page and try again." };
 
-  if (!name || name.length < 2) return { error: "Name is required." };
-  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp))
-    return { error: "WhatsApp number must be in international format like +9198…" };
-  if (!categoryId || !neighborhoodId)
-    return { error: "Category and neighborhood are required." };
-  if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 248001)." };
-  const pin_code = pinRaw || null;
+  const parsed = parseListingFields(fd);
+  if (parsed.error !== undefined) return { error: parsed.error };
+  const { fields } = parsed;
 
-  const hasPhoto = photo instanceof File && photo.size > 0;
-  if (hasPhoto) {
-    const file = photo as File;
-    if (!file.type.startsWith("image/"))
-      return { error: "Photo must be an image file." };
-    if (file.size > 5 * 1024 * 1024)
-      return { error: "Photo must be under 5MB." };
-  }
+  const photoError = validateImage(photo, "Photo");
+  if (photoError) return { error: photoError };
 
-  const base = slugify(name);
   const admin = createSupabaseAdminClient();
 
-  // Dupe warning: if the WhatsApp number matches an existing listing
-  // exactly, refuse. Name-similarity we let through (admin can catch it).
-  const dupes = await findDuplicates(admin, { name, whatsapp });
-  const numberMatch = dupes.find((d) => d.whatsapp_number === whatsapp);
-  if (numberMatch) {
+  // One listing per WhatsApp number. Name-similarity we let through (admin
+  // can catch it at review).
+  const { hit, error: lookupError } = await findListingByWhatsapp(
+    admin,
+    fields.whatsapp_number,
+  );
+  if (lookupError) return { error: "Something went wrong — please try again." };
+  if (hit) {
     return {
-      error: `That WhatsApp is already listed as "${numberMatch.name}". If this is you, contact us to update it.`,
+      error: `That WhatsApp is already listed as "${hit.name}". If this is you, contact us to update it.`,
     };
   }
 
-  for (let i = 0; i < 20; i++) {
-    const slug = i === 0 ? base : `${base}-${i + 1}`;
-    const { data, error } = await admin
-      .from("listings")
-      .insert({
-        name,
-        slug,
-        category_id: categoryId,
-        neighborhood_id: neighborhoodId,
-        description,
-        whatsapp_number: whatsapp,
-        pin_code,
-        status: "pending",
-        source: "self_serve",
-      })
-      .select("id")
-      .single();
+  const inserted = await insertListingWithUniqueSlug(admin, {
+    ...fields,
+    status: "pending",
+    source: "self_serve",
+  });
+  if (inserted.error !== undefined) return { error: inserted.error };
+  const { id } = inserted;
 
-    if (!error) {
-      if (hasPhoto && !isMockMode()) {
-        // Photo upload is best-effort: a failure here shouldn't fail the
-        // whole submission — the business is still listed, just photo-less.
-        const uploaded = await uploadListingPhoto(admin, data.id, photo as File);
-        if (uploaded) {
-          await admin.from("listings").update({ photo_url: uploaded }).eq("id", data.id);
-        }
-      }
-      return { ok: true };
+  if (photo instanceof File && photo.size > 0 && !isMockMode()) {
+    // Photo upload is best-effort: a failure here shouldn't fail the
+    // whole submission — the business is still listed, just photo-less.
+    const uploaded = await uploadListingPhoto(admin, id, photo);
+    if (uploaded) {
+      await admin.from("listings").update({ photo_url: uploaded }).eq("id", id);
     }
-    if (!error.message.includes("duplicate")) return { error: error.message };
   }
-  return { error: "Could not create a unique slug — try a different name." };
+  return { ok: true };
 }

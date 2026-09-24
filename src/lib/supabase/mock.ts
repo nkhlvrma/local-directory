@@ -19,18 +19,47 @@ function getPath(row: Row, path: string): unknown {
   }, row);
 }
 
+// Split an or() string on the commas that separate clauses, leaving commas
+// inside a double-quoted value alone (see ilikeAnyFilter).
+function splitClauses(spec: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < spec.length; i++) {
+    const ch = spec[i];
+    if (ch === "\\" && quoted) {
+      cur += ch + (spec[++i] ?? "");
+    } else if (ch === '"') {
+      quoted = !quoted;
+      cur += ch;
+    } else if (ch === "," && !quoted) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map((c) => c.trim()).filter(Boolean);
+}
+
 // Parse a Supabase-style .or() filter string like
-//   "name.ilike.%tiffin%,description.ilike.%tiffin%"
+//   name.ilike."%tiffin%",description.ilike."%tiffin%"
 // into a single row predicate. Only the ilike operator is supported; other
 // clauses become always-false so results shrink safely rather than lying.
 function parseOr(spec: string): (r: Row) => boolean {
-  const clauses = spec.split(",").map((c) => c.trim()).filter(Boolean);
-  const preds = clauses.map((c) => {
+  const preds = splitClauses(spec).map((c) => {
     const m = /^([^.]+)\.ilike\.(.+)$/.exec(c);
     if (!m) return () => false;
     const col = m[1];
-    // Strip %...% wildcards for a contains check.
-    const needle = m[2].replace(/^%|%$/g, "").toLowerCase();
+    let value = m[2];
+    if (value.startsWith('"') && value.endsWith('"'))
+      value = value.slice(1, -1).replace(/\\(.)/g, "$1");
+    // Strip %...% wildcards and LIKE escapes for a plain contains check.
+    const needle = value
+      .replace(/^%|%$/g, "")
+      .replace(/\\(.)/g, "$1")
+      .toLowerCase();
     return (r: Row) => {
       const v = getPath(r, col);
       return typeof v === "string" && v.toLowerCase().includes(needle);
