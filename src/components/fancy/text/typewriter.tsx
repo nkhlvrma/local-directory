@@ -1,7 +1,6 @@
 "use client"
 
 import { ElementType, useEffect, useMemo, useState } from "react"
-import { motion, Variants } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -71,14 +70,6 @@ interface TypewriterProps {
   cursorChar?: string | React.ReactNode
 
   /**
-   * Animation variants for cursor
-   */
-  cursorAnimationVariants?: {
-    initial: Variants["initial"]
-    animate: Variants["animate"]
-  }
-
-  /**
    * Optional class name for cursor styling
    */
   cursorClassName?: string
@@ -97,18 +88,6 @@ const Typewriter = ({
   hideCursorOnType = false,
   cursorChar = "|",
   cursorClassName = "ml-1",
-  cursorAnimationVariants = {
-    initial: { opacity: 0 },
-    animate: {
-      opacity: 1,
-      transition: {
-        duration: 0.01,
-        repeat: Infinity,
-        repeatDelay: 0.4,
-        repeatType: "reverse",
-      },
-    },
-  },
   ...props
 }: TypewriterProps & React.HTMLAttributes<HTMLElement>) => {
   const [displayText, setDisplayText] = useState("")
@@ -177,20 +156,18 @@ const Typewriter = ({
     <Tag className={cn("inline whitespace-pre-wrap tracking-tight", className)} {...props}>
       <span>{displayText}</span>
       {showCursor && (
-        <motion.span
-          variants={cursorAnimationVariants}
+        <span
           className={cn(
+            "animate-cursor-blink",
             cursorClassName,
             hideCursorOnType &&
               (currentIndex < texts[currentTextIndex].length || isDeleting)
               ? "hidden"
               : ""
           )}
-          initial="initial"
-          animate="animate"
         >
           {cursorChar}
-        </motion.span>
+        </span>
       )}
     </Tag>
   )

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { contactActionClass } from "@/components/contact-action";
-import { UploadIcon, type UploadIconHandle } from "@/components/ui/upload";
-import { CheckIcon, type CheckIconHandle } from "@/components/ui/check";
+import { Check, Upload } from "lucide-react";
+import type { UploadIconHandle } from "@/components/ui/upload";
+import type { CheckIconHandle } from "@/components/ui/check";
+import { useContactIcons } from "@/components/ui/contact-icons";
 import { trackEvent } from "@/lib/analytics-client";
 
 export function ShareButton({
@@ -21,6 +23,7 @@ export function ShareButton({
   iconOnly?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const icons = useContactIcons();
   const icon = useRef<UploadIconHandle>(null);
   const check = useRef<CheckIconHandle>(null);
 
@@ -29,7 +32,7 @@ export function ShareButton({
   // it off when the copied state swaps it in.
   useEffect(() => {
     if (copied) check.current?.startAnimation();
-  }, [copied]);
+  }, [copied, icons]);
 
   async function onClick() {
     trackEvent("share_clicked", { listingId, metadata: { title } });
@@ -66,9 +69,15 @@ export function ShareButton({
       onMouseLeave={() => icon.current?.stopAnimation()}
     >
       {copied ? (
-        <CheckIcon ref={check} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
+        icons ? (
+          <icons.CheckIcon ref={check} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
+        ) : (
+          <Check size={20} data-icon={iconOnly ? undefined : "inline-start"} />
+        )
+      ) : icons ? (
+        <icons.UploadIcon ref={icon} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
       ) : (
-        <UploadIcon ref={icon} size={20} data-icon={iconOnly ? undefined : "inline-start"} />
+        <Upload size={20} data-icon={iconOnly ? undefined : "inline-start"} />
       )}
       {iconOnly ? null : copied ? "Link copied" : "Share"}
     </Button>

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
+import { getActiveCity } from "@/lib/taxonomy";
 import { ListingGridCard } from "@/components/ListingGridCard";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyResults } from "@/components/EmptyResults";
@@ -35,11 +36,9 @@ export default async function SearchPage(
   const pin = (await cookies()).get("pin")?.value ?? "";
   const pinFilter = isValidPin(pin) ? pin : null;
 
-  const { data: city } = await supabase
-    .from("cities")
-    .select("id, name, slug")
-    .eq("slug", CITY_SLUG)
-    .maybeSingle();
+  // Cached across requests — the city row is the same for everyone, and a
+  // per-search round-trip for it sat in front of every result page.
+  const city = await getActiveCity();
 
   type Row = ListingCardRow & {
     neighborhoods: { name: string; slug: string; city_id: string };

@@ -31,7 +31,9 @@ type Params = {
   listing: string;
 };
 
-export const revalidate = 300;
+// Admin actions purge these pages on every change (revalidateListing), so
+// this is only a backstop for anything that changes outside the admin UI.
+export const revalidate = 3600;
 
 // Prerender the approved listings that exist at build time so the pages that
 // carry the long-tail search traffic are warm instead of cold on first hit.

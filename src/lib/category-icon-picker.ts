@@ -1,11 +1,7 @@
-// Import the plain data module directly rather than "lucide-react/dynamic" —
-// that entry point also bundles the client-only DynamicIcon component, and
-// pulling it into this server-only file (imported from a "use server"
-// action) makes Next's server/client boundary handling mangle the iconNames
-// export into something without a working .includes at runtime.
-import dynamicIconImports from "lucide-react/dynamicIconImports";
-
-const ICON_NAMES = new Set(Object.keys(dynamicIconImports));
+// Validate against the icons the UI can actually draw (category-icons.ts),
+// not the full Lucide set: anything outside that map would store fine and
+// then render as a fallback dot.
+import { CATEGORY_ICON_NAMES as ICON_NAMES } from "@/lib/category-icons";
 
 // Server-side only (uses the full 2000+ icon dynamic-import registry).
 // Auto-assigns a Lucide icon to a category at creation time, so admins never
@@ -14,10 +10,10 @@ const ICON_NAMES = new Set(Object.keys(dynamicIconImports));
 // curated dictionary of local-service terms, falling back to a generic
 // storefront icon when nothing matches.
 //
-// Stored value is the icon's kebab-case Lucide name (e.g. "wrench"), valid
-// input to <DynamicIcon name=.../> from "lucide-react/dynamic". Any name
-// picked here is verified against the real icon set before being returned,
-// so a bad keyword mapping can never produce a broken icon.
+// Stored value is the icon's kebab-case Lucide name (e.g. "wrench"), which
+// CategoryIcon resolves through CATEGORY_ICONS. Any name picked here is
+// verified against that map before being returned, so a bad keyword mapping
+// can never produce a broken icon.
 
 const KEYWORD_ICONS: [pattern: RegExp, icon: string][] = [
   [/tiffin|catering|caterer|meal|food\s*delivery|lunch/, "utensils-crossed"],

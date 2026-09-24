@@ -3,7 +3,9 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { contactActionClass } from "@/components/contact-action";
-import { PhoneCallIcon, type PhoneCallIconHandle } from "@/components/ui/phone-call";
+import { PhoneCall } from "lucide-react";
+import type { PhoneCallIconHandle } from "@/components/ui/phone-call";
+import { useContactIcons } from "@/components/ui/contact-icons";
 
 type Props = {
   listingId: string;
@@ -21,6 +23,7 @@ type Props = {
 // icon's, so it fires anywhere on the control instead of only when the
 // pointer happens to cross the glyph itself.
 export function CallButton({ listingId, className, iconOnly }: Props) {
+  const icons = useContactIcons();
   const icon = useRef<PhoneCallIconHandle>(null);
 
   return (
@@ -39,11 +42,15 @@ export function CallButton({ listingId, className, iconOnly }: Props) {
         aria-label={iconOnly ? "Call" : undefined}
         title={iconOnly ? "Call" : undefined}
       >
-        <PhoneCallIcon
-          ref={icon}
-          size={20}
-          data-icon={iconOnly ? undefined : "inline-start"}
-        />
+        {icons ? (
+          <icons.PhoneCallIcon
+            ref={icon}
+            size={20}
+            data-icon={iconOnly ? undefined : "inline-start"}
+          />
+        ) : (
+          <PhoneCall size={20} data-icon={iconOnly ? undefined : "inline-start"} />
+        )}
         {iconOnly ? null : "Call"}
       </a>
     </Button>

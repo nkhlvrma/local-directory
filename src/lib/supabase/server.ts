@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createMockSupabaseClient, isMockMode } from "./mock";
+import { fetchWithTimeout, QUERY_TIMEOUT_MS } from "./fetch";
 
 export async function createSupabaseServerClient() {
   if (isMockMode()) {
@@ -14,6 +15,7 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: fetchWithTimeout(QUERY_TIMEOUT_MS) },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -62,6 +64,9 @@ export function createSupabaseStaticClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
+    {
+      auth: { persistSession: false },
+      global: { fetch: fetchWithTimeout(QUERY_TIMEOUT_MS) },
+    },
   ) as unknown as ReturnType<typeof createServerClient>;
 }

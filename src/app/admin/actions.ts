@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/listing-photo";
 import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
+import { TAXONOMY_TAG } from "@/lib/taxonomy";
 import { requestOrigin } from "@/lib/request-origin";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
@@ -111,7 +112,7 @@ export async function approveListing(listingId: string): Promise<void> {
     .update({ status: "approved", approved_at: new Date().toISOString(), approved_by: user.id })
     .eq("id", listingId);
   if (error) console.error("approveListing failed:", error.message);
-  revalidatePath("/admin");
+  await revalidateListingById(admin, listingId);
 }
 
 export async function rejectListing(listingId: string): Promise<void> {
@@ -122,7 +123,7 @@ export async function rejectListing(listingId: string): Promise<void> {
     .update({ status: "rejected" })
     .eq("id", listingId);
   if (error) console.error("rejectListing failed:", error.message);
-  revalidatePath("/admin");
+  await revalidateListingById(admin, listingId);
 }
 
 export async function setVerified(listingId: string, verified: boolean): Promise<void> {
@@ -133,7 +134,7 @@ export async function setVerified(listingId: string, verified: boolean): Promise
     .update({ verified, verified_at: verified ? new Date().toISOString() : null })
     .eq("id", listingId);
   if (error) console.error("setVerified failed:", error.message);
-  revalidatePath("/admin");
+  await revalidateListingById(admin, listingId);
 }
 
 export async function dismissReport(reportId: string): Promise<void> {
@@ -214,7 +215,8 @@ export async function createListing(
 
     if (!error) {
       // Photos follow as their own requests, keyed on this id.
-      revalidatePath("/admin");
+      if (publish) await revalidateListingById(admin, data.id as string);
+      else revalidatePath("/admin");
       return { ok: true, id: data.id as string };
     }
     if (!error.message.includes("duplicate")) return { error: error.message };
@@ -247,6 +249,25 @@ function revalidateListing(target: RevalidateTarget | null) {
     revalidatePath(`/${city}/c/${category}`);
     revalidatePath(`/${city}/n/${hood}`);
   }
+  revalidatePath("/sitemap.xml");
+}
+
+const REVALIDATE_TARGET_COLUMNS =
+  "slug, categories(slug), neighborhoods(slug, cities(slug))";
+
+// Public pages cache for an hour, so any change that alters what they show
+// has to purge them here — otherwise an approval or a verified badge would
+// take up to that long to appear.
+async function revalidateListingById(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  listingId: string,
+) {
+  const { data } = await admin
+    .from("listings")
+    .select(REVALIDATE_TARGET_COLUMNS)
+    .eq("id", listingId)
+    .maybeSingle();
+  revalidateListing(data as unknown as RevalidateTarget | null);
 }
 
 
@@ -427,7 +448,7 @@ export async function deleteListing(listingId: string): Promise<void> {
   // public pages this listing appeared on.
   const { data: row } = await admin
     .from("listings")
-    .select("slug, categories(slug), neighborhoods(slug, cities(slug))")
+    .select(REVALIDATE_TARGET_COLUMNS)
     .eq("id", listingId)
     .maybeSingle();
   const target = row as unknown as RevalidateTarget | null;
@@ -464,6 +485,9 @@ export async function createCategory(fd: FormData): Promise<{ error?: string; ok
     return { error: error.message };
   }
   revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/sitemap.xml");
+  revalidateTag(TAXONOMY_TAG);
   return { ok: true };
 }
 
@@ -494,5 +518,8 @@ export async function createNeighborhood(fd: FormData): Promise<{ error?: string
     return { error: error.message };
   }
   revalidatePath("/admin/neighborhoods");
+  revalidatePath("/");
+  revalidatePath("/sitemap.xml");
+  revalidateTag(TAXONOMY_TAG);
   return { ok: true };
 }
