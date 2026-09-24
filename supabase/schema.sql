@@ -246,23 +246,23 @@ create policy "admin read analytics_events" on analytics_events for select using
 -- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------
--- Seed — Lucknow + 5 neighborhoods + the category taxonomy
+-- Seed — Dehradun + 5 neighborhoods + the category taxonomy
 -- ---------------------------------------------------------------------------
 
-insert into cities (name, slug) values ('Lucknow', 'lucknow')
+insert into cities (name, slug) values ('Dehradun', 'dehradun')
   on conflict (slug) do nothing;
 
 insert into neighborhoods (city_id, name, slug)
 select c.id, n.name, n.slug
 from cities c,
      (values
-       ('Gomti Nagar','gomti-nagar'),
-       ('Hazratganj','hazratganj'),
-       ('Aliganj','aliganj'),
-       ('Indira Nagar','indira-nagar'),
-       ('Alambagh','alambagh')
+       ('Rajpur Road','rajpur-road'),
+       ('Dalanwala','dalanwala'),
+       ('Vasant Vihar','vasant-vihar'),
+       ('Prem Nagar','prem-nagar'),
+       ('Clement Town','clement-town')
      ) as n(name, slug)
-where c.slug = 'lucknow'
+where c.slug = 'dehradun'
 on conflict (city_id, slug) do nothing;
 
 insert into categories (name, slug, icon) values

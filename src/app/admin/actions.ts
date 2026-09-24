@@ -178,7 +178,7 @@ export async function createListing(
   if (!categoryId || !neighborhoodId)
     return { error: "Category and neighborhood are required." };
   if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+    return { error: "PIN code must be 6 digits (e.g. 248001)." };
   const pin_code = pinRaw || null;
 
   const admin = createSupabaseAdminClient();
@@ -367,7 +367,7 @@ export async function updateListing(
   if (!categoryId || !neighborhoodId)
     return { error: "Category and neighborhood are required." };
   if (pinRaw && !isValidPin(pinRaw))
-    return { error: "PIN code must be 6 digits (e.g. 226010)." };
+    return { error: "PIN code must be 6 digits (e.g. 248001)." };
   const pin_code = pinRaw || null;
 
   const admin = createSupabaseAdminClient();

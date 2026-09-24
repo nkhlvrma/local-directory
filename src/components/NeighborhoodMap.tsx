@@ -37,7 +37,7 @@ export function NeighborhoodMap({
     const el = container.current;
     if (!el) return;
 
-    const map = CITY_MAPS[citySlug] ?? CITY_MAPS.lucknow;
+    const map = CITY_MAPS[citySlug] ?? CITY_MAPS.dehradun;
     const pinned = neighborhoods.filter(
       (n): n is MapNeighborhood & { latitude: number; longitude: number } =>
         typeof n.latitude === "number" && typeof n.longitude === "number",
