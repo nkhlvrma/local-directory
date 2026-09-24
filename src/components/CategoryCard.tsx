@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnimatedCategoryIcon } from "./AnimatedCategoryIcon";
+import { AnimatedCategoryIconLazy } from "./AnimatedCategoryIconLazy";
 
 export function CategoryCard({
   slug,
@@ -49,7 +49,7 @@ export function CategoryCard({
                 : "bg-muted text-muted-foreground"
             }`}
           >
-            <AnimatedCategoryIcon slug={slug} icon={icon} animating={hover} size={20} />
+            <AnimatedCategoryIconLazy slug={slug} icon={icon} animating={hover} size={20} />
           </span>
           <span className="text-sm font-semibold leading-tight whitespace-nowrap">{name}</span>
         </CardContent>

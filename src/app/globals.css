@@ -189,3 +189,26 @@ html {
     transform: none;
   }
 }
+/* Typewriter caret. Was a Motion variant (opacity flip on an infinite
+   reversing repeat), which pulled the whole animation library into the home
+   page's first load for a blinking bar. Same 0.4s-on/0.4s-off rhythm, no JS. */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-cursor-blink {
+  animation: cursor-blink 0.8s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cursor-blink {
+    animation: none;
+  }
+}

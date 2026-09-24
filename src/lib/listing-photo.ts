@@ -17,7 +17,14 @@ export async function uploadListingPhoto(
   const path = `${listingId}/${kind}-${Date.now()}.${ext}`;
   const { error } = await admin.storage
     .from("listing-photos")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    // The path is timestamped and never overwritten (upsert: false), so the
+    // object is immutable — let browsers and the image optimizer cache it
+    // for a year instead of Supabase's 1-hour default.
+    .upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+      cacheControl: "31536000",
+    });
   if (error) return null;
   const { data } = admin.storage.from("listing-photos").getPublicUrl(path);
   return data.publicUrl;

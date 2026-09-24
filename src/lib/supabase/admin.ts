@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createMockSupabaseClient, isMockMode } from "./mock";
+import { fetchWithTimeout, UPLOAD_TIMEOUT_MS } from "./fetch";
 
 // Server-only client that uses the service-role key. NEVER import from a
 // client component. Use only inside server actions / route handlers where
@@ -14,6 +15,9 @@ export function createSupabaseAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
+    {
+      auth: { persistSession: false },
+      global: { fetch: fetchWithTimeout(UPLOAD_TIMEOUT_MS) },
+    },
   );
 }

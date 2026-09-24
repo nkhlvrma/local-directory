@@ -1,14 +1,12 @@
-"use client";
-
 // Static Lucide icon — kept for headings on category pages where hover
 // animation doesn't fit (single icon next to a heading, no card container).
 // The animated version lives in AnimatedCategoryIcon.tsx and is used
 // on the home grid.
 //
-// Must be a client component: DynamicIcon (lucide-react/dynamic) is
-// client-only, and its `fallback` prop is a function — functions can't be
-// passed as props from a Server Component to a Client Component, so the
-// boundary has to be here rather than at DynamicIcon itself.
+// Renders on the server: resolving the DB icon name through the static
+// CATEGORY_ICONS map (rather than <DynamicIcon>, which is client-only and
+// carries the whole icon registry) means a listing grid ships no JavaScript
+// for its icons at all.
 
 import {
   UtensilsCrossed,
@@ -22,7 +20,7 @@ import {
   Dot,
   type LucideIcon,
 } from "lucide-react";
-import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
 
 const MAP: Record<string, LucideIcon> = {
   "tiffin-services": UtensilsCrossed,
@@ -34,6 +32,13 @@ const MAP: Record<string, LucideIcon> = {
   "car-bike-repair": Car,
   salons: Building2,
 };
+
+// Seeded categories store an emoji in `icon` rather than a Lucide name
+// (see schema.sql). Anything that isn't a known icon name but is short and
+// non-ASCII is shown as-is instead of falling through to the dot.
+export function isEmojiIcon(icon?: string | null): icon is string {
+  return !!icon && icon.length <= 4 && /\p{Extended_Pictographic}/u.test(icon);
+}
 
 export function CategoryIcon({
   slug,
@@ -49,16 +54,13 @@ export function CategoryIcon({
   size?: number;
   strokeWidth?: number;
 }) {
-  const Icon = MAP[slug];
+  const Icon = MAP[slug] ?? CATEGORY_ICONS[icon ?? ""];
   if (Icon) return <Icon size={size} strokeWidth={strokeWidth} />;
-  if (icon)
+  if (isEmojiIcon(icon))
     return (
-      <DynamicIcon
-        name={icon as IconName}
-        size={size}
-        strokeWidth={strokeWidth}
-        fallback={() => <Dot size={size} strokeWidth={strokeWidth} />}
-      />
+      <span aria-hidden style={{ fontSize: size, lineHeight: 1 }}>
+        {icon}
+      </span>
     );
   return <Dot size={size} strokeWidth={strokeWidth} />;
 }

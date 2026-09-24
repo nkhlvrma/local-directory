@@ -61,6 +61,28 @@ Unit tests cover the pure logic in `src/lib` — opening hours (including
 windows that cross midnight), PIN validation, slugs, WhatsApp link building,
 browse-page filtering, and the rate limiter.
 
+## Caching
+
+Public pages are prerendered and served from the edge; only `/search`,
+`/report` and `/admin/*` run per request.
+
+Freshness comes from purging, not from waiting: every admin action that
+changes what a visitor sees (approve, reject, verify, edit, delete, and
+adding a category or neighborhood) revalidates exactly the affected paths,
+and the category/neighborhood lists are cached by the `taxonomy` tag. The
+one-hour `revalidate` on those pages is only a backstop for changes made
+outside the admin UI — for example, editing a row straight in Supabase,
+which will take up to an hour to appear.
+
+Listing photos upload with a one-year `Cache-Control` under a timestamped
+path that is never overwritten, so `images.minimumCacheTTL` is long too. A
+new photo gets a new URL.
+
+Server-side Supabase clients carry a request timeout (`lib/supabase/fetch.ts`)
+so an outage fails fast instead of holding a function open, and `unwrap()`
+turns a failed query on a cached page into a thrown error, which keeps the
+last good copy in place rather than caching an empty one.
+
 ## Routes
 
 | Path | Purpose |

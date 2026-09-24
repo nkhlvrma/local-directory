@@ -63,7 +63,7 @@ export default async function Home() {
               browser only ever fetches the one variant that actually
               applies, instead of downloading all four. */}
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[2px] scale-105 bg-[url('/daytimePortrait.jpg')] sm:bg-[url('/daytimeCover.jpg')] dark:bg-[url('/dusktimePortrait.jpg')] dark:sm:bg-[url('/dusktimeCover.jpg')]"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[2px] scale-105 bg-[url('/daytimePortrait.webp')] sm:bg-[url('/daytimeCover.webp')] dark:bg-[url('/dusktimePortrait.webp')] dark:sm:bg-[url('/dusktimeCover.webp')]"
           />
           <div className="absolute inset-0 bg-black/45" />
         </div>

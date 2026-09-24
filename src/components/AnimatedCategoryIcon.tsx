@@ -10,7 +10,8 @@
 
 import { motion, useAnimation, type Variants } from "motion/react";
 import { useEffect, useRef } from "react";
-import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
+import { isEmojiIcon } from "./CategoryIcon";
 import { SmileIcon, type SmileIconHandle } from "@/components/ui/smile";
 
 // ---------------------------------------------------------------------------
@@ -404,9 +405,15 @@ export function AnimatedCategoryIcon({
 }) {
   const Icon = MAP[slug];
   if (Icon) return <Icon animating={animating} size={size} />;
-  if (icon)
+  // No hand-authored animation for this category: fall back to the static
+  // Lucide icon, or the seeded emoji, rendered without motion.
+  const Static = CATEGORY_ICONS[icon ?? ""];
+  if (Static) return <Static size={size} />;
+  if (isEmojiIcon(icon))
     return (
-      <DynamicIcon name={icon as IconName} size={size} fallback={() => <DotIcon size={size} />} />
+      <span aria-hidden style={{ fontSize: size, lineHeight: 1 }}>
+        {icon}
+      </span>
     );
   return <DotIcon size={size} />;
 }

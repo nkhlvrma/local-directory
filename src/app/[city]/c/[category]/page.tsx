@@ -18,7 +18,9 @@ type Params = { city: string; category: string };
 // the PIN cookie) moved to the client so the HTML can be prerendered — see
 // lib/listing-filters. `dynamicParams` stays on by default, so a category
 // added after the last build still renders on demand.
-export const revalidate = 300;
+// Admin actions purge these pages on every change (revalidateListing), so
+// this is only a backstop for anything that changes outside the admin UI.
+export const revalidate = 3600;
 
 export async function generateStaticParams(): Promise<Params[]> {
   const supabase = createSupabaseStaticClient();

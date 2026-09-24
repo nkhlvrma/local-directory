@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatedCategoryIcon } from "./AnimatedCategoryIcon";
+import { AnimatedCategoryIconLazy } from "./AnimatedCategoryIconLazy";
 
 // Replays the category icon's hover animation on a loop. Used where there's
 // no hover surface to drive AnimatedCategoryIcon naturally (e.g. a page
@@ -38,5 +38,5 @@ export function LoopingCategoryIcon({
     };
   }, []);
 
-  return <AnimatedCategoryIcon slug={slug} icon={icon} animating={animating} size={size} />;
+  return <AnimatedCategoryIconLazy slug={slug} icon={icon} animating={animating} size={size} />;
 }
