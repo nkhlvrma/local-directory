@@ -7,11 +7,11 @@ const cities: Row[] = [
 ];
 
 const neighborhoods: Row[] = [
-  { id: "n1", city_id: "c1", name: "Rajpur Road", slug: "rajpur-road" },
-  { id: "n2", city_id: "c1", name: "Dalanwala", slug: "dalanwala" },
-  { id: "n3", city_id: "c1", name: "Vasant Vihar", slug: "vasant-vihar" },
-  { id: "n4", city_id: "c1", name: "Prem Nagar", slug: "prem-nagar" },
-  { id: "n5", city_id: "c1", name: "Clement Town", slug: "clement-town" },
+  { id: "n1", city_id: "c1", name: "Rajpur Road", slug: "rajpur-road", latitude: 30.344, longitude: 78.062 },
+  { id: "n2", city_id: "c1", name: "Dalanwala", slug: "dalanwala", latitude: 30.3225, longitude: 78.056 },
+  { id: "n3", city_id: "c1", name: "Vasant Vihar", slug: "vasant-vihar", latitude: 30.3215, longitude: 77.9935 },
+  { id: "n4", city_id: "c1", name: "Prem Nagar", slug: "prem-nagar", latitude: 30.334, longitude: 77.958 },
+  { id: "n5", city_id: "c1", name: "Clement Town", slug: "clement-town", latitude: 30.269, longitude: 78.009 },
 ];
 
 // Tiffin has a starter fields_schema so /admin/categories has something to
@@ -38,11 +38,11 @@ const categories: Row[] = [
   { id: "k8", name: "Salons", slug: "salons", icon: "💇", fields_schema: null },
 ];
 
-// Unsplash source images (free, cached).
-const IMG_TIFFIN_1 =
-  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop";
-const IMG_TIFFIN_2 =
-  "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800&auto=format&fit=crop";
+// Local images from /public, so demo mode needs no remote image host (the
+// Unsplash URLs used before aren't in next.config's allow list, which made
+// every demo listing page with a photo crash).
+const IMG_TIFFIN_1 = "/daytimePortrait.webp";
+const IMG_TIFFIN_2 = "/dusktimePortrait.webp";
 
 const listings: Row[] = [
   {

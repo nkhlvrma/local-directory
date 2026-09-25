@@ -1,21 +1,19 @@
-import { DAYS, DAY_LABEL, formatDay } from "@/lib/hours";
+"use client";
+
+import { DAYS, DAY_LABEL, currentDayIn, formatDay } from "@/lib/hours";
+import { useMinuteClock } from "@/lib/use-minute-clock";
 import type { WeekHours } from "@/lib/types";
 
-// Day index: 0 = Sunday … 6 = Saturday. DAYS array uses 3-letter keys.
-const DAY_TO_INDEX: Record<string, number> = {
-  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
-};
-
 export function HoursTable({ hours }: { hours: WeekHours }) {
-  // We resolve today's day in a way that works server-side (no window).
-  // getDay() returns 0–6 starting Sunday, matching DAY_TO_INDEX above.
-  const todayIndex =
-    typeof Date !== "undefined" ? new Date().getDay() : -1;
+  // "Today" is the business's day in IST, resolved in the browser. Computing
+  // it during render used the server's clock (UTC on Vercel — the wrong day
+  // before 05:30 IST) and then cached it with the page for up to an hour.
+  const today = useMinuteClock(() => currentDayIn().day);
 
   return (
     <div className="rounded-xl border border-border/70 overflow-hidden">
       {DAYS.map((d, i) => {
-        const isToday = DAY_TO_INDEX[d] === todayIndex;
+        const isToday = d === today;
         return (
           <div
             key={d}

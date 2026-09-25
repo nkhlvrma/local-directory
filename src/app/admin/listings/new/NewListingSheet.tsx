@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { ListingForm } from "../ListingForm";
+import { ListingForm, type CategoryOption } from "../ListingForm";
 
 type Option = { id: string; name: string };
 
@@ -20,7 +20,7 @@ export function NewListingSheet({
   categories,
   neighborhoods,
 }: {
-  categories: Option[];
+  categories: CategoryOption[];
   neighborhoods: Option[];
 }) {
   const router = useRouter();

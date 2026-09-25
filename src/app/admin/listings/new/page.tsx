@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG } from "@/lib/site";
 import { AdminShell } from "../../AdminShell";
 import { NewListingSheet } from "./NewListingSheet";
+import type { CategoryOption } from "../ListingForm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function AdminNewListingPage() {
   // more than usual given the cross-region latency (Supabase ap-south-1,
   // this runs on Vercel iad1).
   const [{ data: categories }, { data: neighborhoods }] = await Promise.all([
-    admin.from("categories").select("id, name").order("name"),
+    admin.from("categories").select("id, name, fields_schema").order("name"),
     admin
       .from("neighborhoods")
       .select("id, name, cities!inner(slug)")
@@ -27,7 +28,7 @@ export default async function AdminNewListingPage() {
   return (
     <AdminShell title="Admin Dashboard" description="Create a listing directly.">
       <NewListingSheet
-        categories={(categories ?? []) as { id: string; name: string }[]}
+        categories={(categories ?? []) as CategoryOption[]}
         neighborhoods={(neighborhoods ?? []) as { id: string; name: string }[]}
       />
     </AdminShell>

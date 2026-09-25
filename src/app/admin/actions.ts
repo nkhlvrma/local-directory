@@ -22,6 +22,9 @@ import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 import { TAXONOMY_TAG } from "@/lib/taxonomy";
 import { requestOrigin } from "@/lib/request-origin";
+import { parseHoursInput } from "@/lib/hours";
+import { parseFieldsSchemaInput, parseFieldValuesInput } from "@/lib/category-fields";
+import type { FieldDef } from "@/lib/types";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
 const MAX_GALLERY_PHOTOS = 4;
@@ -164,6 +167,33 @@ async function duplicateNumberError(
   return hit ? `That WhatsApp number is already listed as "${hit.name}".` : null;
 }
 
+// Hours and category-specific values — the admin-only parts of a listing.
+// Field values are checked against the schema of the category the listing is
+// being saved into, which is loaded here rather than trusted from the form.
+async function parseListingExtras(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  fd: FormData,
+  categoryId: string,
+): Promise<
+  | { hours_json: unknown; fields_values: unknown; error?: undefined }
+  | { error: string }
+> {
+  const hours = parseHoursInput(String(fd.get("hours_json") ?? ""));
+  if (hours.error !== undefined) return { error: hours.error };
+
+  const { data: category, error } = await admin
+    .from("categories")
+    .select("fields_schema")
+    .eq("id", categoryId)
+    .maybeSingle();
+  if (error) return { error: error.message };
+  const schema = (category as { fields_schema: FieldDef[] | null } | null)?.fields_schema ?? null;
+  const values = parseFieldValuesInput(schema, String(fd.get("fields_values") ?? ""));
+  if (values.error !== undefined) return { error: values.error };
+
+  return { hours_json: hours.hours, fields_values: values.values };
+}
+
 export async function createListing(
   fd: FormData,
 ): Promise<{ error?: string; ok?: boolean; id?: string }> {
@@ -177,12 +207,16 @@ export async function createListing(
 
   const admin = createSupabaseAdminClient();
 
+  const extras = await parseListingExtras(admin, fd, fields.category_id);
+  if (extras.error !== undefined) return { error: extras.error };
+
   const dupe = await duplicateNumberError(admin, fields.whatsapp_number);
   if (dupe) return { error: dupe };
 
   const now = new Date().toISOString();
   const inserted = await insertListingWithUniqueSlug(admin, {
     ...fields,
+    ...extras,
     status: publish ? "approved" : "pending",
     source: "manual",
     approved_at: publish ? now : null,
@@ -353,6 +387,9 @@ export async function updateListing(
   const kept = new Set(fd.getAll("keep_gallery").map(String));
   const keptGallery = currentGallery.filter((u) => kept.has(u));
 
+  const extras = await parseListingExtras(admin, fd, fields.category_id);
+  if (extras.error !== undefined) return { error: extras.error };
+
   const dupe = await duplicateNumberError(admin, fields.whatsapp_number, id);
   if (dupe) return { error: dupe };
 
@@ -361,6 +398,7 @@ export async function updateListing(
     .from("listings")
     .update({
       ...fields,
+      ...extras,
       verified,
       // Only stamp a fresh verified_at when verification actually flips on,
       // so re-saving a listing doesn't keep moving the date forward.
@@ -488,5 +526,32 @@ export async function createNeighborhood(fd: FormData): Promise<{ error?: string
     return { error: error.message };
   }
   revalidateTaxonomy("/admin/neighborhoods");
+  return { ok: true };
+}
+
+// Replaces a category's custom-field definitions. Listings keep any values
+// stored under a removed field's key; the listing page only renders fields
+// the current schema defines, so they simply stop showing.
+export async function updateCategoryFields(
+  fd: FormData,
+): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+
+  const categoryId = String(fd.get("category_id") ?? "");
+  if (!categoryId) return { error: "Missing category id." };
+  const parsed = parseFieldsSchemaInput(String(fd.get("fields_schema") ?? ""));
+  if (parsed.error !== undefined) return { error: parsed.error };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("categories")
+    .update({ fields_schema: parsed.fields })
+    .eq("id", categoryId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/categories");
+  // Every listing page in the category renders these fields. Purging the
+  // route pattern covers them all without looking each one up.
+  revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");
   return { ok: true };
 }

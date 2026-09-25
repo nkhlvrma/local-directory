@@ -252,16 +252,16 @@ create policy "admin read analytics_events" on analytics_events for select using
 insert into cities (name, slug) values ('Dehradun', 'dehradun')
   on conflict (slug) do nothing;
 
-insert into neighborhoods (city_id, name, slug)
-select c.id, n.name, n.slug
+insert into neighborhoods (city_id, name, slug, latitude, longitude)
+select c.id, n.name, n.slug, n.lat, n.lng
 from cities c,
      (values
-       ('Rajpur Road','rajpur-road'),
-       ('Dalanwala','dalanwala'),
-       ('Vasant Vihar','vasant-vihar'),
-       ('Prem Nagar','prem-nagar'),
-       ('Clement Town','clement-town')
-     ) as n(name, slug)
+       ('Rajpur Road','rajpur-road',30.3440,78.0620),
+       ('Dalanwala','dalanwala',30.3225,78.0560),
+       ('Vasant Vihar','vasant-vihar',30.3215,77.9935),
+       ('Prem Nagar','prem-nagar',30.3340,77.9580),
+       ('Clement Town','clement-town',30.2690,78.0090)
+     ) as n(name, slug, lat, lng)
 where c.slug = 'dehradun'
 on conflict (city_id, slug) do nothing;
 

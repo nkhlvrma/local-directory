@@ -20,8 +20,13 @@ import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, AlertTriangle, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { createListing, updateListing, uploadListingImage } from "../actions";
+import type { FieldDef, WeekHours } from "@/lib/types";
+import type { FieldValue } from "@/lib/category-fields";
+import { HoursEditor } from "./HoursEditor";
+import { CategoryFieldInputs } from "./CategoryFieldInputs";
 
 type Option = { id: string; name: string };
+export type CategoryOption = Option & { fields_schema: FieldDef[] | null };
 
 export type EditableListing = {
   id: string;
@@ -35,6 +40,8 @@ export type EditableListing = {
   photo_url: string | null;
   cover_photo_url: string | null;
   gallery_urls: string[] | null;
+  hours_json: WeekHours | null;
+  fields_values: Record<string, FieldValue | null> | null;
 };
 
 // One form for both creating and editing. The fields are identical; only
@@ -45,7 +52,7 @@ export function ListingForm({
   neighborhoods,
   listing,
 }: {
-  categories: Option[];
+  categories: CategoryOption[];
   neighborhoods: Option[];
   listing?: EditableListing;
 }) {
@@ -228,6 +235,13 @@ export function ListingForm({
           defaultValue={listing?.description ?? ""}
         />
       </div>
+
+      <CategoryFieldInputs
+        schema={categories.find((c) => c.id === categoryId)?.fields_schema ?? null}
+        initial={listing?.fields_values ?? null}
+      />
+
+      <HoursEditor initial={listing?.hours_json ?? null} />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
