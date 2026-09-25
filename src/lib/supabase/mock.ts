@@ -96,6 +96,14 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     this.filters.push({ kind: "or", predicate: parseOr(spec) });
     return this;
   }
+  gte(col: string, val: string | number) {
+    this.filters.push({ kind: "or", predicate: (r) => (getPath(r, col) as string | number) >= val });
+    return this;
+  }
+  in(col: string, vals: unknown[]) {
+    this.filters.push({ kind: "or", predicate: (r) => vals.includes(getPath(r, col)) });
+    return this;
+  }
   order(col: string, opts?: { ascending?: boolean }) {
     this.orderCol = col;
     this.orderAsc = opts?.ascending ?? true;

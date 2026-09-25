@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Inbox,
   List,
+  ChartColumn,
   Send,
   Flag,
   Tags,
@@ -32,6 +33,7 @@ import { signOut } from "./actions";
 const NAV = [
   { href: "/admin", label: "Pending queue", icon: Inbox },
   { href: "/admin/listings", label: "All listings", icon: List },
+  { href: "/admin/stats", label: "Stats", icon: ChartColumn },
   { href: "/admin/outreach", label: "Outreach", icon: Send },
   { href: "/admin/reports", label: "Reports", icon: Flag },
   { href: "/admin/categories", label: "Categories", icon: Tags },
