@@ -42,7 +42,7 @@ export async function submitListing(fd: FormData) {
   if (lookupError) return { error: "Something went wrong — please try again." };
   if (hit) {
     return {
-      error: `That WhatsApp is already listed as "${hit.name}". If this is you, contact us to update it.`,
+      error: `That WhatsApp is already listed as "${hit.name}". If this is you, open that listing and use "Own this business? Request changes".`,
     };
   }
 

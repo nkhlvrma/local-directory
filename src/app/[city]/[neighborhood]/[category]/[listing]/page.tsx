@@ -2,7 +2,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, AlertTriangle } from "lucide-react";
+import { ChevronRight, AlertTriangle, PencilLine } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -338,14 +338,21 @@ export default async function ListingPage(
           </div>
         ) : null}
 
-        {/* Report */}
-        <div className="border-t pt-4">
+        {/* Report / owner changes */}
+        <div className="border-t pt-4 flex flex-wrap gap-x-5 gap-y-2">
           <Link
             href={`/report?listing=${listing.id}`}
             className="text-xs text-muted-foreground inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
           >
             <AlertTriangle className="size-3" />
             Report this listing
+          </Link>
+          <Link
+            href={`/report?listing=${listing.id}&reason=owner_update`}
+            className="text-xs text-muted-foreground inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+          >
+            <PencilLine className="size-3" />
+            Own this business? Request changes
           </Link>
         </div>
       </Container>

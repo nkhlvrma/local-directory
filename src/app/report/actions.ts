@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { rateLimit } from "@/lib/rate-limit";
+import { isReportReason } from "@/lib/report-reasons";
 
 // Reports are an unauthenticated write, so this mirrors the protections on the
 // listing-submission form: a Turnstile check, a per-IP rate limit, a closed
@@ -11,7 +12,6 @@ import { rateLimit } from "@/lib/rate-limit";
 // actually exists. Postgres errors are logged, never returned — the previous
 // version handed `error.message` straight to the browser.
 
-const REASONS = new Set(["closed", "wrong_info", "spam", "other"]);
 const MAX_NOTE = 400;
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 
@@ -21,7 +21,11 @@ export async function submitReport(fd: FormData) {
   const note = String(fd.get("note") ?? "").trim().slice(0, MAX_NOTE) || null;
 
   if (!listing_id || !reason) return { error: "Missing fields" };
-  if (!REASONS.has(reason)) return { error: "Invalid reason" };
+  if (!isReportReason(reason)) return { error: "Invalid reason" };
+  // An owner's request is only actionable with the details to change and a
+  // way to confirm it's really them.
+  if (reason === "owner_update" && !note)
+    return { error: "Tell us what to change, and how we can reach you to confirm." };
 
   const ip =
     (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
