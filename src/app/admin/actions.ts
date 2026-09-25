@@ -106,7 +106,7 @@ export async function updatePassword(
   return { ok: true };
 }
 
-// These four are bound directly as <form action={...}> handlers, which
+// These are bound directly as <form action={...}> handlers, which
 // requires a void-returning function — errors are logged server-side rather
 // than surfaced in the UI. Good enough for the admin basics; worth adding a
 // toast/error surface later if mistakes turn out to be common.
@@ -130,6 +130,19 @@ export async function rejectListing(listingId: string): Promise<void> {
     .update({ status: "rejected" })
     .eq("id", listingId);
   if (error) console.error("rejectListing failed:", error.message);
+  await revalidateListingById(admin, listingId);
+}
+
+// Takes an approved listing off the public site without deleting it (status
+// "removed"). approveListing brings it back.
+export async function unpublishListing(listingId: string): Promise<void> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("listings")
+    .update({ status: "removed" })
+    .eq("id", listingId);
+  if (error) console.error("unpublishListing failed:", error.message);
   await revalidateListingById(admin, listingId);
 }
 
@@ -248,6 +261,7 @@ type RevalidateTarget = {
 // save looked like it had hung.
 function revalidateListing(target: RevalidateTarget | null) {
   revalidatePath("/admin");
+  revalidatePath("/admin/listings");
   if (!target) return;
   const city = target.neighborhoods?.cities?.slug;
   const hood = target.neighborhoods?.slug;
