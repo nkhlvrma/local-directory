@@ -61,8 +61,9 @@ export function DeleteListingButton({
               // row doesn't vanish before the server confirms.
               e.preventDefault();
               startTransition(async () => {
-                await deleteListing(listingId);
-                toast.success(`Deleted “${listingName}”`);
+                const res = await deleteListing(listingId);
+                if (res.error) toast.error(`Couldn't delete: ${res.error}`);
+                else toast.success(`Deleted “${listingName}”`);
               });
             }}
           >

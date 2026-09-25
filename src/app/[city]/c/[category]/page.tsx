@@ -39,7 +39,7 @@ export async function generateStaticParams(): Promise<Params[]> {
 async function loadContext(params: Params) {
   const supabase = createSupabaseStaticClient();
   const [cityRes, categoryRes] = await Promise.all([
-    supabase.from("cities").select("id, name, slug").eq("slug", params.city).maybeSingle(),
+    supabase.from("cities").select("id, name, slug").eq("slug", params.city).eq("active", true).maybeSingle(),
     supabase.from("categories").select("id, name, slug, icon").eq("slug", params.category).maybeSingle(),
   ]);
   return { supabase, city: unwrap(cityRes), category: unwrap(categoryRes) };

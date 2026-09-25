@@ -1,13 +1,12 @@
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, X, ShieldCheck, Pencil } from "lucide-react";
+import { Check, X, Pencil } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { AdminShell } from "./AdminShell";
 import { DeleteListingButton } from "./DeleteListingButton";
-import { approveListing, rejectListing, setVerified } from "./actions";
+import { approveListing, rejectListing } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -27,29 +26,15 @@ export default async function AdminQueuePage() {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
-  // Independent queries — run concurrently rather than one-after-another.
-  // Matters more than usual here since Supabase (ap-south-1) is a long way
-  // from wherever this runs, and every extra sequential round trip adds up.
-  const [{ data: pending }, { data: approved }] = await Promise.all([
-    admin
-      .from("listings")
-      .select(
-        "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
-      )
-      .eq("status", "pending")
-      .order("created_at", { ascending: true }),
-    admin
-      .from("listings")
-      .select(
-        "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
-      )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(50),
-  ]);
+  const { data: pending } = await admin
+    .from("listings")
+    .select(
+      "id, name, whatsapp_number, description, created_at, verified, status, categories(name), neighborhoods(name)",
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
 
   const pendingRows = (pending ?? []) as unknown as Row[];
-  const approvedRows = (approved ?? []) as unknown as Row[];
 
   return (
     <AdminShell title="Admin Dashboard" description="Review submissions and manage verification.">
@@ -103,48 +88,13 @@ export default async function AdminQueuePage() {
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-semibold">
-          Approved listings{" "}
-          <span className="text-muted-foreground font-normal">
-            (most recent {approvedRows.length})
-          </span>
-        </h2>
-        <div className="space-y-2">
-          {approvedRows.map((l) => (
-            <div key={l.id} className="border rounded-lg p-3 flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="font-medium truncate flex items-center gap-1.5">
-                  {l.name}
-                  {l.verified ? (
-                    <Badge variant="secondary" className="gap-1">
-                      <ShieldCheck className="size-3" /> Verified
-                    </Badge>
-                  ) : null}
-                </p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {l.categories?.name} · {l.neighborhoods?.name}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <form action={setVerified.bind(null, l.id, !l.verified)}>
-                  <Button type="submit" size="sm" variant={l.verified ? "outline" : "default"}>
-                    <ShieldCheck className="size-4" />
-                    {l.verified ? "Unverify" : "Mark verified"}
-                  </Button>
-                </form>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/admin/listings/${l.id}/edit`} aria-label={`Edit ${l.name}`}>
-                    <Pencil className="size-4" />
-                    Edit
-                  </Link>
-                </Button>
-                <DeleteListingButton listingId={l.id} listingName={l.name} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <p className="text-sm text-muted-foreground">
+        Live, rejected and unpublished listings are in{" "}
+        <Link href="/admin/listings" className="underline underline-offset-4 hover:text-foreground">
+          All listings
+        </Link>
+        .
+      </p>
     </Container>
     </AdminShell>
   );

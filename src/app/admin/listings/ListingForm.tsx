@@ -22,8 +22,8 @@ import { toast } from "sonner";
 import { createListing, updateListing, uploadListingImage } from "../actions";
 import type { FieldDef, WeekHours } from "@/lib/types";
 import type { FieldValue } from "@/lib/category-fields";
-import { HoursEditor } from "./HoursEditor";
-import { CategoryFieldInputs } from "./CategoryFieldInputs";
+import { HoursEditor } from "@/components/HoursEditor";
+import { CategoryFieldInputs } from "@/components/CategoryFieldInputs";
 
 type Option = { id: string; name: string };
 export type CategoryOption = Option & { fields_schema: FieldDef[] | null };

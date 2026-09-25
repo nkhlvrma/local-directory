@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { CITY_SLUG } from "@/lib/site";
+import type { FieldDef } from "@/lib/types";
 
 // The city row and the category/neighborhood lists change a few times a year
 // but were re-queried on every request to the dynamic pages (/search, the
@@ -32,7 +33,7 @@ export const getActiveCity = unstable_cache(
 
 export type SubmissionOptions = {
   city: { id: string; name: string } | null;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; fields_schema: FieldDef[] | null }[];
   neighborhoods: { id: string; name: string }[];
 };
 
@@ -43,7 +44,7 @@ export const getSubmissionOptions = unstable_cache(
     const city = (await getActiveCity()) as ActiveCity | null;
 
     const [categories, neighborhoods] = await Promise.all([
-      supabase.from("categories").select("id, name").order("name"),
+      supabase.from("categories").select("id, name, fields_schema").order("name"),
       city
         ? supabase
             .from("neighborhoods")
@@ -55,13 +56,13 @@ export const getSubmissionOptions = unstable_cache(
 
     return {
       city: city ? { id: city.id, name: city.name } : null,
-      categories: (unwrap(categories) ?? []) as { id: string; name: string }[],
+      categories: (unwrap(categories) ?? []) as SubmissionOptions["categories"],
       neighborhoods: (unwrap(neighborhoods) ?? []) as {
         id: string;
         name: string;
       }[],
     };
   },
-  ["submission-options", CITY_SLUG],
+  ["submission-options-v2", CITY_SLUG],
   { revalidate: 3600, tags: [TAXONOMY_TAG] },
 );

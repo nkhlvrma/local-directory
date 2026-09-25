@@ -74,11 +74,14 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
   private limitN: number | null = null;
   private orderCol: string | null = null;
   private orderAsc = true;
+  private rangeFrom: number | null = null;
+  private rangeTo = 0;
 
   constructor(private rows: Row[]) {}
 
-  select(_cols?: string) {
+  select(_cols?: string, _opts?: { count?: string }) {
     void _cols;
+    void _opts;
     return this;
   }
   eq(col: string, val: unknown) {
@@ -93,6 +96,14 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
     this.filters.push({ kind: "or", predicate: parseOr(spec) });
     return this;
   }
+  gte(col: string, val: string | number) {
+    this.filters.push({ kind: "or", predicate: (r) => (getPath(r, col) as string | number) >= val });
+    return this;
+  }
+  in(col: string, vals: unknown[]) {
+    this.filters.push({ kind: "or", predicate: (r) => vals.includes(getPath(r, col)) });
+    return this;
+  }
   order(col: string, opts?: { ascending?: boolean }) {
     this.orderCol = col;
     this.orderAsc = opts?.ascending ?? true;
@@ -100,6 +111,11 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
   }
   limit(n: number) {
     this.limitN = n;
+    return this;
+  }
+  range(from: number, to: number) {
+    this.rangeFrom = from;
+    this.rangeTo = to;
     return this;
   }
   maybeSingle() {
@@ -128,10 +144,13 @@ class MockQuery implements PromiseLike<{ data: unknown; error: null }> {
         return 0;
       });
     }
+    // count mirrors select(..., { count: "exact" }): the total before paging.
+    const count = out.length;
+    if (this.rangeFrom != null) out = out.slice(this.rangeFrom, this.rangeTo + 1);
     if (this.limitN != null) out = out.slice(0, this.limitN);
     return this.single
-      ? { data: out[0] ?? null, error: null }
-      : { data: out, error: null };
+      ? { data: out[0] ?? null, error: null, count }
+      : { data: out, error: null, count };
   }
 
   then<TResult1 = { data: unknown; error: null }, TResult2 = never>(

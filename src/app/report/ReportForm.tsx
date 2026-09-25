@@ -15,12 +15,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { Turnstile } from "@/components/Turnstile";
 import { submitReport } from "./actions";
+import { REPORT_REASONS, type ReportReason } from "@/lib/report-reasons";
 
-export function ReportForm({ listingId }: { listingId: string }) {
+export function ReportForm({
+  listingId,
+  initialReason,
+}: {
+  listingId: string;
+  initialReason?: ReportReason;
+}) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState<string>(initialReason ?? "");
+  const isOwner = reason === "owner_update";
 
   if (done)
     return (
@@ -53,16 +61,28 @@ export function ReportForm({ listingId }: { listingId: string }) {
             <SelectValue placeholder="Choose reason" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="closed">Closed / no longer operating</SelectItem>
-            <SelectItem value="wrong_info">Wrong info</SelectItem>
-            <SelectItem value="spam">Spam</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            {Object.entries(REPORT_REASONS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="note">Note (optional)</Label>
-        <Textarea id="note" name="note" rows={3} maxLength={400} />
+        <Label htmlFor="note">{isOwner ? "What should change?" : "Note (optional)"}</Label>
+        <Textarea
+          id="note"
+          name="note"
+          rows={isOwner ? 5 : 3}
+          maxLength={400}
+          required={isOwner}
+          placeholder={
+            isOwner
+              ? "New hours, number, description… and a phone or email we can confirm with."
+              : undefined
+          }
+        />
       </div>
       {/* Injects cf-turnstile-response into the form; picked up by the
           FormData below, same as the listing-submission form. */}
@@ -74,7 +94,7 @@ export function ReportForm({ listingId }: { listingId: string }) {
         </Alert>
       ) : null}
       <Button type="submit" disabled={pending || !listingId || !reason}>
-        {pending ? "Sending…" : "Send report"}
+        {pending ? "Sending…" : isOwner ? "Send request" : "Send report"}
       </Button>
     </form>
   );

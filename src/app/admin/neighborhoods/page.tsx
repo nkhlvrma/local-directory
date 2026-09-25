@@ -4,10 +4,17 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG } from "@/lib/site";
 import { AdminShell } from "../AdminShell";
 import { NeighborhoodForm } from "./NeighborhoodForm";
+import { TaxonomyItemActions } from "../TaxonomyItemActions";
 
 export const dynamic = "force-dynamic";
 
-type Row = { id: string; name: string; slug: string };
+type Row = {
+  id: string;
+  name: string;
+  slug: string;
+  latitude: number | null;
+  longitude: number | null;
+};
 
 export default async function AdminNeighborhoodsPage() {
   await requireAdmin();
@@ -22,7 +29,7 @@ export default async function AdminNeighborhoodsPage() {
     admin.from("cities").select("name").eq("slug", CITY_SLUG).maybeSingle(),
     admin
       .from("neighborhoods")
-      .select("id, name, slug, cities!inner(slug)")
+      .select("id, name, slug, latitude, longitude, cities!inner(slug)")
       .eq("cities.slug", CITY_SLUG)
       .order("name"),
   ]);
@@ -41,9 +48,23 @@ export default async function AdminNeighborhoodsPage() {
         </h2>
         <div className="space-y-2">
           {neighborhoods.map((n) => (
-            <div key={n.id} className="border rounded-lg p-3">
-              <p className="font-medium">{n.name}</p>
-              <p className="text-sm text-muted-foreground">{n.slug}</p>
+            <div key={n.id} className="border rounded-lg p-3 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium">{n.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {n.slug} ·{" "}
+                  {n.latitude !== null && n.longitude !== null
+                    ? `${n.latitude}, ${n.longitude}`
+                    : "no map pin — add coordinates"}
+                </p>
+              </div>
+              <TaxonomyItemActions
+                kind="neighborhood"
+                id={n.id}
+                name={n.name}
+                latitude={n.latitude}
+                longitude={n.longitude}
+              />
             </div>
           ))}
         </div>

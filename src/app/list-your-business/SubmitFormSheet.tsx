@@ -9,6 +9,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { SubmitForm } from "./SubmitForm";
+import type { SubmissionOptions } from "@/lib/taxonomy";
 
 type Option = { id: string; name: string };
 
@@ -22,7 +23,7 @@ export function SubmitFormSheet({
   categories,
   neighborhoods,
 }: {
-  categories: Option[];
+  categories: SubmissionOptions["categories"];
   neighborhoods: Option[];
 }) {
   const router = useRouter();

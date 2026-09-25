@@ -1,6 +1,9 @@
 import type { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isValidPin } from "@/lib/pin";
 import { slugify } from "@/lib/slug";
+import { parseHoursInput } from "@/lib/hours";
+import { parseFieldValuesInput } from "@/lib/category-fields";
+import type { FieldDef } from "@/lib/types";
 
 // Parsing and validation shared by every listing write path — the public
 // submission form, and the admin create and edit forms. They used to each
@@ -8,8 +11,9 @@ import { slugify } from "@/lib/slug";
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-// Postgres unique_violation. Matched on the code, not the message text.
+// Postgres error codes, matched on the code rather than the message text.
 export const UNIQUE_VIOLATION = "23505";
+export const FOREIGN_KEY_VIOLATION = "23503";
 
 export type ListingFields = {
   name: string;
@@ -78,4 +82,32 @@ export async function insertListingWithUniqueSlug(
     if (error.code !== UNIQUE_VIOLATION) return { error: error.message };
   }
   return { error: "Could not create a unique slug — try a different name." };
+}
+
+// Hours and category-specific values, shared by the admin forms and the
+// public submission form.
+// Field values are checked against the schema of the category the listing is
+// being saved into, which is loaded here rather than trusted from the form.
+export async function parseListingExtras(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  fd: FormData,
+  categoryId: string,
+): Promise<
+  | { hours_json: unknown; fields_values: unknown; error?: undefined }
+  | { error: string }
+> {
+  const hours = parseHoursInput(String(fd.get("hours_json") ?? ""));
+  if (hours.error !== undefined) return { error: hours.error };
+
+  const { data: category, error } = await admin
+    .from("categories")
+    .select("fields_schema")
+    .eq("id", categoryId)
+    .maybeSingle();
+  if (error) return { error: error.message };
+  const schema = (category as { fields_schema: FieldDef[] | null } | null)?.fields_schema ?? null;
+  const values = parseFieldValuesInput(schema, String(fd.get("fields_values") ?? ""));
+  if (values.error !== undefined) return { error: values.error };
+
+  return { hours_json: hours.hours, fields_values: values.values };
 }

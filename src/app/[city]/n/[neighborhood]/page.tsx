@@ -41,6 +41,7 @@ async function loadContext(params: Params) {
       .from("cities")
       .select("id, name, slug")
       .eq("slug", params.city)
+      .eq("active", true)
       .maybeSingle(),
   );
   if (!city) return { supabase, city: null, neighborhood: null };

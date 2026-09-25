@@ -13,8 +13,10 @@ import {
   storagePathFromUrl,
 } from "@/lib/listing-photo";
 import {
+  FOREIGN_KEY_VIOLATION,
   UNIQUE_VIOLATION,
   insertListingWithUniqueSlug,
+  parseListingExtras,
   parseListingFields,
   validateImage,
 } from "@/lib/listing-input";
@@ -22,9 +24,7 @@ import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 import { TAXONOMY_TAG } from "@/lib/taxonomy";
 import { requestOrigin } from "@/lib/request-origin";
-import { parseHoursInput } from "@/lib/hours";
-import { parseFieldsSchemaInput, parseFieldValuesInput } from "@/lib/category-fields";
-import type { FieldDef } from "@/lib/types";
+import { parseFieldsSchemaInput } from "@/lib/category-fields";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
 const MAX_GALLERY_PHOTOS = 4;
@@ -106,7 +106,7 @@ export async function updatePassword(
   return { ok: true };
 }
 
-// These four are bound directly as <form action={...}> handlers, which
+// These are bound directly as <form action={...}> handlers, which
 // requires a void-returning function — errors are logged server-side rather
 // than surfaced in the UI. Good enough for the admin basics; worth adding a
 // toast/error surface later if mistakes turn out to be common.
@@ -130,6 +130,19 @@ export async function rejectListing(listingId: string): Promise<void> {
     .update({ status: "rejected" })
     .eq("id", listingId);
   if (error) console.error("rejectListing failed:", error.message);
+  await revalidateListingById(admin, listingId);
+}
+
+// Takes an approved listing off the public site without deleting it (status
+// "removed"). approveListing brings it back.
+export async function unpublishListing(listingId: string): Promise<void> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("listings")
+    .update({ status: "removed" })
+    .eq("id", listingId);
+  if (error) console.error("unpublishListing failed:", error.message);
   await revalidateListingById(admin, listingId);
 }
 
@@ -165,33 +178,6 @@ async function duplicateNumberError(
   const { hit, error } = await findListingByWhatsapp(admin, whatsapp, excludeId);
   if (error) return error;
   return hit ? `That WhatsApp number is already listed as "${hit.name}".` : null;
-}
-
-// Hours and category-specific values — the admin-only parts of a listing.
-// Field values are checked against the schema of the category the listing is
-// being saved into, which is loaded here rather than trusted from the form.
-async function parseListingExtras(
-  admin: ReturnType<typeof createSupabaseAdminClient>,
-  fd: FormData,
-  categoryId: string,
-): Promise<
-  | { hours_json: unknown; fields_values: unknown; error?: undefined }
-  | { error: string }
-> {
-  const hours = parseHoursInput(String(fd.get("hours_json") ?? ""));
-  if (hours.error !== undefined) return { error: hours.error };
-
-  const { data: category, error } = await admin
-    .from("categories")
-    .select("fields_schema")
-    .eq("id", categoryId)
-    .maybeSingle();
-  if (error) return { error: error.message };
-  const schema = (category as { fields_schema: FieldDef[] | null } | null)?.fields_schema ?? null;
-  const values = parseFieldValuesInput(schema, String(fd.get("fields_values") ?? ""));
-  if (values.error !== undefined) return { error: values.error };
-
-  return { hours_json: hours.hours, fields_values: values.values };
 }
 
 export async function createListing(
@@ -248,6 +234,7 @@ type RevalidateTarget = {
 // save looked like it had hung.
 function revalidateListing(target: RevalidateTarget | null) {
   revalidatePath("/admin");
+  revalidatePath("/admin/listings");
   if (!target) return;
   const city = target.neighborhoods?.cities?.slug;
   const hood = target.neighborhoods?.slug;
@@ -433,7 +420,7 @@ export async function updateListing(
 // Hard delete. Safe at the schema level: reports cascade with the listing
 // and analytics_events keep their rows with a null listing_id, so history
 // survives without dangling references.
-export async function deleteListing(listingId: string): Promise<void> {
+export async function deleteListing(listingId: string): Promise<{ error?: string }> {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -452,11 +439,12 @@ export async function deleteListing(listingId: string): Promise<void> {
   const { error } = await admin.from("listings").delete().eq("id", listingId);
   if (error) {
     console.error("deleteListing failed:", error.message);
-    return;
+    return { error: error.message };
   }
   await deleteListingPhotos(admin, listingId);
 
   revalidateListing(target);
+  return {};
 }
 
 // Name + slug parsing shared by the category and neighborhood forms.
@@ -550,8 +538,228 @@ export async function updateCategoryFields(
   if (error) return { error: error.message };
 
   revalidatePath("/admin/categories");
+  // The public submission form reads schemas from the cached taxonomy.
+  revalidateTag(TAXONOMY_TAG);
   // Every listing page in the category renders these fields. Purging the
   // route pattern covers them all without looking each one up.
   revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");
+  return { ok: true };
+}
+
+// Renames and deletes touch every public page that prints the name — browse
+// pages, listing pages, the home page — so they purge those route patterns
+// wholesale rather than looking each page up. Rare admin actions, so the
+// cost of re-rendering on next visit is fine.
+function revalidateAllPublicPages(adminPath: string) {
+  revalidateTaxonomy(adminPath);
+  revalidatePath("/[city]/c/[category]", "page");
+  revalidatePath("/[city]/n/[neighborhood]", "page");
+  revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");
+}
+
+// Slugs are left alone on rename: they're in every URL for the category, and
+// changing them would break links and search rankings.
+export async function renameCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  const name = String(fd.get("name") ?? "").trim();
+  if (!id) return { error: "Missing category id." };
+  if (name.length < 2) return { error: "Name is required." };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("categories").update({ name }).eq("id", id);
+  if (error) return { error: error.message };
+  revalidateAllPublicPages("/admin/categories");
+  return { ok: true };
+}
+
+export async function deleteCategory(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("categories").delete().eq("id", id);
+  if (error) {
+    // listings.category_id is ON DELETE RESTRICT.
+    if (error.code === FOREIGN_KEY_VIOLATION)
+      return { error: "Listings still use this category — move or delete them first." };
+    return { error: error.message };
+  }
+  revalidateAllPublicPages("/admin/categories");
+  return {};
+}
+
+function parseCoordinate(raw: FormDataEntryValue | null, min: number, max: number): number | null | undefined {
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
+}
+
+export async function updateNeighborhood(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  const name = String(fd.get("name") ?? "").trim();
+  if (!id) return { error: "Missing neighborhood id." };
+  if (name.length < 2) return { error: "Name is required." };
+  const latitude = parseCoordinate(fd.get("latitude"), -90, 90);
+  const longitude = parseCoordinate(fd.get("longitude"), -180, 180);
+  if (latitude === undefined || longitude === undefined)
+    return { error: "Coordinates must be decimal degrees, e.g. 30.3165 and 78.0322." };
+  if ((latitude === null) !== (longitude === null))
+    return { error: "Enter both latitude and longitude, or neither." };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("neighborhoods")
+    .update({ name, latitude, longitude })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidateAllPublicPages("/admin/neighborhoods");
+  return { ok: true };
+}
+
+export async function deleteNeighborhood(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("neighborhoods").delete().eq("id", id);
+  if (error) {
+    // listings.neighborhood_id is ON DELETE RESTRICT.
+    if (error.code === FOREIGN_KEY_VIOLATION)
+      return { error: "Listings are still in this neighborhood — move or delete them first." };
+    return { error: error.message };
+  }
+  revalidateAllPublicPages("/admin/neighborhoods");
+  return {};
+}
+
+// ---------------------------------------------------------------------------
+// Outreach: businesses we plan to invite. A lead moves lead → contacted →
+// yes / no / no_response; a "yes" becomes a pending listing.
+// ---------------------------------------------------------------------------
+
+const OUTREACH_STATUSES = ["lead", "contacted", "yes", "no", "no_response"] as const;
+type OutreachStatus = (typeof OUTREACH_STATUSES)[number];
+
+export async function createOutreachLead(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const business_name = String(fd.get("business_name") ?? "").trim();
+  const whatsapp_number = String(fd.get("whatsapp_number") ?? "").trim();
+  const category_id = String(fd.get("category_id") ?? "") || null;
+  const neighborhood_id = String(fd.get("neighborhood_id") ?? "") || null;
+  const source_note = String(fd.get("source_note") ?? "").trim().slice(0, 300) || null;
+
+  if (business_name.length < 2) return { error: "Business name is required." };
+  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp_number))
+    return { error: "WhatsApp number must be in international format like +9198…" };
+
+  const admin = createSupabaseAdminClient();
+  const [{ data: lead }, listing] = await Promise.all([
+    admin
+      .from("outreach_leads")
+      .select("business_name")
+      .eq("whatsapp_number", whatsapp_number)
+      .limit(1)
+      .maybeSingle(),
+    findListingByWhatsapp(admin, whatsapp_number),
+  ]);
+  if (listing.hit) return { error: `Already listed as "${listing.hit.name}".` };
+  if (lead)
+    return { error: `Already in outreach as "${(lead as { business_name: string }).business_name}".` };
+
+  const { error } = await admin
+    .from("outreach_leads")
+    .insert({ business_name, whatsapp_number, category_id, neighborhood_id, source_note });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
+  return { ok: true };
+}
+
+export async function setOutreachStatus(id: string, status: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!OUTREACH_STATUSES.includes(status as OutreachStatus)) return { error: "Unknown status." };
+
+  const now = new Date().toISOString();
+  const stamp =
+    status === "contacted"
+      ? { contacted_at: now, replied_at: null }
+      : status === "lead"
+        ? { contacted_at: null, replied_at: null }
+        : { replied_at: now };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({ status, ...stamp })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
+  return {};
+}
+
+// A lead that said yes becomes a pending listing, so it still goes through
+// the normal review (and can have photos and hours added) before going live.
+export async function convertLeadToListing(
+  id: string,
+): Promise<{ error?: string; listingId?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { data, error: loadError } = await admin
+    .from("outreach_leads")
+    .select("business_name, whatsapp_number, category_id, neighborhood_id, source_note, listing_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { error: loadError.message };
+  const lead = data as {
+    business_name: string;
+    whatsapp_number: string;
+    category_id: string | null;
+    neighborhood_id: string | null;
+    listing_id: string | null;
+  } | null;
+  if (!lead) return { error: "That lead no longer exists." };
+  if (lead.listing_id) return { listingId: lead.listing_id };
+  if (!lead.category_id || !lead.neighborhood_id)
+    return { error: "Set a category and neighborhood on the lead first." };
+
+  const dupe = await duplicateNumberError(admin, lead.whatsapp_number);
+  if (dupe) return { error: dupe };
+
+  const inserted = await insertListingWithUniqueSlug(admin, {
+    name: lead.business_name,
+    whatsapp_number: lead.whatsapp_number,
+    category_id: lead.category_id,
+    neighborhood_id: lead.neighborhood_id,
+    description: null,
+    pin_code: null,
+    status: "pending",
+    source: "manual",
+  });
+  if (inserted.error !== undefined) return { error: inserted.error };
+
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({ listing_id: inserted.id, status: "yes" })
+    .eq("id", id);
+  if (error) console.error("convertLeadToListing: link failed:", error.message);
+
+  revalidatePath("/admin/outreach");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  return { listingId: inserted.id };
+}
+
+export async function updateOutreachLead(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  if (!id) return { error: "Missing lead id." };
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({
+      category_id: String(fd.get("category_id") ?? "") || null,
+      neighborhood_id: String(fd.get("neighborhood_id") ?? "") || null,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
   return { ok: true };
 }

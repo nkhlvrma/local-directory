@@ -1,6 +1,8 @@
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Pencil, Trash2 } from "lucide-react";
+import { REPORT_REASONS, isReportReason } from "@/lib/report-reasons";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AdminShell } from "../AdminShell";
@@ -44,7 +46,8 @@ export default async function AdminReportsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-0.5">
                     <p className="font-medium">
-                      {r.listings?.name ?? "(listing removed)"} — {r.reason}
+                      {r.listings?.name ?? "(listing removed)"} —{" "}
+                      {isReportReason(r.reason) ? REPORT_REASONS[r.reason] : r.reason}
                     </p>
                     {r.note ? (
                       <p className="text-sm text-foreground/80">{r.note}</p>
@@ -54,6 +57,14 @@ export default async function AdminReportsPage() {
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0">
+                    {r.listings ? (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/listings/${r.listing_id}/edit`}>
+                          <Pencil className="size-4" />
+                          Edit listing
+                        </Link>
+                      </Button>
+                    ) : null}
                     <form action={dismissReport.bind(null, r.id)}>
                       <Button type="submit" size="sm" variant="ghost">
                         <Trash2 className="size-4" />
