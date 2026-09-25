@@ -75,6 +75,7 @@ const loadListing = cache(async (params: Params) => {
       .from("cities")
       .select("id, name, slug")
       .eq("slug", params.city)
+      .eq("active", true)
       .maybeSingle(),
   );
   if (!city) return null;
