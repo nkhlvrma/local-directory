@@ -6,12 +6,14 @@ const cities: Row[] = [
   { id: "c1", name: "Dehradun", slug: "dehradun", active: true },
 ];
 
+// `cities` mirrors the embedded join the admin pages filter on
+// (cities!inner(slug) + .eq("cities.slug", …)).
 const neighborhoods: Row[] = [
-  { id: "n1", city_id: "c1", name: "Rajpur Road", slug: "rajpur-road", latitude: 30.344, longitude: 78.062 },
-  { id: "n2", city_id: "c1", name: "Dalanwala", slug: "dalanwala", latitude: 30.3225, longitude: 78.056 },
-  { id: "n3", city_id: "c1", name: "Vasant Vihar", slug: "vasant-vihar", latitude: 30.3215, longitude: 77.9935 },
-  { id: "n4", city_id: "c1", name: "Prem Nagar", slug: "prem-nagar", latitude: 30.334, longitude: 77.958 },
-  { id: "n5", city_id: "c1", name: "Clement Town", slug: "clement-town", latitude: 30.269, longitude: 78.009 },
+  { id: "n1", city_id: "c1", name: "Rajpur Road", slug: "rajpur-road", latitude: 30.344, longitude: 78.062, cities: { slug: "dehradun" } },
+  { id: "n2", city_id: "c1", name: "Dalanwala", slug: "dalanwala", latitude: 30.3225, longitude: 78.056, cities: { slug: "dehradun" } },
+  { id: "n3", city_id: "c1", name: "Vasant Vihar", slug: "vasant-vihar", latitude: 30.3215, longitude: 77.9935, cities: { slug: "dehradun" } },
+  { id: "n4", city_id: "c1", name: "Prem Nagar", slug: "prem-nagar", latitude: 30.334, longitude: 77.958, cities: { slug: "dehradun" } },
+  { id: "n5", city_id: "c1", name: "Clement Town", slug: "clement-town", latitude: 30.269, longitude: 78.009, cities: { slug: "dehradun" } },
 ];
 
 // Tiffin has a starter fields_schema so /admin/categories has something to
