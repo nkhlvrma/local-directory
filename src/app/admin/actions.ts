@@ -16,6 +16,7 @@ import {
   FOREIGN_KEY_VIOLATION,
   UNIQUE_VIOLATION,
   insertListingWithUniqueSlug,
+  parseListingExtras,
   parseListingFields,
   validateImage,
 } from "@/lib/listing-input";
@@ -23,9 +24,7 @@ import { pickCategoryIcon } from "@/lib/category-icon-picker";
 import { CITY_SLUG } from "@/lib/site";
 import { TAXONOMY_TAG } from "@/lib/taxonomy";
 import { requestOrigin } from "@/lib/request-origin";
-import { parseHoursInput } from "@/lib/hours";
-import { parseFieldsSchemaInput, parseFieldValuesInput } from "@/lib/category-fields";
-import type { FieldDef } from "@/lib/types";
+import { parseFieldsSchemaInput } from "@/lib/category-fields";
 
 // Mirrors the detail-page carousel cap (cover image + gallery = 5 slides).
 const MAX_GALLERY_PHOTOS = 4;
@@ -179,33 +178,6 @@ async function duplicateNumberError(
   const { hit, error } = await findListingByWhatsapp(admin, whatsapp, excludeId);
   if (error) return error;
   return hit ? `That WhatsApp number is already listed as "${hit.name}".` : null;
-}
-
-// Hours and category-specific values — the admin-only parts of a listing.
-// Field values are checked against the schema of the category the listing is
-// being saved into, which is loaded here rather than trusted from the form.
-async function parseListingExtras(
-  admin: ReturnType<typeof createSupabaseAdminClient>,
-  fd: FormData,
-  categoryId: string,
-): Promise<
-  | { hours_json: unknown; fields_values: unknown; error?: undefined }
-  | { error: string }
-> {
-  const hours = parseHoursInput(String(fd.get("hours_json") ?? ""));
-  if (hours.error !== undefined) return { error: hours.error };
-
-  const { data: category, error } = await admin
-    .from("categories")
-    .select("fields_schema")
-    .eq("id", categoryId)
-    .maybeSingle();
-  if (error) return { error: error.message };
-  const schema = (category as { fields_schema: FieldDef[] | null } | null)?.fields_schema ?? null;
-  const values = parseFieldValuesInput(schema, String(fd.get("fields_values") ?? ""));
-  if (values.error !== undefined) return { error: values.error };
-
-  return { hours_json: hours.hours, fields_values: values.values };
 }
 
 export async function createListing(
@@ -566,6 +538,8 @@ export async function updateCategoryFields(
   if (error) return { error: error.message };
 
   revalidatePath("/admin/categories");
+  // The public submission form reads schemas from the cached taxonomy.
+  revalidateTag(TAXONOMY_TAG);
   // Every listing page in the category renders these fields. Purging the
   // route pattern covers them all without looking each one up.
   revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");

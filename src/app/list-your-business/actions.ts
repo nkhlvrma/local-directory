@@ -7,6 +7,7 @@ import { findListingByWhatsapp } from "@/lib/dupes";
 import { uploadListingPhoto } from "@/lib/listing-photo";
 import {
   insertListingWithUniqueSlug,
+  parseListingExtras,
   parseListingFields,
   validateImage,
 } from "@/lib/listing-input";
@@ -33,6 +34,9 @@ export async function submitListing(fd: FormData) {
 
   const admin = createSupabaseAdminClient();
 
+  const extras = await parseListingExtras(admin, fd, fields.category_id);
+  if (extras.error !== undefined) return { error: extras.error };
+
   // One listing per WhatsApp number. Name-similarity we let through (admin
   // can catch it at review).
   const { hit, error: lookupError } = await findListingByWhatsapp(
@@ -48,6 +52,7 @@ export async function submitListing(fd: FormData) {
 
   const inserted = await insertListingWithUniqueSlug(admin, {
     ...fields,
+    ...extras,
     status: "pending",
     source: "self_serve",
   });

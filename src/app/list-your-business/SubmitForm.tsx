@@ -17,8 +17,12 @@ import { CheckCircle2, AlertTriangle, User, MessageCircle, Home, Send } from "lu
 import { submitListing } from "./actions";
 import { Turnstile } from "@/components/Turnstile";
 import { trackEvent } from "@/lib/analytics-client";
+import { HoursEditor } from "@/components/HoursEditor";
+import { CategoryFieldInputs } from "@/components/CategoryFieldInputs";
+import type { FieldDef } from "@/lib/types";
 
 type Option = { id: string; name: string };
+type CategoryOption = Option & { fields_schema: FieldDef[] | null };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -32,7 +36,7 @@ export function SubmitForm({
   categories,
   neighborhoods,
 }: {
-  categories: Option[];
+  categories: CategoryOption[];
   neighborhoods: Option[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -162,6 +166,13 @@ export function SubmitForm({
           <Label htmlFor="description">Short description</Label>
           <Textarea id="description" name="description" rows={3} maxLength={300} />
         </div>
+
+        <CategoryFieldInputs
+          schema={categories.find((c) => c.id === categoryId)?.fields_schema ?? null}
+          initial={null}
+        />
+
+        <HoursEditor initial={null} />
 
         <div className="space-y-1.5">
           <Label htmlFor="photo">Photo</Label>
