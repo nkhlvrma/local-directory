@@ -13,6 +13,7 @@ import {
   storagePathFromUrl,
 } from "@/lib/listing-photo";
 import {
+  FOREIGN_KEY_VIOLATION,
   UNIQUE_VIOLATION,
   insertListingWithUniqueSlug,
   parseListingFields,
@@ -447,7 +448,7 @@ export async function updateListing(
 // Hard delete. Safe at the schema level: reports cascade with the listing
 // and analytics_events keep their rows with a null listing_id, so history
 // survives without dangling references.
-export async function deleteListing(listingId: string): Promise<void> {
+export async function deleteListing(listingId: string): Promise<{ error?: string }> {
   await requireAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -466,11 +467,12 @@ export async function deleteListing(listingId: string): Promise<void> {
   const { error } = await admin.from("listings").delete().eq("id", listingId);
   if (error) {
     console.error("deleteListing failed:", error.message);
-    return;
+    return { error: error.message };
   }
   await deleteListingPhotos(admin, listingId);
 
   revalidateListing(target);
+  return {};
 }
 
 // Name + slug parsing shared by the category and neighborhood forms.
@@ -568,4 +570,89 @@ export async function updateCategoryFields(
   // route pattern covers them all without looking each one up.
   revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");
   return { ok: true };
+}
+
+// Renames and deletes touch every public page that prints the name — browse
+// pages, listing pages, the home page — so they purge those route patterns
+// wholesale rather than looking each page up. Rare admin actions, so the
+// cost of re-rendering on next visit is fine.
+function revalidateAllPublicPages(adminPath: string) {
+  revalidateTaxonomy(adminPath);
+  revalidatePath("/[city]/c/[category]", "page");
+  revalidatePath("/[city]/n/[neighborhood]", "page");
+  revalidatePath("/[city]/[neighborhood]/[category]/[listing]", "page");
+}
+
+// Slugs are left alone on rename: they're in every URL for the category, and
+// changing them would break links and search rankings.
+export async function renameCategory(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  const name = String(fd.get("name") ?? "").trim();
+  if (!id) return { error: "Missing category id." };
+  if (name.length < 2) return { error: "Name is required." };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("categories").update({ name }).eq("id", id);
+  if (error) return { error: error.message };
+  revalidateAllPublicPages("/admin/categories");
+  return { ok: true };
+}
+
+export async function deleteCategory(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("categories").delete().eq("id", id);
+  if (error) {
+    // listings.category_id is ON DELETE RESTRICT.
+    if (error.code === FOREIGN_KEY_VIOLATION)
+      return { error: "Listings still use this category — move or delete them first." };
+    return { error: error.message };
+  }
+  revalidateAllPublicPages("/admin/categories");
+  return {};
+}
+
+function parseCoordinate(raw: FormDataEntryValue | null, min: number, max: number): number | null | undefined {
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
+}
+
+export async function updateNeighborhood(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  const name = String(fd.get("name") ?? "").trim();
+  if (!id) return { error: "Missing neighborhood id." };
+  if (name.length < 2) return { error: "Name is required." };
+  const latitude = parseCoordinate(fd.get("latitude"), -90, 90);
+  const longitude = parseCoordinate(fd.get("longitude"), -180, 180);
+  if (latitude === undefined || longitude === undefined)
+    return { error: "Coordinates must be decimal degrees, e.g. 30.3165 and 78.0322." };
+  if ((latitude === null) !== (longitude === null))
+    return { error: "Enter both latitude and longitude, or neither." };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("neighborhoods")
+    .update({ name, latitude, longitude })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidateAllPublicPages("/admin/neighborhoods");
+  return { ok: true };
+}
+
+export async function deleteNeighborhood(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("neighborhoods").delete().eq("id", id);
+  if (error) {
+    // listings.neighborhood_id is ON DELETE RESTRICT.
+    if (error.code === FOREIGN_KEY_VIOLATION)
+      return { error: "Listings are still in this neighborhood — move or delete them first." };
+    return { error: error.message };
+  }
+  revalidateAllPublicPages("/admin/neighborhoods");
+  return {};
 }

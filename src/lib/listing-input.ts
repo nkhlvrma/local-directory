@@ -8,8 +8,9 @@ import { slugify } from "@/lib/slug";
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-// Postgres unique_violation. Matched on the code, not the message text.
+// Postgres error codes, matched on the code rather than the message text.
 export const UNIQUE_VIOLATION = "23505";
+export const FOREIGN_KEY_VIOLATION = "23503";
 
 export type ListingFields = {
   name: string;

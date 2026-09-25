@@ -5,6 +5,7 @@ import { CategoryIcon } from "@/components/CategoryIcon";
 import { AdminShell } from "../AdminShell";
 import { CategoryForm } from "./CategoryForm";
 import { CategoryFieldsEditor } from "./CategoryFieldsEditor";
+import { TaxonomyItemActions } from "../TaxonomyItemActions";
 import type { FieldDef } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -53,8 +54,12 @@ export default async function AdminCategoriesPage() {
                     : "Add fields"}
                 </span>
               </summary>
-              <div className="border-t p-3">
-                <CategoryFieldsEditor categoryId={c.id} initial={c.fields_schema} />
+              <div className="border-t p-3 space-y-4">
+                <TaxonomyItemActions kind="category" id={c.id} name={c.name} />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Custom fields</p>
+                  <CategoryFieldsEditor categoryId={c.id} initial={c.fields_schema} />
+                </div>
               </div>
             </details>
           ))}
