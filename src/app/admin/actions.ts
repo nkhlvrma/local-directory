@@ -630,3 +630,136 @@ export async function deleteNeighborhood(id: string): Promise<{ error?: string }
   revalidateAllPublicPages("/admin/neighborhoods");
   return {};
 }
+
+// ---------------------------------------------------------------------------
+// Outreach: businesses we plan to invite. A lead moves lead → contacted →
+// yes / no / no_response; a "yes" becomes a pending listing.
+// ---------------------------------------------------------------------------
+
+const OUTREACH_STATUSES = ["lead", "contacted", "yes", "no", "no_response"] as const;
+type OutreachStatus = (typeof OUTREACH_STATUSES)[number];
+
+export async function createOutreachLead(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const business_name = String(fd.get("business_name") ?? "").trim();
+  const whatsapp_number = String(fd.get("whatsapp_number") ?? "").trim();
+  const category_id = String(fd.get("category_id") ?? "") || null;
+  const neighborhood_id = String(fd.get("neighborhood_id") ?? "") || null;
+  const source_note = String(fd.get("source_note") ?? "").trim().slice(0, 300) || null;
+
+  if (business_name.length < 2) return { error: "Business name is required." };
+  if (!/^\+[1-9][0-9]{7,14}$/.test(whatsapp_number))
+    return { error: "WhatsApp number must be in international format like +9198…" };
+
+  const admin = createSupabaseAdminClient();
+  const [{ data: lead }, listing] = await Promise.all([
+    admin
+      .from("outreach_leads")
+      .select("business_name")
+      .eq("whatsapp_number", whatsapp_number)
+      .limit(1)
+      .maybeSingle(),
+    findListingByWhatsapp(admin, whatsapp_number),
+  ]);
+  if (listing.hit) return { error: `Already listed as "${listing.hit.name}".` };
+  if (lead)
+    return { error: `Already in outreach as "${(lead as { business_name: string }).business_name}".` };
+
+  const { error } = await admin
+    .from("outreach_leads")
+    .insert({ business_name, whatsapp_number, category_id, neighborhood_id, source_note });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
+  return { ok: true };
+}
+
+export async function setOutreachStatus(id: string, status: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!OUTREACH_STATUSES.includes(status as OutreachStatus)) return { error: "Unknown status." };
+
+  const now = new Date().toISOString();
+  const stamp =
+    status === "contacted"
+      ? { contacted_at: now, replied_at: null }
+      : status === "lead"
+        ? { contacted_at: null, replied_at: null }
+        : { replied_at: now };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({ status, ...stamp })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
+  return {};
+}
+
+// A lead that said yes becomes a pending listing, so it still goes through
+// the normal review (and can have photos and hours added) before going live.
+export async function convertLeadToListing(
+  id: string,
+): Promise<{ error?: string; listingId?: string }> {
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
+  const { data, error: loadError } = await admin
+    .from("outreach_leads")
+    .select("business_name, whatsapp_number, category_id, neighborhood_id, source_note, listing_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { error: loadError.message };
+  const lead = data as {
+    business_name: string;
+    whatsapp_number: string;
+    category_id: string | null;
+    neighborhood_id: string | null;
+    listing_id: string | null;
+  } | null;
+  if (!lead) return { error: "That lead no longer exists." };
+  if (lead.listing_id) return { listingId: lead.listing_id };
+  if (!lead.category_id || !lead.neighborhood_id)
+    return { error: "Set a category and neighborhood on the lead first." };
+
+  const dupe = await duplicateNumberError(admin, lead.whatsapp_number);
+  if (dupe) return { error: dupe };
+
+  const inserted = await insertListingWithUniqueSlug(admin, {
+    name: lead.business_name,
+    whatsapp_number: lead.whatsapp_number,
+    category_id: lead.category_id,
+    neighborhood_id: lead.neighborhood_id,
+    description: null,
+    pin_code: null,
+    status: "pending",
+    source: "manual",
+  });
+  if (inserted.error !== undefined) return { error: inserted.error };
+
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({ listing_id: inserted.id, status: "yes" })
+    .eq("id", id);
+  if (error) console.error("convertLeadToListing: link failed:", error.message);
+
+  revalidatePath("/admin/outreach");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  return { listingId: inserted.id };
+}
+
+export async function updateOutreachLead(fd: FormData): Promise<{ error?: string; ok?: boolean }> {
+  await requireAdmin();
+  const id = String(fd.get("id") ?? "");
+  if (!id) return { error: "Missing lead id." };
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("outreach_leads")
+    .update({
+      category_id: String(fd.get("category_id") ?? "") || null,
+      neighborhood_id: String(fd.get("neighborhood_id") ?? "") || null,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/outreach");
+  return { ok: true };
+}
