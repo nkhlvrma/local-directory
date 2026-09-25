@@ -5,7 +5,6 @@ import { Container } from "@/components/ui/container";
 import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { LoopingCategoryIcon } from "@/components/LoopingCategoryIcon";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
-import { ActivePinBadge } from "@/components/ActivePinBadge";
 import {
   FilteredListingGrid,
   type GridItem,
@@ -14,8 +13,8 @@ import { LISTING_CARD_COLUMNS, type ListingCardRow } from "@/lib/types";
 
 type Params = { city: string; category: string };
 
-// Cached, not dynamic: this is a page that has to rank. Filtering (including
-// the PIN cookie) moved to the client so the HTML can be prerendered — see
+// Cached, not dynamic: this is a page that has to rank. Filtering moved to
+// the client so the HTML can be prerendered — see
 // lib/listing-filters. `dynamicParams` stays on by default, so a category
 // added after the last build still renders on demand.
 // Admin actions purge these pages on every change (revalidateListing), so
@@ -122,7 +121,6 @@ export default async function CategoryPage(
           <h1 className="text-2xl font-bold tracking-tight font-heading">
             {categoryName}
           </h1>
-          <ActivePinBadge />
         </div>
       </header>
 

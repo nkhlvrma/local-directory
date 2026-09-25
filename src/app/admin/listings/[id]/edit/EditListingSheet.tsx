@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { ListingForm, type EditableListing } from "../../ListingForm";
+import { ListingForm, type CategoryOption, type EditableListing } from "../../ListingForm";
 
 type Option = { id: string; name: string };
 
@@ -19,7 +19,7 @@ export function EditListingSheet({
   neighborhoods,
   listing,
 }: {
-  categories: Option[];
+  categories: CategoryOption[];
   neighborhoods: Option[];
   listing: EditableListing;
 }) {

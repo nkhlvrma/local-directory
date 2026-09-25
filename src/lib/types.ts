@@ -20,7 +20,6 @@ export type Category = {
   name: string;
   slug: string;
   icon: string | null;
-  parent_id: string | null;
 };
 
 // { open: "09:00", close: "18:00" } or null (closed that day).

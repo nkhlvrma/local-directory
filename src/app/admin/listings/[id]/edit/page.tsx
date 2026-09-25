@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG } from "@/lib/site";
 import { AdminShell } from "../../../AdminShell";
 import { EditListingSheet } from "./EditListingSheet";
-import type { EditableListing } from "../../ListingForm";
+import type { CategoryOption, EditableListing } from "../../ListingForm";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +24,11 @@ export default async function AdminEditListingPage({
       admin
         .from("listings")
         .select(
-          "id, name, description, whatsapp_number, pin_code, category_id, neighborhood_id, verified, photo_url, cover_photo_url, gallery_urls",
+          "id, name, description, whatsapp_number, pin_code, category_id, neighborhood_id, verified, photo_url, cover_photo_url, gallery_urls, hours_json, fields_values",
         )
         .eq("id", id)
         .maybeSingle(),
-      admin.from("categories").select("id, name").order("name"),
+      admin.from("categories").select("id, name, fields_schema").order("name"),
       admin
         .from("neighborhoods")
         .select("id, name, cities!inner(slug)")
@@ -42,7 +42,7 @@ export default async function AdminEditListingPage({
     <AdminShell title="Admin Dashboard" description="Edit a listing.">
       <EditListingSheet
         listing={listing as unknown as EditableListing}
-        categories={(categories ?? []) as { id: string; name: string }[]}
+        categories={(categories ?? []) as CategoryOption[]}
         neighborhoods={(neighborhoods ?? []) as { id: string; name: string }[]}
       />
     </AdminShell>

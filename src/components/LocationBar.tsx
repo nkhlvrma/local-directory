@@ -17,7 +17,7 @@ const CITY_LABEL: Record<string, string> = {
   bangalore: "Bangalore",
 };
 
-export function LocationBar({}: { initialPin?: string }) {
+export function LocationBar() {
   const [open, setOpen] = useState(false);
   const cityName = CITY_LABEL[CITY_SLUG] ?? CITY_SLUG;
 

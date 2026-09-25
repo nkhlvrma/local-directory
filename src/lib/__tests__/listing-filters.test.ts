@@ -27,8 +27,8 @@ describe("hasActiveFilters", () => {
     expect(hasActiveFilters(NO_FILTERS)).toBe(false);
   });
 
-  it("is true when only a PIN is set", () => {
-    expect(hasActiveFilters({ ...NO_FILTERS, pin: "226030" })).toBe(true);
+  it("is true when only one filter is set", () => {
+    expect(hasActiveFilters({ ...NO_FILTERS, verified: true })).toBe(true);
   });
 });
 
@@ -38,18 +38,6 @@ describe("applyFilters", () => {
     // the one crawlers see) allocation-free.
     const rows = [row(), row()];
     expect(applyFilters(rows, NO_FILTERS)).toBe(rows);
-  });
-
-  it("filters by PIN", () => {
-    const rows = [row({ pin_code: "226030" }), row({ pin_code: "226010" })];
-    const out = applyFilters(rows, { ...NO_FILTERS, pin: "226030" });
-    expect(out).toHaveLength(1);
-    expect(out[0].pin_code).toBe("226030");
-  });
-
-  it("drops listings with no PIN when a PIN filter is active", () => {
-    const rows = [row({ pin_code: null })];
-    expect(applyFilters(rows, { ...NO_FILTERS, pin: "226030" })).toHaveLength(0);
   });
 
   it("filters by verified", () => {
@@ -74,15 +62,13 @@ describe("applyFilters", () => {
   });
 
   it("ANDs multiple filters", () => {
-    const match = row({ verified: true, pin_code: "226030", photo_url: "u" });
+    const match = row({ verified: true, photo_url: "u" });
     const rows = [
       match,
-      row({ verified: false, pin_code: "226030", photo_url: "u" }),
-      row({ verified: true, pin_code: "226010", photo_url: "u" }),
-      row({ verified: true, pin_code: "226030", photo_url: null }),
+      row({ verified: false, photo_url: "u" }),
+      row({ verified: true, photo_url: null }),
     ];
     const out = applyFilters(rows, {
-      pin: "226030",
       verified: true,
       photo: true,
       open: false,

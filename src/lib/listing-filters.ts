@@ -1,12 +1,11 @@
 "use client";
 
-import { isValidPin } from "./pin";
 import { isOpenNow } from "./hours";
 import type { ListingCardRow } from "./types";
 
 // Browse-page filtering runs on the client so /[city]/c/[category] and
 // /[city]/n/[neighborhood] can be statically rendered and served from the
-// edge. Reading the PIN cookie or searchParams on the server would force
+// edge. Reading searchParams on the server would force
 // every one of those requests through a Supabase round-trip — on the pages
 // whose whole job is to rank in search.
 //
@@ -17,14 +16,12 @@ import type { ListingCardRow } from "./types";
 export type FilterKey = "verified" | "photo" | "open";
 
 export type ListingFilters = {
-  pin: string | null;
   verified: boolean;
   photo: boolean;
   open: boolean;
 };
 
 export const NO_FILTERS: ListingFilters = {
-  pin: null,
   verified: false,
   photo: false,
   open: false,
@@ -34,27 +31,17 @@ const CHANGE_EVENT = "listing-filters-change";
 
 // useSyncExternalStore requires getSnapshot to return the SAME reference when
 // nothing changed, or React re-renders in a loop (React error #185). Cache on
-// a key built from the only two inputs — the query string and the PIN cookie.
+// the only input — the query string.
 let cachedKey: string | undefined;
 let cached: ListingFilters = NO_FILTERS;
 
-function readPinCookie(): string | null {
-  const match = /(?:^|;\s*)pin=([^;]*)/.exec(document.cookie);
-  if (!match) return null;
-  const pin = decodeURIComponent(match[1]);
-  return isValidPin(pin) ? pin : null;
-}
-
 export function getFilterSnapshot(): ListingFilters {
-  const pin = readPinCookie();
   const search = window.location.search;
-  const key = `${search}|${pin ?? ""}`;
-  if (key === cachedKey) return cached;
+  if (search === cachedKey) return cached;
 
   const sp = new URLSearchParams(search);
-  cachedKey = key;
+  cachedKey = search;
   cached = {
-    pin,
     verified: sp.get("verified") === "1",
     photo: sp.get("photo") === "1",
     open: sp.get("open") === "1",
@@ -62,7 +49,7 @@ export function getFilterSnapshot(): ListingFilters {
   return cached;
 }
 
-// The server has no cookies and no query string in a static render, so it
+// The server has no query string in a static render, so it
 // always sees "no filters" — matching the full list it renders.
 export function getServerFilterSnapshot(): ListingFilters {
   return NO_FILTERS;
@@ -93,13 +80,8 @@ export function toggleFilter(key: FilterKey): void {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-// Call after changing the PIN cookie so subscribed grids re-filter.
-export function notifyFiltersChanged(): void {
-  window.dispatchEvent(new Event(CHANGE_EVENT));
-}
-
 export function hasActiveFilters(f: ListingFilters): boolean {
-  return Boolean(f.pin || f.verified || f.photo || f.open);
+  return f.verified || f.photo || f.open;
 }
 
 // Pure — exported separately so it can be unit-tested without a DOM.
@@ -110,7 +92,6 @@ export function applyFilters<T extends ListingCardRow>(
   if (!hasActiveFilters(f)) return rows;
   return rows.filter(
     (r) =>
-      (!f.pin || r.pin_code === f.pin) &&
       (!f.verified || r.verified) &&
       (!f.photo || Boolean(r.photo_url)) &&
       (!f.open || isOpenNow(r.hours_json) === true),

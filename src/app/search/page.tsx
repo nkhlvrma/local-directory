@@ -1,9 +1,7 @@
-import { cookies } from "next/headers";
 import { after } from "next/server";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CITY_SLUG, SITE_NAME_FALLBACK } from "@/lib/site";
@@ -11,7 +9,6 @@ import { getActiveCity } from "@/lib/taxonomy";
 import { ListingGridCard } from "@/components/ListingGridCard";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyResults } from "@/components/EmptyResults";
-import { isValidPin } from "@/lib/pin";
 import { ilikeAnyFilter } from "@/lib/postgrest";
 import { isMockMode } from "@/lib/supabase/mock";
 import { logEvent } from "@/lib/analytics";
@@ -34,8 +31,6 @@ export default async function SearchPage(
   const { q } = await searchParams;
   const query = (q ?? "").trim();
   const supabase = await createSupabaseServerClient();
-  const pin = (await cookies()).get("pin")?.value ?? "";
-  const pinFilter = isValidPin(pin) ? pin : null;
 
   // Cached across requests — the city row is the same for everyone, and a
   // per-search round-trip for it sat in front of every result page.
@@ -48,7 +43,7 @@ export default async function SearchPage(
   let rows: Row[] = [];
 
   if (city && query) {
-    let q2 = supabase
+    const q2 = supabase
       .from("listings")
       .select(
         `${LISTING_CARD_COLUMNS},
@@ -59,7 +54,6 @@ export default async function SearchPage(
       .eq("neighborhoods.city_id", (city as { id: string }).id)
       .or(ilikeAnyFilter(["name", "description"], query))
       .limit(50);
-    if (pinFilter) q2 = q2.eq("pin_code", pinFilter);
     const { data, error } = await q2;
     rows = (data ?? []) as unknown as Row[];
 
@@ -78,7 +72,6 @@ export default async function SearchPage(
             query,
             matched_count: matched,
             city_slug: CITY_SLUG,
-            pin_code: pinFilter,
           });
         }
         // General funnel event (separate from the zero-result-only search_events
@@ -122,15 +115,6 @@ export default async function SearchPage(
           <ChevronRight className="size-3" />
           <span className="text-foreground font-medium">&ldquo;{query}&rdquo;</span>
         </p>
-      ) : null}
-
-      {pinFilter ? (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Badge className="bg-primary/10 text-primary border-primary/20 font-mono">
-            {pinFilter}
-          </Badge>
-          <span>filtering to your area</span>
-        </div>
       ) : null}
 
       {!query ? (

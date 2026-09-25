@@ -4,7 +4,6 @@ import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { createSupabaseStaticClient, unwrap } from "@/lib/supabase/server";
 import { CategoryFilterBar } from "@/components/CategoryFilterBar";
-import { ActivePinBadge } from "@/components/ActivePinBadge";
 import {
   FilteredListingGrid,
   type GridItem,
@@ -119,7 +118,6 @@ export default async function NeighborhoodPage(
         <h1 className="text-2xl font-bold tracking-tight font-heading">
           {neighborhoodName}
         </h1>
-        <ActivePinBadge />
       </header>
 
       <p className="flex items-center gap-1 text-xs text-muted-foreground -mt-4">
